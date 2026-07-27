@@ -1,10 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Character, STAT_LABELS, Stats, StatKey } from '@/lib/types'
+import { Character, STAT_LABELS, Stats, StatKey, STAT_BUDGET, STAT_MIN, STAT_MAX } from '@/lib/types'
 import { getItem } from '@/lib/items'
 
-type Tab = 'queue' | 'players' | 'world'
+type Tab = 'queue' | 'players' | 'npcs' | 'world'
 type Weather = { seasonLabel?: string; label: string; temperature: number; season: string }
+type NpcInfo = { id: string; name: string; tradeLevel: number; stock: { itemKey: string; quantity: number }[] }
+
+const STAT_KEYS = Object.keys(STAT_LABELS) as StatKey[]
 
 export default function GMPage() {
   const [authed, setAuthed] = useState(false)
@@ -22,12 +25,17 @@ export default function GMPage() {
   const [statKey, setStatKey] = useState<StatKey>('str')
   const [statValue, setStatValue] = useState(3)
   const [hpValue, setHpValue] = useState(0)
+  const [npcs, setNpcs] = useState<NpcInfo[]>([])
+  const [newName, setNewName] = useState('')
+  const [newOwner, setNewOwner] = useState('')
+  const [newStats, setNewStats] = useState<Stats>({ str: 3, agi: 3, end: 3, per: 3, int: 3, cha: 3 })
 
   async function loadAll() {
-    const [pendingRes, playersRes, weatherRes] = await Promise.all([
+    const [pendingRes, playersRes, weatherRes, npcsRes] = await Promise.all([
       fetch('/api/gm/characters'),
       fetch('/api/gm/players'),
       fetch('/api/weather'),
+      fetch('/api/gm/npcs'),
     ])
     if (pendingRes.ok) {
       setPending(await pendingRes.json())
@@ -35,6 +43,7 @@ export default function GMPage() {
     }
     if (playersRes.ok) setPlayers(await playersRes.json())
     if (weatherRes.ok) setWeather(await weatherRes.json())
+    if (npcsRes.ok) setNpcs(await npcsRes.json())
   }
 
   useEffect(() => { loadAll() }, [])
@@ -92,9 +101,27 @@ export default function GMPage() {
 
   const player = players.find(p => p.id === selectedPlayer) ?? null
 
+  const newStatsSum = Object.values(newStats).reduce((a, b) => a + b, 0)
+  const newStatsRemaining = STAT_BUDGET - newStatsSum
+
+  async function createCharacter() {
+    setLoading(true)
+    setError('')
+    const res = await fetch('/api/gm/create-character', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName, owner: newOwner, stats: newStats }),
+    })
+    const d = await res.json()
+    setLoading(false)
+    if (!res.ok) { setError(d.error || 'Помилка'); return }
+    setNewName(''); setNewOwner('')
+    await loadAll()
+  }
+
   const tabs: { key: Tab; label: string }[] = [
     { key: 'queue', label: `Черга (${pending.length})` },
     { key: 'players', label: 'Гравці' },
+    { key: 'npcs', label: 'NPC' },
     { key: 'world', label: 'Світ' },
   ]
 
@@ -155,6 +182,35 @@ export default function GMPage() {
 
       {tab === 'players' && (
         <div className="flex flex-col gap-4">
+          <div className="card">
+            <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Створити картку гравцю</h2>
+            <div className="flex flex-col gap-2 mb-3">
+              <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ім'я персонажа" />
+              <input value={newOwner} onChange={e => setNewOwner(e.target.value)} placeholder="Нік акаунта гравця (якщо вже зареєстрований — прив'яжеться)" />
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <span style={{ color: '#888', fontSize: 12 }}>Характеристики (від {STAT_MIN} до {STAT_MAX})</span>
+              <span style={{ color: newStatsRemaining === 0 ? '#27ae60' : '#c0392b', fontWeight: 700, fontSize: 12 }}>Не розподілено: {newStatsRemaining}</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+              {STAT_KEYS.map(k => (
+                <div key={k} className="flex items-center justify-between" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '4px 8px' }}>
+                  <span style={{ color: '#888', fontSize: 12 }}>{STAT_LABELS[k]}</span>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setNewStats(s => ({ ...s, [k]: Math.max(STAT_MIN, s[k] - 1) }))}
+                      style={{ width: 20, height: 20, borderRadius: 3, border: '1px solid #2a2a2a', background: 'none', color: '#c9a227', cursor: 'pointer', fontSize: 12 }}>−</button>
+                    <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 12, minWidth: 14, textAlign: 'center' }}>{newStats[k]}</span>
+                    <button type="button" onClick={() => setNewStats(s => ({ ...s, [k]: Math.min(STAT_MAX, s[k] + 1) }))}
+                      style={{ width: 20, height: 20, borderRadius: 3, border: '1px solid #2a2a2a', background: 'none', color: '#c9a227', cursor: 'pointer', fontSize: 12 }}>+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={createCharacter} disabled={loading || !newName.trim() || newStatsRemaining !== 0} className="btn-primary">
+              Створити й одразу затвердити
+            </button>
+          </div>
+
           <div className="card">
             <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Огляд групи ({players.length})</h2>
             <div className="flex flex-col gap-2">
@@ -235,6 +291,31 @@ export default function GMPage() {
               </details>
             </div>
           )}
+        </div>
+      )}
+
+      {tab === 'npcs' && (
+        <div className="flex flex-col gap-3">
+          {npcs.map(n => (
+            <div key={n.id} className="card">
+              <div className="flex justify-between items-center mb-3">
+                <h2 style={{ color: '#e5e5e5', fontSize: 15 }}>{n.name}</h2>
+                <span className="tag">рівень торгу {n.tradeLevel}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {n.stock.map(s => (
+                  <span key={s.itemKey} style={{ fontSize: 12, color: '#ccc', background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 4, padding: '4px 8px' }}>
+                    {getItem(s.itemKey)?.name ?? s.itemKey} ×{s.quantity}
+                  </span>
+                ))}
+                {n.stock.length === 0 && <span style={{ color: '#555', fontSize: 12 }}>Товару нема.</span>}
+              </div>
+            </div>
+          ))}
+          <p style={{ color: '#555', fontSize: 12 }}>
+            Живий спавн ворогів і бій наживо тут не діють так, як у Discord — сутички вирішуються миттєво на сервері,
+            без окремої керованої ГМ сцени. Ці NPC — лише постійні торговці табору.
+          </p>
         </div>
       )}
 
