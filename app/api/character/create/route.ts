@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { redis } from '@/lib/redis'
 import { getSession } from '@/lib/auth'
-import { Character, EMPTY_EQUIPPED, STAT_POINTS_TOTAL, Stats } from '@/lib/types'
+import { Character, EMPTY_EQUIPPED, Stats, maxHpForEndurance, validateStatSpread } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   const owner = await getSession()
@@ -14,14 +14,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Імʼя персонажа має бути від 2 до 30 символів' }, { status: 400 })
   }
 
-  const values = Object.values(stats || {})
-  if (values.length !== 6 || values.some(v => !Number.isInteger(v) || v < 1)) {
-    return NextResponse.json({ error: 'Некоректні характеристики' }, { status: 400 })
-  }
-  const sum = values.reduce((a, b) => a + b, 0)
-  if (sum !== STAT_POINTS_TOTAL) {
-    return NextResponse.json({ error: `Сума характеристик має дорівнювати ${STAT_POINTS_TOTAL} (зараз ${sum})` }, { status: 400 })
-  }
+  const statError = validateStatSpread(stats)
+  if (statError) return NextResponse.json({ error: statError }, { status: 400 })
 
   const existing = await redis.get<string>(`char:owner:${owner}`)
   if (existing) {
@@ -29,6 +23,8 @@ export async function POST(req: NextRequest) {
   }
 
   const id = await redis.incr('char:id')
+  const maxHp = maxHpForEndurance(stats.end)
+
   const character: Character = {
     id: String(id),
     owner,
@@ -36,12 +32,23 @@ export async function POST(req: NextRequest) {
     stats,
     status: 'pending',
     createdAt: Date.now(),
+    hp: maxHp,
+    maxHp,
+    hunger: 100,
+    thirst: 100,
+    morale: 70,
+    infection: 0,
+    reputation: 5,
+    dead: false,
     inventory: [
       { itemId: 'pipe', qty: 1 },
       { itemId: 'bandage', qty: 2 },
       { itemId: 'canned_food', qty: 2 },
+      { itemId: 'water_bottle', qty: 2 },
     ],
     equipped: EMPTY_EQUIPPED,
+    expedition: null,
+    recentExpeditionTimestamps: [],
   }
 
   await redis.set(`char:${id}`, JSON.stringify(character))

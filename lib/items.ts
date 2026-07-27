@@ -1,92 +1,193 @@
-export type ItemType = 'weapon' | 'armor' | 'material' | 'consumable'
-export type EquipSlot = 'head' | 'torso' | 'legs' | 'boots' | 'accessory' | 'backpack'
-export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+import { ClothingSlot, StatKey } from './types'
 
-export type Item = {
-  id: string
+export type ItemType = 'weapon_melee' | 'weapon_ranged' | 'food' | 'water' | 'medical' | 'material' | 'clothing' | 'misc'
+
+export interface ItemDefinition {
+  key: string
   name: string
   type: ItemType
-  slot?: EquipSlot
-  warmth?: number // armor pieces
-  armor?: number // armor pieces
-  damage?: string // weapon dice, e.g. "1d6"
-  statReq?: keyof import('./types').Stats
-  backpackSlots?: number // backpack only: total inventory slots it grants
-  value: number // combat/defense value, drives rarity
+  description: string
+  damageDice?: string
+  statUsed?: StatKey
+  ammoKey?: string
+  hungerRestore?: number
+  thirstRestore?: number
+  healAmount?: number
+  infectionReduce?: number
+  moraleRestore?: number
+  poisonChance?: number
+  slot?: ClothingSlot
+  warmth?: number
+  armor?: number
 }
 
-export function rarityOf(value: number): Rarity {
-  if (value >= 20) return 'legendary'
-  if (value >= 14) return 'epic'
-  if (value >= 9) return 'rare'
-  if (value >= 4) return 'uncommon'
+export const ITEM_CATALOG: Record<string, ItemDefinition> = {
+  bat: { key: 'bat', name: 'Бейсбольна бита', type: 'weapon_melee', description: 'Проста, надійна, тиха.', damageDice: '1d6', statUsed: 'str' },
+  knife: { key: 'knife', name: 'Ніж', type: 'weapon_melee', description: 'Легкий і швидкий, добре лягає в руку.', damageDice: '1d4', statUsed: 'agi' },
+  machete: { key: 'machete', name: 'Мачете', type: 'weapon_melee', description: 'Важче за ніж, ріже впевненіше.', damageDice: '1d6+1', statUsed: 'str' },
+  axe: { key: 'axe', name: 'Сокира', type: 'weapon_melee', description: 'Повільна, але вбиває з одного удару частіше за інших.', damageDice: '1d8', statUsed: 'str' },
+  pistol: { key: 'pistol', name: 'Пістолет', type: 'weapon_ranged', description: 'Компактний, гучний. Потребує набоїв 9мм.', damageDice: '1d8', statUsed: 'per', ammoKey: 'ammo_pistol' },
+  rifle: { key: 'rifle', name: 'Гвинтівка', type: 'weapon_ranged', description: 'Влучна зброя далекого бою. Потребує гвинтівкових набоїв.', damageDice: '1d10', statUsed: 'per', ammoKey: 'ammo_rifle' },
+  crossbow: { key: 'crossbow', name: 'Арбалет', type: 'weapon_ranged', description: 'Тихий, повільно перезаряджається. Потребує болтів.', damageDice: '1d8', statUsed: 'per', ammoKey: 'ammo_bolt' },
+  pipe: { key: 'pipe', name: 'Труба', type: 'weapon_melee', description: 'Іржава металева труба. Краще за голі руки.', damageDice: '1d4', statUsed: 'str' },
+  crowbar: { key: 'crowbar', name: 'Монтировка', type: 'weapon_melee', description: 'Зручна для замків і для черепів.', damageDice: '1d6', statUsed: 'str' },
+  hammer: { key: 'hammer', name: 'Молоток', type: 'weapon_melee', description: 'Важкий будівельний молоток.', damageDice: '1d8', statUsed: 'str' },
+  fire_axe: { key: 'fire_axe', name: 'Пожежна сокира', type: 'weapon_melee', description: 'Гостріша й важча за звичайну сокиру.', damageDice: '1d8+1', statUsed: 'str' },
+  sledgehammer: { key: 'sledgehammer', name: 'Кувалда', type: 'weapon_melee', description: 'Повільна, зате одним ударом розвалює все на шматки.', damageDice: '2d8+2', statUsed: 'str' },
+  combat_knife: { key: 'combat_knife', name: 'Бойовий ніж', type: 'weapon_melee', description: 'Балансований клинок.', damageDice: '1d6', statUsed: 'agi' },
+  spear: { key: 'spear', name: 'Спис', type: 'weapon_melee', description: 'Довге держално дає бити першим.', damageDice: '1d8', statUsed: 'agi' },
+  katana: { key: 'katana', name: 'Катана', type: 'weapon_melee', description: 'Неймовірно гостре лезо. Рідкісна зброя.', damageDice: '2d8+1', statUsed: 'agi' },
+  revolver: { key: 'revolver', name: 'Револьвер', type: 'weapon_ranged', description: "Простий і надійний. Потребує набоїв .357.", damageDice: '1d8+1', statUsed: 'per', ammoKey: 'ammo_357' },
+  smg: { key: 'smg', name: 'Пістолет-кулемет', type: 'weapon_ranged', description: 'Швидка черга набоїв 9мм.', damageDice: '1d8', statUsed: 'per', ammoKey: 'ammo_pistol' },
+  compound_bow: { key: 'compound_bow', name: 'Блоковий лук', type: 'weapon_ranged', description: 'Тихіший за арбалет. Потребує стріл.', damageDice: '1d6', statUsed: 'per', ammoKey: 'ammo_arrow' },
+  sawn_shotgun: { key: 'sawn_shotgun', name: 'Обріз', type: 'weapon_ranged', description: 'Нищівний зблизька. Потребує дробу.', damageDice: '2d4', statUsed: 'per', ammoKey: 'ammo_shotgun' },
+  hunting_rifle: { key: 'hunting_rifle', name: 'Мисливська гвинтівка', type: 'weapon_ranged', description: 'Точніша й потужніша за звичайну.', damageDice: '1d12', statUsed: 'per', ammoKey: 'ammo_rifle' },
+  sniper_rifle: { key: 'sniper_rifle', name: 'Снайперська гвинтівка', type: 'weapon_ranged', description: 'Найпотужніша зброя далекого бою.', damageDice: '2d8+2', statUsed: 'per', ammoKey: 'ammo_rifle' },
+
+  ammo_shotgun: { key: 'ammo_shotgun', name: 'Дріб', type: 'misc', description: 'Боєприпаси для обріза.' },
+  ammo_pistol: { key: 'ammo_pistol', name: 'Набої 9мм', type: 'misc', description: 'Боєприпаси для пістолета.' },
+  ammo_rifle: { key: 'ammo_rifle', name: 'Гвинтівкові набої', type: 'misc', description: 'Боєприпаси для гвинтівки.' },
+  ammo_bolt: { key: 'ammo_bolt', name: 'Арбалетні болти', type: 'misc', description: 'Боєприпаси для арбалета.' },
+  ammo_arrow: { key: 'ammo_arrow', name: 'Стріли', type: 'misc', description: 'Боєприпаси для блокового лука.' },
+  ammo_357: { key: 'ammo_357', name: 'Набої .357', type: 'misc', description: 'Боєприпаси для револьвера.' },
+
+  canned_food: { key: 'canned_food', name: 'Консерви', type: 'food', description: 'Тушонка чи консервовані овочі.', hungerRestore: 40 },
+  energy_bar: { key: 'energy_bar', name: 'Енергетичний батончик', type: 'food', description: 'Швидкий перекус.', hungerRestore: 20 },
+  water_bottle: { key: 'water_bottle', name: 'Пляшка води', type: 'water', description: 'Чиста питна вода.', thirstRestore: 40 },
+  mystery_can: { key: 'mystery_can', name: 'Загадкові консерви', type: 'food', description: 'Бляшанка без етикетки.', hungerRestore: 25, poisonChance: 35 },
+  bandage: { key: 'bandage', name: 'Бинт', type: 'medical', description: 'Зупиняє кровотечу, трохи гоїть рани.', healAmount: 10 },
+  medkit: { key: 'medkit', name: 'Аптечка', type: 'medical', description: 'Повний набір першої допомоги.', healAmount: 30, infectionReduce: 20 },
+  antibiotics: { key: 'antibiotics', name: 'Антибіотики', type: 'medical', description: 'Значно знижує рівень інфекції.', infectionReduce: 50 },
+  whiskey: { key: 'whiskey', name: 'Пляшка віскі', type: 'misc', description: 'Піднімає бойовий дух.', moraleRestore: 15 },
+
+  scrap: { key: 'scrap', name: 'Металобрухт', type: 'material', description: 'Придатний для ремонту чи крафту.' },
+  casings: { key: 'casings', name: 'Гільзи 9мм', type: 'material', description: 'Порожні гільзи.' },
+  casings_rifle: { key: 'casings_rifle', name: 'Гільзи 7.62×54', type: 'material', description: 'Порожні гільзи.' },
+  gunpowder: { key: 'gunpowder', name: 'Порох', type: 'material', description: 'Для спорядження набоїв.' },
+  reloading_press: { key: 'reloading_press', name: 'Машинка для пресу', type: 'misc', description: 'Багаторазова, не витрачається.' },
+  workbench: { key: 'workbench', name: 'Верстак', type: 'misc', description: 'Багаторазовий, не витрачається.' },
+  cloth: { key: 'cloth', name: 'Тканина', type: 'material', description: 'Можна пустити на бинти чи латки.' },
+  old_dress: { key: 'old_dress', name: 'Стара сукня', type: 'material', description: 'Можна розірвати на тканину.' },
+  blanket: { key: 'blanket', name: 'Ковдра', type: 'material', description: 'Багато тканини, якщо розірвати.' },
+  bedsheet: { key: 'bedsheet', name: 'Простирадло', type: 'material', description: 'Можна розірвати на тканину.' },
+  rope: { key: 'rope', name: 'Мотузка', type: 'material', description: 'Придатна для багатьох виробів.' },
+  fuel: { key: 'fuel', name: 'Паливо', type: 'material', description: 'Каністра пального.' },
+
+  belt: { key: 'belt', name: 'Пояс', type: 'clothing', description: 'Міцний пояс.', slot: 'accessory', warmth: 0, armor: 1 },
+  cap: { key: 'cap', name: 'Кепка', type: 'clothing', description: 'Легкий головний убір.', slot: 'head', warmth: 2, armor: 0 },
+  helmet: { key: 'helmet', name: 'Каска', type: 'clothing', description: 'Важка, добре захищає голову.', slot: 'head', warmth: 1, armor: 4 },
+  balaclava: { key: 'balaclava', name: 'Балаклава', type: 'clothing', description: 'Чудово тримає тепло.', slot: 'head', warmth: 4, armor: 0 },
+  tshirt: { key: 'tshirt', name: 'Футболка', type: 'clothing', description: 'Звичайна тонка футболка.', slot: 'torso', warmth: 1, armor: 0 },
+  jacket: { key: 'jacket', name: 'Куртка', type: 'clothing', description: 'Непогано гріє.', slot: 'torso', warmth: 6, armor: 1 },
+  winter_coat: { key: 'winter_coat', name: 'Зимова куртка', type: 'clothing', description: 'Важка, тепла.', slot: 'torso', warmth: 14, armor: 1 },
+  leather_jacket: { key: 'leather_jacket', name: 'Шкіряна куртка', type: 'clothing', description: 'Дещо захищає від порізів.', slot: 'torso', warmth: 5, armor: 3 },
+  kevlar_vest: { key: 'kevlar_vest', name: 'Бронежилет', type: 'clothing', description: 'Важкий кевларовий захист.', slot: 'torso', warmth: 2, armor: 9 },
+  jeans: { key: 'jeans', name: 'Джинси', type: 'clothing', description: 'Звичайні джинси.', slot: 'legs', warmth: 3, armor: 1 },
+  cargo_pants: { key: 'cargo_pants', name: 'Карго-штани', type: 'clothing', description: 'Міцна тканина з кишенями.', slot: 'legs', warmth: 5, armor: 2 },
+  thermal_pants: { key: 'thermal_pants', name: 'Термоштани', type: 'clothing', description: 'Для холодної погоди.', slot: 'legs', warmth: 9, armor: 1 },
+  sneakers: { key: 'sneakers', name: 'Кросівки', type: 'clothing', description: 'Легкі, майже не гріють.', slot: 'feet', warmth: 1, armor: 0 },
+  boots: { key: 'boots', name: 'Берці', type: 'clothing', description: 'Міцне взуття.', slot: 'feet', warmth: 4, armor: 2 },
+  winter_boots: { key: 'winter_boots', name: 'Зимові чоботи', type: 'clothing', description: 'Утеплені проти морозу.', slot: 'feet', warmth: 8, armor: 1 },
+  gloves: { key: 'gloves', name: 'Рукавиці', type: 'clothing', description: 'Захищають руки.', slot: 'accessory', warmth: 3, armor: 1 },
+  scarf: { key: 'scarf', name: 'Шарф', type: 'clothing', description: 'Тримає тепло шиї.', slot: 'accessory', warmth: 4, armor: 0 },
+  improvised_backpack: { key: 'improvised_backpack', name: 'Саморобний рюкзак', type: 'clothing', description: 'Краще за нічого.', slot: 'backpack', warmth: 1, armor: 0 },
+  hiking_backpack: { key: 'hiking_backpack', name: 'Туристичний рюкзак', type: 'clothing', description: 'Міцний рюкзак.', slot: 'backpack', warmth: 2, armor: 0 },
+  tactical_backpack: { key: 'tactical_backpack', name: 'Тактичний рюкзак', type: 'clothing', description: 'Армований матеріал.', slot: 'backpack', warmth: 1, armor: 2 },
+  tactical_helmet: { key: 'tactical_helmet', name: 'Тактичний шолом', type: 'clothing', description: 'Композитний шолом.', slot: 'head', warmth: 2, armor: 6 },
+  ops_helmet: { key: 'ops_helmet', name: 'Шолом спецпризначення', type: 'clothing', description: 'Балістичний шолом.', slot: 'head', warmth: 2, armor: 9 },
+  pilot_jacket: { key: 'pilot_jacket', name: 'Куртка пілота', type: 'clothing', description: 'Хутряний комір.', slot: 'torso', warmth: 10, armor: 2 },
+  tactical_jacket: { key: 'tactical_jacket', name: 'Тактична куртка', type: 'clothing', description: 'Кишені під плити.', slot: 'torso', warmth: 4, armor: 6 },
+  combat_jacket: { key: 'combat_jacket', name: 'Бойова куртка', type: 'clothing', description: 'Вмонтовані плити.', slot: 'torso', warmth: 5, armor: 8 },
+  tactical_pants: { key: 'tactical_pants', name: 'Тактичні штани', type: 'clothing', description: 'Посилені коліна.', slot: 'legs', warmth: 4, armor: 4 },
+  combat_pants: { key: 'combat_pants', name: 'Бойові штани', type: 'clothing', description: 'Ефективні вставки.', slot: 'legs', warmth: 5, armor: 6 },
+  tactical_boots: { key: 'tactical_boots', name: 'Тактичні берці', type: 'clothing', description: 'Зміцнений носок.', slot: 'feet', warmth: 5, armor: 4 },
+  combat_boots: { key: 'combat_boots', name: 'Бойові берці', type: 'clothing', description: 'Найкраще взуття.', slot: 'feet', warmth: 6, armor: 7 },
+  tactical_gloves: { key: 'tactical_gloves', name: 'Тактичні рукавиці', type: 'clothing', description: 'Посилені кісточки.', slot: 'accessory', warmth: 2, armor: 3 },
+  chest_rig: { key: 'chest_rig', name: 'Розвантажувальний жилет', type: 'clothing', description: 'Точкова броня поверх.', slot: 'accessory', warmth: 1, armor: 5 },
+  military_backpack: { key: 'military_backpack', name: 'Військовий рюкзак', type: 'clothing', description: 'Посилена спинка.', slot: 'backpack', warmth: 2, armor: 4 },
+}
+
+export const WEAPON_UPGRADE_SUFFIX = '_tempered'
+
+function upgradeDamageDice(dice: string): string {
+  const match = /^(\d*)d(\d+)([+-]\d+)?$/i.exec(dice)
+  if (!match) return dice
+  const [, countStr, sides, bonusStr] = match
+  const bonus = (bonusStr ? parseInt(bonusStr, 10) : 0) + 2
+  return `${countStr || '1'}d${sides}+${bonus}`
+}
+
+for (const base of Object.values(ITEM_CATALOG)) {
+  if (base.type !== 'weapon_melee' && base.type !== 'weapon_ranged') continue
+  const upgradedKey = `${base.key}${WEAPON_UPGRADE_SUFFIX}`
+  ITEM_CATALOG[upgradedKey] = {
+    ...base,
+    key: upgradedKey,
+    name: `${base.name} [Покращено]`,
+    description: `Покращена версія: ${base.description} Після доробки на верстаку б'є відчутно сильніше.`,
+    damageDice: upgradeDamageDice(base.damageDice ?? '1d4'),
+  }
+}
+
+export function getItem(key: string): ItemDefinition | undefined {
+  return ITEM_CATALOG[key]
+}
+
+export function isConsumable(item: ItemDefinition): boolean {
+  return item.type === 'food' || item.type === 'water' || item.type === 'medical' || item.moraleRestore !== undefined
+}
+
+const TRADE_VALUE_OVERRIDES: Record<string, number> = {
+  reloading_press: 12, workbench: 10, rope: 3, old_dress: 2, blanket: 2, bedsheet: 2,
+}
+
+function averageDiceRoll(dice: string): number {
+  const match = /^(\d*)d(\d+)([+-]\d+)?$/i.exec(dice.trim())
+  if (!match) return 3
+  const count = match[1] ? parseInt(match[1], 10) : 1
+  const sides = parseInt(match[2], 10)
+  const bonus = match[3] ? parseInt(match[3], 10) : 0
+  return count * ((sides + 1) / 2) + bonus
+}
+
+export function estimateTradeValue(item: ItemDefinition): number {
+  const override = TRADE_VALUE_OVERRIDES[item.key]
+  if (override !== undefined) return override
+  switch (item.type) {
+    case 'weapon_melee':
+    case 'weapon_ranged':
+      return Math.max(2, Math.round(3 + averageDiceRoll(item.damageDice ?? '1d4')))
+    case 'medical':
+      return Math.max(1, Math.round(1 + (item.healAmount ?? 0) / 8 + (item.infectionReduce ?? 0) / 8))
+    case 'food':
+      return Math.max(1, Math.round(1 + (item.hungerRestore ?? 0) / 15))
+    case 'water':
+      return Math.max(1, Math.round(1 + (item.thirstRestore ?? 0) / 15))
+    case 'clothing':
+      return Math.max(1, Math.round(1 + (item.warmth ?? 0) / 3 + (item.armor ?? 0) * 1.5))
+    case 'misc':
+      return item.moraleRestore ? Math.max(1, Math.round(1 + item.moraleRestore / 8)) : 1
+    case 'material':
+    default:
+      return 1
+  }
+}
+
+export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+
+export const RARITY_LABELS: Record<ItemRarity, string> = {
+  common: '⚪ Звичайна', uncommon: '🟢 Незвичайна', rare: '🔵 Рідкісна', epic: '🟣 Епічна', legendary: '🟠 Легендарна',
+}
+
+export function getItemRarity(item: ItemDefinition): ItemRarity {
+  const value = estimateTradeValue(item)
+  if (value >= 13) return 'legendary'
+  if (value >= 9) return 'epic'
+  if (value >= 6) return 'rare'
+  if (value >= 3) return 'uncommon'
   return 'common'
 }
 
-export const RARITY_LABELS: Record<Rarity, string> = {
-  common: '⚪ Звичайна',
-  uncommon: '🟢 Незвичайна',
-  rare: '🔵 Рідкісна',
-  epic: '🟣 Епічна',
-  legendary: '🟠 Легендарна',
-}
-
-export const EQUIP_SLOT_LABELS: Record<EquipSlot, string> = {
-  head: 'Голова',
-  torso: 'Торс',
-  legs: 'Ноги',
-  boots: 'Взуття',
-  accessory: 'Аксесуар',
-  backpack: 'Рюкзак',
-}
-
-export const ITEMS: Item[] = [
-  // Armor — head
-  { id: 'cap_civilian', name: 'Цивільна кепка', type: 'armor', slot: 'head', warmth: 1, armor: 0, value: 1 },
-  { id: 'helmet_tactical', name: 'Тактичний шолом', type: 'armor', slot: 'head', warmth: 2, armor: 5, value: 8 },
-  { id: 'helmet_military', name: 'Військовий шолом', type: 'armor', slot: 'head', warmth: 3, armor: 9, value: 15 },
-
-  // Armor — torso
-  { id: 'jacket_civilian', name: 'Цивільна куртка', type: 'armor', slot: 'torso', warmth: 3, armor: 1, value: 2 },
-  { id: 'vest_tactical', name: 'Тактичний жилет', type: 'armor', slot: 'torso', warmth: 2, armor: 6, value: 9 },
-  { id: 'armor_military', name: 'Військова броня', type: 'armor', slot: 'torso', warmth: 4, armor: 12, value: 18 },
-
-  // Armor — legs
-  { id: 'pants_civilian', name: 'Звичайні штани', type: 'armor', slot: 'legs', warmth: 2, armor: 0, value: 1 },
-  { id: 'pants_tactical', name: 'Тактичні штани', type: 'armor', slot: 'legs', warmth: 2, armor: 4, value: 6 },
-
-  // Armor — boots
-  { id: 'boots_civilian', name: 'Звичайні черевики', type: 'armor', slot: 'boots', warmth: 1, armor: 0, value: 1 },
-  { id: 'boots_military', name: 'Берці', type: 'armor', slot: 'boots', warmth: 2, armor: 3, value: 5 },
-
-  // Backpacks
-  { id: 'backpack_none', name: 'Без рюкзака', type: 'armor', slot: 'backpack', value: 0, backpackSlots: 6 },
-  { id: 'backpack_small', name: 'Малий рюкзак', type: 'armor', slot: 'backpack', value: 2, backpackSlots: 8 },
-  { id: 'backpack_large', name: 'Великий рюкзак', type: 'armor', slot: 'backpack', value: 5, backpackSlots: 10 },
-  { id: 'backpack_military', name: 'Військовий рюкзак', type: 'armor', slot: 'backpack', value: 10, backpackSlots: 15 },
-
-  // Melee weapons
-  { id: 'pipe', name: 'Труба', type: 'weapon', damage: '1d4', statReq: 'strength', value: 1 },
-  { id: 'knife', name: 'Ніж', type: 'weapon', damage: '1d4', statReq: 'agility', value: 2 },
-  { id: 'machete', name: 'Мачете', type: 'weapon', damage: '1d6', statReq: 'agility', value: 5 },
-  { id: 'axe', name: 'Сокира', type: 'weapon', damage: '1d8', statReq: 'strength', value: 8 },
-  { id: 'katana', name: 'Катана', type: 'weapon', damage: '1d10', statReq: 'agility', value: 16 },
-  { id: 'sledgehammer', name: 'Кувалда', type: 'weapon', damage: '1d12', statReq: 'strength', value: 20 },
-
-  // Ranged weapons
-  { id: 'pistol', name: 'Пістолет', type: 'weapon', damage: '1d6', statReq: 'perception', value: 4 },
-  { id: 'shotgun', name: 'Обріз', type: 'weapon', damage: '1d10', statReq: 'perception', value: 10 },
-  { id: 'rifle', name: 'Гвинтівка', type: 'weapon', damage: '1d10', statReq: 'perception', value: 12 },
-  { id: 'sniper', name: 'Снайперська гвинтівка', type: 'weapon', damage: '1d12', statReq: 'perception', value: 22 },
-
-  // Materials
-  { id: 'scrap', name: 'Металобрухт', type: 'material', value: 1 },
-  { id: 'ammo_9mm', name: 'Набої 9мм', type: 'material', value: 1 },
-  { id: 'bandage', name: 'Бинт', type: 'consumable', value: 1 },
-  { id: 'medkit', name: 'Аптечка', type: 'consumable', value: 3 },
-  { id: 'canned_food', name: 'Консерви', type: 'consumable', value: 1 },
-]
-
-export function getItem(id: string): Item | undefined {
-  return ITEMS.find(i => i.id === id)
+export const CLOTHING_SLOT_LABELS: Record<ClothingSlot, string> = {
+  head: 'Голова', torso: 'Торс', legs: 'Ноги', feet: 'Взуття', accessory: 'Аксесуар', backpack: 'Рюкзак',
 }

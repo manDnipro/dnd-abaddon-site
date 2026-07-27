@@ -69,6 +69,15 @@ export default function Home() {
               {character.status === 'rejected' && (
                 <span className="tag">❌ Відхилено {character.reviewNote ? `— ${character.reviewNote}` : ''}</span>
               )}
+              {character.status === 'approved' && character.dead && (
+                <span className="tag">☠️ Загинув(-ла)</span>
+              )}
+              {character.status === 'approved' && !character.dead && (
+                <p style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
+                  ОЗ: {character.hp}/{character.maxHp} · Голод: {character.hunger} · Спрага: {character.thirst} · Мораль: {character.morale}
+                  {character.infection > 0 && <> · <span style={{ color: '#8e44ad' }}>Інфекція: {character.infection}</span></>}
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-2 mt-4">
                 {(Object.entries(character.stats) as [keyof Stats, number][]).map(([k, v]) => (
                   <div key={k} style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '6px 10px', display: 'flex', justifyContent: 'space-between' }}>
@@ -77,8 +86,11 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              {character.status === 'approved' && (
-                <Link href="/character/inventory" className="btn-gold inline-block mt-4">🎒 Спорядження</Link>
+              {character.status === 'approved' && !character.dead && (
+                <div className="flex gap-3 mt-4">
+                  <Link href="/character/expedition" className="btn-primary">🔍 Вилазка</Link>
+                  <Link href="/character/inventory" className="btn-gold">🎒 Спорядження</Link>
+                </div>
               )}
             </div>
           )}

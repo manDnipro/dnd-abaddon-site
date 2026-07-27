@@ -1,24 +1,22 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { STAT_LABELS, STAT_POINTS_TOTAL, Stats } from '@/lib/types'
+import { STAT_LABELS, STAT_BUDGET, STAT_MIN, STAT_MAX, Stats } from '@/lib/types'
 
 const STAT_KEYS = Object.keys(STAT_LABELS) as (keyof Stats)[]
 
 export default function CreateCharacterPage() {
   const router = useRouter()
   const [name, setName] = useState('')
-  const [stats, setStats] = useState<Stats>({
-    strength: 3, agility: 3, endurance: 3, perception: 3, intellect: 3, charisma: 3,
-  })
+  const [stats, setStats] = useState<Stats>({ str: 3, agi: 3, end: 3, per: 3, int: 3, cha: 3 })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const sum = Object.values(stats).reduce((a, b) => a + b, 0)
-  const remaining = STAT_POINTS_TOTAL - sum
+  const remaining = STAT_BUDGET - sum
 
   function setStat(key: keyof Stats, value: number) {
-    if (value < 1) return
+    if (value < STAT_MIN || value > STAT_MAX) return
     setStats(s => ({ ...s, [key]: value }))
   }
 
@@ -52,7 +50,7 @@ export default function CreateCharacterPage() {
 
         <div>
           <div className="flex justify-between items-center mb-2">
-            <span style={{ color: '#aaa', fontSize: 14 }}>Характеристики</span>
+            <span style={{ color: '#aaa', fontSize: 14 }}>Характеристики (від {STAT_MIN} до {STAT_MAX})</span>
             <span style={{ color: remaining === 0 ? '#27ae60' : '#c0392b', fontWeight: 700, fontSize: 14 }}>
               Залишилось: {remaining}
             </span>
