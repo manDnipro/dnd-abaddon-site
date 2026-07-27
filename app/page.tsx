@@ -77,6 +77,9 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+              {character.status === 'approved' && (
+                <Link href="/character/inventory" className="btn-gold inline-block mt-4">🎒 Спорядження</Link>
+              )}
             </div>
           )}
         </div>

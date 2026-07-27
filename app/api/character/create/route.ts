@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { redis } from '@/lib/redis'
 import { getSession } from '@/lib/auth'
-import { Character, STAT_POINTS_TOTAL, Stats } from '@/lib/types'
+import { Character, EMPTY_EQUIPPED, STAT_POINTS_TOTAL, Stats } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   const owner = await getSession()
@@ -36,6 +36,12 @@ export async function POST(req: NextRequest) {
     stats,
     status: 'pending',
     createdAt: Date.now(),
+    inventory: [
+      { itemId: 'pipe', qty: 1 },
+      { itemId: 'bandage', qty: 2 },
+      { itemId: 'canned_food', qty: 2 },
+    ],
+    equipped: EMPTY_EQUIPPED,
   }
 
   await redis.set(`char:${id}`, JSON.stringify(character))
