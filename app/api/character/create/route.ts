@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
     xp: 0,
     meleeProf: 0,
     firearmProf: 0,
+    lastDailyTickAt: Date.now(),
   }
 
   await redis.set(`char:${id}`, JSON.stringify(character))

@@ -3,6 +3,8 @@ import { redis } from '@/lib/redis'
 import { getSession } from '@/lib/auth'
 import { Character } from '@/lib/types'
 import { migrateLegacyCharacter } from '@/lib/migrateCharacter'
+import { getOrRollWeather } from '@/lib/worldState'
+import { runDueDailyTicks } from '@/lib/dailyTick'
 
 export async function GET() {
   const owner = await getSession()
@@ -16,10 +18,18 @@ export async function GET() {
 
   let character: Character = typeof raw === 'string' ? JSON.parse(raw) : raw
   const migrated = migrateLegacyCharacter(character)
-  if (migrated) {
-    character = migrated
+  if (migrated) character = migrated
+
+  let dailyTickLog: string[] = []
+  if (character.status === 'approved' && !character.dead) {
+    const weather = await getOrRollWeather()
+    const tick = runDueDailyTicks(character, weather.temperature)
+    dailyTickLog = tick.log
+  }
+
+  if (migrated || dailyTickLog.length > 0) {
     await redis.set(`char:${id}`, JSON.stringify(character))
   }
 
-  return NextResponse.json({ character })
+  return NextResponse.json({ character, dailyTickLog })
 }

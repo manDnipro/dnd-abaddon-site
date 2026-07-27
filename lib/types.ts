@@ -94,4 +94,5 @@ export type Character = {
   xp: number
   meleeProf: number
   firearmProf: number
+  lastDailyTickAt: number
 }

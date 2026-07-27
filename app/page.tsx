@@ -12,17 +12,25 @@ const FEATURES: { href: string; icon: string; title: string; desc: string }[] = 
   { href: '/gm', icon: '📜', title: 'Панель ГМ', desc: 'Затвердження нових вцілілих — вхід лише для головного гравця.' },
 ]
 
+type Weather = { seasonLabel: string; label: string; temperature: number }
+
 export default function Home() {
   const [nickname, setNickname] = useState<string | null | undefined>(undefined)
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
+  const [weather, setWeather] = useState<Weather | null>(null)
+  const [awayLog, setAwayLog] = useState<string[]>([])
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setNickname(d.nickname))
+    fetch('/api/weather').then(r => r.json()).then(setWeather)
   }, [])
 
   useEffect(() => {
     if (!nickname) return
-    fetch('/api/character/mine').then(r => r.json()).then(d => setCharacter(d.character))
+    fetch('/api/character/mine').then(r => r.json()).then(d => {
+      setCharacter(d.character)
+      if (d.dailyTickLog?.length) setAwayLog(d.dailyTickLog)
+    })
   }, [nickname])
 
   async function logout() {
@@ -45,9 +53,14 @@ export default function Home() {
         }}>
           ABADDON
         </h1>
-        <p style={{ color: '#8a8378', fontFamily: "'Special Elite', monospace", fontSize: 15, letterSpacing: '0.03em', maxWidth: 520, margin: '0 auto 28px', lineHeight: 1.7 }}>
+        <p style={{ color: '#8a8378', fontFamily: "'Special Elite', monospace", fontSize: 15, letterSpacing: '0.03em', maxWidth: 520, margin: '0 auto 8px', lineHeight: 1.7 }}>
           Світ загинув. Записи обірвались. Ти — один із небагатьох, хто ще дихає серед руїн.
         </p>
+        {weather && (
+          <p style={{ color: '#6b6558', fontFamily: "'Special Elite', monospace", fontSize: 12, letterSpacing: '0.05em', marginBottom: 28 }}>
+            {weather.seasonLabel} · {weather.label} · {weather.temperature}°C
+          </p>
+        )}
 
         {nickname === null && (
           <div className="flex gap-3 justify-center flex-wrap">
@@ -70,6 +83,17 @@ export default function Home() {
           </div>
 
           {character === undefined && <p style={{ color: '#555' }}>Завантаження персонажа...</p>}
+
+          {awayLog.length > 0 && (
+            <div className="card mb-6" style={{ borderColor: '#3a1010' }}>
+              <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>ПОКИ ТЕБЕ НЕ БУЛО...</p>
+              <div className="flex flex-col gap-2">
+                {awayLog.map((line, i) => (
+                  <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{line}</p>
+                ))}
+              </div>
+            </div>
+          )}
 
           {character === null && (
             <div className="card text-center" style={{ padding: '40px 24px' }}>
