@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/character/actions', label: 'Дії' },
   { href: '/character/trade', label: 'Торгівля' },
   { href: '/character/barter', label: 'Обмін' },
+  { href: '/character/social', label: 'Табір' },
   { href: '/character/expedition', label: 'Вилазка' },
   { href: '/gm', label: 'ГМ' },
 ]
