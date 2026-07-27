@@ -232,11 +232,9 @@ export default function GMPage() {
             <div className="card">
               <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>{player.name}</h2>
 
-              {player.dead && (
-                <button onClick={() => call('/api/gm/players/revive', { charId: player.id })} disabled={loading} className="btn-primary mb-4">
-                  ✨ Воскресити
-                </button>
-              )}
+              <button onClick={() => call('/api/gm/players/revive', { charId: player.id })} disabled={loading} className="btn-primary mb-4">
+                {player.dead ? '✨ Воскресити' : '❤️ Відновити повністю'}
+              </button>
 
               <div className="flex items-center gap-2 mb-3">
                 <span style={{ color: '#888', fontSize: 12, width: 90 }}>ОЗ (0–{player.maxHp})</span>
