@@ -6,6 +6,7 @@ const LINKS = [
   { href: '/', label: 'Головна' },
   { href: '/character/create', label: 'Створити персонажа' },
   { href: '/character/inventory', label: 'Спорядження' },
+  { href: '/character/actions', label: 'Дії' },
   { href: '/character/expedition', label: 'Вилазка' },
   { href: '/gm', label: 'ГМ' },
 ]

@@ -47,8 +47,11 @@ export async function POST(req: NextRequest) {
       { itemId: 'water_bottle', qty: 2 },
     ],
     equipped: EMPTY_EQUIPPED,
+    storageBox: [],
     expedition: null,
     recentExpeditionTimestamps: [],
+    huntingProf: 0,
+    huntsSinceLevel: 0,
   }
 
   await redis.set(`char:${id}`, JSON.stringify(character))

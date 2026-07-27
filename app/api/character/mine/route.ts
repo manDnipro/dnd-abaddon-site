@@ -43,6 +43,9 @@ function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.inventory === undefined) { patched.inventory = []; changed = true }
   if (patched.expedition === undefined) { patched.expedition = null; changed = true }
   if (patched.recentExpeditionTimestamps === undefined) { patched.recentExpeditionTimestamps = []; changed = true }
+  if (patched.storageBox === undefined) { patched.storageBox = []; changed = true }
+  if (patched.huntingProf === undefined) { patched.huntingProf = 0; changed = true }
+  if (patched.huntsSinceLevel === undefined) { patched.huntsSinceLevel = 0; changed = true }
 
   return changed ? patched : null
 }

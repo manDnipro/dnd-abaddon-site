@@ -98,9 +98,10 @@ export default function Home() {
                 ))}
               </div>
               {character.status === 'approved' && !character.dead && (
-                <div className="flex gap-3 mt-4">
+                <div className="flex gap-3 mt-4 flex-wrap">
                   <Link href="/character/expedition" className="btn-primary">🔍 Вилазка</Link>
                   <Link href="/character/inventory" className="btn-gold">🎒 Спорядження</Link>
+                  <Link href="/character/actions" className="btn-gold">🛌 Дії</Link>
                 </div>
               )}
             </div>

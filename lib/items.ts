@@ -60,6 +60,11 @@ export const ITEM_CATALOG: Record<string, ItemDefinition> = {
   antibiotics: { key: 'antibiotics', name: 'Антибіотики', type: 'medical', description: 'Значно знижує рівень інфекції.', infectionReduce: 50 },
   whiskey: { key: 'whiskey', name: 'Пляшка віскі', type: 'misc', description: 'Піднімає бойовий дух.', moraleRestore: 15 },
 
+  rat_meat: { key: 'rat_meat', name: 'Смажений щур', type: 'food', description: 'Здобич полювання. Не вишукано, зате ситно.', hungerRestore: 12, poisonChance: 20 },
+  pigeon_meat: { key: 'pigeon_meat', name: 'Смажений голуб', type: 'food', description: 'Здобич полювання. М\'яса небагато, зате птах трапляється часто.', hungerRestore: 18, poisonChance: 12 },
+  crow_meat: { key: 'crow_meat', name: 'Смажена ворона', type: 'food', description: 'Здобич полювання. Жорсткувате м\'ясо.', hungerRestore: 16, poisonChance: 15 },
+  seagull_meat: { key: 'seagull_meat', name: 'Смажена чайка', type: 'food', description: 'Здобич полювання. Більший птах — ситніший.', hungerRestore: 22, poisonChance: 10 },
+
   scrap: { key: 'scrap', name: 'Металобрухт', type: 'material', description: 'Придатний для ремонту чи крафту.' },
   casings: { key: 'casings', name: 'Гільзи 9мм', type: 'material', description: 'Порожні гільзи.' },
   casings_rifle: { key: 'casings_rifle', name: 'Гільзи 7.62×54', type: 'material', description: 'Порожні гільзи.' },

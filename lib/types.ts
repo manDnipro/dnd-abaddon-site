@@ -81,8 +81,11 @@ export type Character = {
 
   inventory: InventoryStack[]
   equipped: Equipped
+  storageBox: InventoryStack[]
 
   expedition: ExpeditionState
 
   recentExpeditionTimestamps: number[]
+  huntingProf: number
+  huntsSinceLevel: number
 }
