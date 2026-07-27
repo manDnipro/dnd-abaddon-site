@@ -80,7 +80,7 @@ export default function GMPage() {
               </div>
               <span className="tag">⏳ Очікує</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
               {(Object.entries(c.stats) as [keyof Stats, number][]).map(([k, v]) => (
                 <div key={k} style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '4px 8px', display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#666', fontSize: 12 }}>{STAT_LABELS[k]}</span>

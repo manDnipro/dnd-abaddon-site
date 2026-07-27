@@ -130,3 +130,8 @@ input, textarea, select {
   font-family: 'Special Elite', monospace;
 }
 input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+
+@media (max-width: 640px) {
+  .card { padding: 1rem; }
+  body { font-size: 14px; }
+}

@@ -37,7 +37,7 @@ export default function Home() {
           <span style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#b04a3a', letterSpacing: '0.15em' }}>ЗАПИС #0817 — ОСТАННІЙ ПЕРЕДАВАЧ</span>
         </div>
         <h1 style={{
-          fontFamily: 'Butcherman, serif', fontWeight: 400, fontSize: 'clamp(48px, 12vw, 88px)',
+          fontFamily: 'Butcherman, serif', fontWeight: 400, fontSize: 'clamp(36px, 13vw, 88px)',
           color: '#a68a4a', letterSpacing: '0.03em', marginBottom: 10, lineHeight: 1,
           textShadow: '4px 4px 0 rgba(0,0,0,0.7), 0 0 32px rgba(107,16,16,0.4), -1px -1px 0 rgba(200,160,90,0.15)',
         }}>
