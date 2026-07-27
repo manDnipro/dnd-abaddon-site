@@ -185,13 +185,16 @@ export default function Home() {
 function VitalBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100))
   return (
-    <div>
-      <div className="flex justify-between mb-1">
-        <span style={{ color: '#8a8378', fontSize: 11, fontFamily: "'Special Elite', monospace" }}>{label}</span>
-        <span style={{ color: '#aaa', fontSize: 11, fontFamily: "'Special Elite', monospace" }}>{value}/{max}</span>
-      </div>
-      <div style={{ height: 6, background: '#0a0908', border: '1px solid #201b15', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, transition: 'width 0.3s' }} />
+    <div className="flex items-center gap-3">
+      <span style={{ color: '#8a8378', fontSize: 12, fontFamily: "'Special Elite', monospace", width: 60, flexShrink: 0 }}>{label}</span>
+      <div style={{ position: 'relative', flex: 1, height: 22, background: '#0a0908', border: '1px solid #201b15', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, width: `${pct}%`, background: color, opacity: 0.35, transition: 'width 0.3s' }} />
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#e5e5e5', fontSize: 12, fontFamily: "'Special Elite', monospace", fontWeight: 700,
+        }}>
+          {value}/{max}
+        </div>
       </div>
     </div>
   )
