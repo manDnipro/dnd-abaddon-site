@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { Character } from '@/lib/types'
 import { getExpeditionLevel } from '@/lib/expedition'
 import { performSearch } from '@/lib/expeditionEngine'
+import { tryCampJob } from '@/lib/campJobEngine'
 
 export async function POST() {
   const owner = await getSession()
@@ -37,6 +38,9 @@ export async function POST() {
   } else if (character.expedition.phase === 'traveling_back') {
     log.push(`🏕️ ${character.name} повернувся(-лась) в табір.`)
     character.expedition = null
+    const job = tryCampJob(character)
+    log = log.concat(job.log)
+    if (job.image) images.push(job.image)
   }
 
   await redis.set(`char:${charId}`, JSON.stringify(character))
