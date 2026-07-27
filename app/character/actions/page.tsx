@@ -185,10 +185,17 @@ export default function ActionsPage() {
       )}
 
       {log.length > 0 && (
-        <div className="card">
-          <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 10 }}>Журнал</h2>
-          <div className="flex flex-col gap-1">
-            {log.map((line, i) => <p key={i} style={{ color: '#bbb', fontSize: 13 }}>{line}</p>)}
+        <div className="card" style={{ borderColor: '#3a1010' }}>
+          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 14 }}>ЩОДЕННИК ВИЖИВШОГО</p>
+          <div className="flex flex-col gap-3">
+            {log.map((line, i) => (
+              <p key={i} style={{
+                color: '#c9c4ba', fontSize: 14, lineHeight: 1.7, fontFamily: "'Special Elite', monospace",
+                borderLeft: '2px solid #3a1010', paddingLeft: 12, opacity: i === 0 ? 1 : 0.6,
+              }}>
+                {line}
+              </p>
+            ))}
           </div>
         </div>
       )}

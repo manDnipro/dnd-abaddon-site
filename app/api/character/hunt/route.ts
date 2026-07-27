@@ -5,6 +5,7 @@ import { rollD20 } from '@/lib/dice'
 import { getItem } from '@/lib/items'
 import { addStack } from '@/lib/stacks'
 import { HUNTING_DC, HUNTING_HUNGER_COST, HUNTING_THIRST_COST, HUNTING_MISHAP_CHANCE, HUNTS_PER_PROFICIENCY, MAX_HUNTING_PROFICIENCY, rollHuntingCatch } from '@/lib/hunting'
+import { huntLine } from '@/lib/flavor'
 
 export async function POST() {
   const result = await loadOwnCharacter()
@@ -25,18 +26,18 @@ export async function POST() {
   if (success) {
     const catchKey = rollHuntingCatch()
     addStack(character.inventory, catchKey, 1)
-    log.push(`🏹 Полювання вдале (${roll.total} проти СК ${HUNTING_DC}): здобуто ${getItem(catchKey)?.name ?? catchKey}.`)
+    log.push(huntLine(character.name, true, getItem(catchKey)?.name ?? catchKey))
     character.huntsSinceLevel += 1
     if (character.huntsSinceLevel >= HUNTS_PER_PROFICIENCY && character.huntingProf < MAX_HUNTING_PROFICIENCY) {
       character.huntingProf += 1
       character.huntsSinceLevel = 0
-      log.push(`🏹 Навик полювання зростає: ${character.huntingProf}/${MAX_HUNTING_PROFICIENCY}!`)
+      log.push(`🏹 Навик полювання загострюється — тепер ${character.name} читає сліди впевненіше (${character.huntingProf}/${MAX_HUNTING_PROFICIENCY}).`)
     }
   } else {
-    log.push(`🏹 Полювання невдале (${roll.total} проти СК ${HUNTING_DC}).`)
+    log.push(huntLine(character.name, false))
     if (Math.random() < HUNTING_MISHAP_CHANCE) {
       character.hunger = clampHungerThirst(character.hunger - 5)
-      log.push(`😮‍💨 Змарнував(-ла) час і сили — додатково -5 голоду.`)
+      log.push(`😮‍💨 Змарновані сили далися взнаки — додатково -5 голоду.`)
     }
   }
 

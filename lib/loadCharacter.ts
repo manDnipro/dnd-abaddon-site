@@ -1,6 +1,7 @@
 import { redis } from './redis'
 import { getSession } from './auth'
 import { Character } from './types'
+import { migrateLegacyCharacter } from './migrateCharacter'
 
 export async function loadOwnCharacter(): Promise<{ owner: string; charId: string; character: Character } | { error: string; status: number }> {
   const owner = await getSession()
@@ -11,7 +12,13 @@ export async function loadOwnCharacter(): Promise<{ owner: string; charId: strin
 
   const raw = await redis.get<string>(`char:${charId}`)
   if (!raw) return { error: 'Персонажа не знайдено', status: 404 }
-  const character: Character = typeof raw === 'string' ? JSON.parse(raw) : raw
+  let character: Character = typeof raw === 'string' ? JSON.parse(raw) : raw
+
+  const migrated = migrateLegacyCharacter(character)
+  if (migrated) {
+    character = migrated
+    await redis.set(`char:${charId}`, JSON.stringify(character))
+  }
 
   return { owner, charId, character }
 }

@@ -3,6 +3,7 @@ import { loadOwnCharacter, saveCharacter } from '@/lib/loadCharacter'
 import { clampHungerThirst, clampInfection, clampMorale } from '@/lib/types'
 import { getItem, isConsumable } from '@/lib/items'
 import { removeStack } from '@/lib/stacks'
+import { useItemLine, poisonLine } from '@/lib/flavor'
 
 export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
@@ -25,14 +26,14 @@ export async function POST(req: NextRequest) {
   if (item.poisonChance && Math.random() * 100 < item.poisonChance) {
     const dmg = Math.ceil(Math.random() * 4) + 1
     character.hp = Math.max(0, character.hp - dmg)
-    log.push(`🤢 ${item.name} виявились зіпсованими! -${dmg} ОЗ.`)
-    if (character.hp <= 0) { character.dead = true; log.push(`☠️ ${character.name} помер(-ла) від отруєння.`) }
+    log.push(poisonLine(character.name, dmg))
+    if (character.hp <= 0) { character.dead = true; log.push(`☠️ ${character.name} не пережив(-ла) отруєння.`) }
   } else {
-    if (item.hungerRestore) { character.hunger = clampHungerThirst(character.hunger + item.hungerRestore); log.push(`🍽️ +${item.hungerRestore} голоду.`) }
-    if (item.thirstRestore) { character.thirst = clampHungerThirst(character.thirst + item.thirstRestore); log.push(`💧 +${item.thirstRestore} спраги.`) }
-    if (item.healAmount) { character.hp = Math.min(character.maxHp, character.hp + item.healAmount); log.push(`❤️ +${item.healAmount} ОЗ.`) }
-    if (item.infectionReduce) { character.infection = clampInfection(character.infection - item.infectionReduce); log.push(`☣️ -${item.infectionReduce} інфекції.`) }
-    if (item.moraleRestore) { character.morale = clampMorale(character.morale + item.moraleRestore); log.push(`🥃 +${item.moraleRestore} моралі.`) }
+    if (item.hungerRestore) { character.hunger = clampHungerThirst(character.hunger + item.hungerRestore); log.push(useItemLine(character.name, item.name, 'food')) }
+    if (item.thirstRestore) { character.thirst = clampHungerThirst(character.thirst + item.thirstRestore); log.push(useItemLine(character.name, item.name, 'water')) }
+    if (item.healAmount) { character.hp = Math.min(character.maxHp, character.hp + item.healAmount); log.push(useItemLine(character.name, item.name, 'medical')) }
+    if (item.infectionReduce) { character.infection = clampInfection(character.infection - item.infectionReduce); log.push(`☣️ ${character.name} відчуває, як гарячка трохи відступає (-${item.infectionReduce} інфекції).`) }
+    if (item.moraleRestore) { character.morale = clampMorale(character.morale + item.moraleRestore); log.push(useItemLine(character.name, item.name, 'other')) }
   }
 
   await saveCharacter(charId, character)
