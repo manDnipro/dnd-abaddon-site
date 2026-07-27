@@ -44,6 +44,7 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.huntingProf === undefined) { patched.huntingProf = 0; changed = true }
   if (patched.huntsSinceLevel === undefined) { patched.huntsSinceLevel = 0; changed = true }
   if (patched.avatar === undefined) { patched.avatar = null; changed = true }
+  if (patched.canteenUses === undefined) { patched.canteenUses = []; changed = true }
 
   return changed ? patched : null
 }

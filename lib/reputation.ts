@@ -22,3 +22,7 @@ export const REST_HEAL_DICE: Record<ReputationTierKey, string> = {
 
 export const REST_HUNGER_COST = 8
 export const REST_THIRST_COST = 8
+
+export const CANTEEN_MAX_USES: Record<ReputationTierKey, number> = {
+  outcast: 0, stranger: 1, regular: 2, trusted: 3, hero: 4,
+}

@@ -5,8 +5,9 @@ import { Character, STAT_LABELS, StatKey } from '@/lib/types'
 import { getItem, isConsumable } from '@/lib/items'
 import { CRAFT_RECIPES } from '@/lib/crafting'
 import { countOf } from '@/lib/stacks'
+import { CAMP_LOCATIONS } from '@/lib/campLocations'
 
-type Tab = 'quick' | 'items' | 'craft' | 'storage'
+type Tab = 'quick' | 'locations' | 'items' | 'craft' | 'storage'
 
 export default function ActionsPage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -44,6 +45,7 @@ export default function ActionsPage() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'quick', label: 'Швидкі дії' },
+    { key: 'locations', label: 'Локації табору' },
     { key: 'items', label: 'Предмети' },
     { key: 'craft', label: 'Крафт' },
     { key: 'storage', label: 'Ящик' },
@@ -90,6 +92,29 @@ export default function ActionsPage() {
                 style={{ fontSize: 12, padding: '6px 12px', borderRadius: 4, border: '1px solid #2a241c', background: 'none', color: '#ccc', cursor: 'pointer' }}>
                 {STAT_LABELS[k]}
               </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === 'locations' && (
+        <div className="card mb-6">
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Локації табору</h2>
+          <div className="flex flex-col gap-2">
+            {CAMP_LOCATIONS.map(loc => (
+              <div key={loc.key} style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '10px 14px' }}>
+                <div className="flex justify-between items-start gap-3">
+                  <div>
+                    <div style={{ color: '#e5e5e5', fontSize: 14 }}>{loc.name}</div>
+                    <div style={{ color: '#75705f', fontSize: 12, marginTop: 2, fontFamily: "'Special Elite', monospace" }}>{loc.flavor}</div>
+                    {loc.stat && <div style={{ color: '#555', fontSize: 11, marginTop: 4 }}>Перевірка: {STAT_LABELS[loc.stat]} проти СК {loc.dc}</div>}
+                  </div>
+                  <button onClick={() => call('/api/character/visit-location', { key: loc.key })} disabled={loading}
+                    style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', flexShrink: 0 }}>
+                    Відвідати
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </div>

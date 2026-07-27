@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
     huntingProf: 0,
     huntsSinceLevel: 0,
     avatar: null,
+    canteenUses: [],
   }
 
   await redis.set(`char:${id}`, JSON.stringify(character))
