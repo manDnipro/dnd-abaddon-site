@@ -24,10 +24,21 @@ export default function Home() {
 
   return (
     <div>
-      <h1 style={{ fontFamily: 'Cinzel, serif', fontWeight: 900, fontSize: 'clamp(28px, 7vw, 44px)', color: '#c9a227', letterSpacing: '0.12em', marginBottom: 8 }}>
+      <h1 style={{
+        fontFamily: 'Butcherman, serif', fontWeight: 400, fontSize: 'clamp(40px, 11vw, 72px)',
+        color: '#a68a4a', letterSpacing: '0.04em', marginBottom: 4, lineHeight: 1,
+        textShadow: '3px 3px 0 rgba(0,0,0,0.7), 0 0 24px rgba(107,16,16,0.35), -1px -1px 0 rgba(200,160,90,0.15)',
+        filter: 'contrast(1.1)',
+      }}>
         ABADDON
       </h1>
-      <p style={{ color: '#888', marginBottom: 32 }}>Настільна гра виживання у світі після зомбі-апокаліпсису</p>
+      <p style={{
+        color: '#8a8378', marginBottom: 32, fontFamily: "'Special Elite', monospace",
+        fontSize: 14, letterSpacing: '0.04em', borderTop: '1px dashed #2a241c', borderBottom: '1px dashed #2a241c',
+        padding: '8px 0', maxWidth: 420,
+      }}>
+        Світ загинув. Записи обірвались. Ти — один із небагатьох, хто ще дихає.
+      </p>
 
       {nickname === undefined && <p style={{ color: '#555' }}>Завантаження...</p>}
 
