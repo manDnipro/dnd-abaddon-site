@@ -6,10 +6,12 @@ import { Character, STAT_LABELS, Stats } from '@/lib/types'
 import { xpProgress, levelTitle } from '@/lib/levels'
 
 const FEATURES: { href: string; icon: string; title: string; desc: string }[] = [
-  { href: '/character/expedition', icon: '🔍', title: 'Вилазка за припасами', desc: 'Виходь у зруйнований світ по лут, зброю та спорядження. Кожен крок — ризик.' },
-  { href: '/character/inventory', icon: '🎒', title: 'Спорядження', desc: 'Одягай знайдену броню, тримай найкращу зброю напоготові.' },
-  { href: '/character/actions', icon: '🛌', title: 'Табір', desc: 'Відпочивай, полюй, крафти спорядження, ховай зайве в особистий ящик.' },
-  { href: '/gm', icon: '📜', title: 'Панель ГМ', desc: 'Затвердження нових вцілілих — вхід лише для головного гравця.' },
+  { href: '/character/expedition', icon: '🔍', title: 'Вилазка за припасами', desc: 'Кожні двері назовні — азартна ставка. Лут, зброя й ризик знайти більше, ніж шукав.' },
+  { href: '/character/inventory', icon: '🎒', title: 'Спорядження', desc: 'Те, що на тобі, — між життям і рештками. Обирай уважно, що вдягаєш перед виходом.' },
+  { href: '/character/actions', icon: '🛌', title: 'Табір', desc: 'Тут відпочивають, латають рани, крафтять і ховають зайве в ящик, поки ще є час.' },
+  { href: '/character/social', icon: '🔥', title: 'Табірне життя', desc: 'Знайомся з іншими вцілілими біля багаття, кличи на вилазку разом — самому важче вижити.' },
+  { href: '/character/trade', icon: '🤝', title: 'Торгівля', desc: 'Виживальці міняють лут на лут. Довіра будується угодами, не словами.' },
+  { href: '/gm', icon: '📜', title: 'Панель ГМ', desc: 'Хроніки табору. Хто заходить у ворота — вирішує головний гравець.' },
 ]
 
 type Weather = { seasonLabel: string; label: string; temperature: number }
@@ -70,19 +72,19 @@ export default function Home() {
         )}
       </section>
 
-      {nickname === undefined && <p style={{ color: '#555', marginTop: 24 }}>Завантаження...</p>}
+      {nickname === undefined && <p style={{ color: '#555', marginTop: 24, fontFamily: "'Special Elite', monospace", fontSize: 13 }}>Сканую радіочастоти...</p>}
 
       {/* LOGGED IN PANEL */}
       {nickname && (
         <section className="mt-8">
           <div className="card flex justify-between items-center mb-6" style={{ borderColor: '#a68a4a30' }}>
             <p style={{ color: '#aaa', fontFamily: "'Special Elite', monospace", fontSize: 13 }}>
-              Ти в грі як <span style={{ color: '#c9a94f', fontWeight: 700 }}>{nickname}</span>
+              У таборі відомий(-а) як <span style={{ color: '#c9a94f', fontWeight: 700 }}>{nickname}</span>
             </p>
-            <button onClick={logout} style={{ color: '#555', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: "'Special Elite', monospace" }}>Вийти</button>
+            <button onClick={logout} style={{ color: '#555', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: "'Special Elite', monospace" }}>Покинути табір</button>
           </div>
 
-          {character === undefined && <p style={{ color: '#555' }}>Завантаження персонажа...</p>}
+          {character === undefined && <p style={{ color: '#555', fontFamily: "'Special Elite', monospace", fontSize: 13 }}>Гортаю особову справу...</p>}
 
           {awayLog.length > 0 && (
             <div className="card mb-6" style={{ borderColor: '#3a1010' }}>
@@ -97,8 +99,8 @@ export default function Home() {
 
           {character === null && (
             <div className="card text-center" style={{ padding: '40px 24px' }}>
-              <p style={{ color: '#8a8378', marginBottom: 20, fontFamily: "'Special Elite', monospace" }}>У тебе ще немає персонажа. Табір чекає нового вцілілого.</p>
-              <Link href="/character/create" className="btn-primary">Створити персонажа</Link>
+              <p style={{ color: '#8a8378', marginBottom: 20, fontFamily: "'Special Elite', monospace" }}>Ворота табору відкриті. У тебе ще нема тут ні імені, ні місця біля вогню.</p>
+              <Link href="/character/create" className="btn-primary">Вижити тут</Link>
             </div>
           )}
 
@@ -154,7 +156,7 @@ export default function Home() {
                   <Link href="/character/expedition" className="btn-primary">🔍 Вилазка</Link>
                   <Link href="/character/inventory" className="btn-gold">🎒 Спорядження</Link>
                   <Link href="/character/actions" className="btn-gold">🛌 Дії</Link>
-                  <Link href="/character/avatar" style={{ color: '#8a8378', fontSize: 13, alignSelf: 'center', textDecoration: 'underline' }}>Змінити аватар</Link>
+                  <Link href="/character/avatar" style={{ color: '#8a8378', fontSize: 13, alignSelf: 'center', textDecoration: 'underline' }}>Змінити обличчя</Link>
                 </div>
               )}
             </div>

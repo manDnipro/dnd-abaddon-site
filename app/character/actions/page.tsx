@@ -39,16 +39,16 @@ export default function ActionsPage() {
     setCharacter(d.character ?? character)
   }
 
-  if (character === undefined) return <p style={{ color: '#555' }}>Завантаження...</p>
-  if (character === null) return <p style={{ color: '#888' }}>У тебе ще немає персонажа.</p>
-  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Дії доступні лише після затвердження персонажа ГМ.</p>
-  if (character.dead) return <p style={{ color: '#c0392b' }}>☠️ {character.name} загинув(-ла).</p>
+  if (character === undefined) return <p style={{ color: '#555' }}>Оглядаю табір...</p>
+  if (character === null) return <p style={{ color: '#888' }}>Немає кому тут поратись — спершу створи персонажа.</p>
+  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Табір ще не визнав тебе своїм — чекай на слово ГМ.</p>
+  if (character.dead) return <p style={{ color: '#c0392b' }}>☠️ {character.name} назавжди лишився(-лась) серед руїн.</p>
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'quick', label: 'Швидкі дії' },
-    { key: 'locations', label: 'Локації табору' },
-    { key: 'items', label: 'Предмети' },
-    { key: 'craft', label: 'Крафт' },
+    { key: 'quick', label: 'Побут' },
+    { key: 'locations', label: 'По табору' },
+    { key: 'items', label: 'Припаси' },
+    { key: 'craft', label: 'Верстак' },
     { key: 'storage', label: 'Ящик' },
     { key: 'repair', label: 'Ремонт' },
   ]
@@ -59,7 +59,7 @@ export default function ActionsPage() {
         <Image src="/camp/camp-map.png" alt="Табір" fill style={{ objectFit: 'cover' }} priority />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(8,7,6,0.9) 100%)' }} />
       </div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Дії — {character.name}</h1>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Табір бачить тебе, {character.name}</h1>
       <p style={{ color: '#666', marginBottom: 16, fontSize: 13 }}>
         ОЗ: {character.hp}/{character.maxHp} · Голод: {character.hunger} · Спрага: {character.thirst} · Мораль: {character.morale} · Репутація: {character.reputation}
         {character.infection > 0 && <> · <span style={{ color: '#8e44ad' }}>Інфекція: {character.infection}</span></>}
@@ -84,10 +84,10 @@ export default function ActionsPage() {
       {tab === 'quick' && (
         <div className="card mb-6">
           <div className="flex gap-3 flex-wrap mb-6">
-            <button onClick={() => call('/api/character/rest')} disabled={loading} className="btn-primary">🛌 Відпочити</button>
-            <button onClick={() => call('/api/character/hunt')} disabled={loading} className="btn-gold">🏹 Полювання</button>
+            <button onClick={() => call('/api/character/rest')} disabled={loading} className="btn-primary">🛌 Перепочити біля вогнища</button>
+            <button onClick={() => call('/api/character/hunt')} disabled={loading} className="btn-gold">🏹 Пошукати здобич поруч</button>
           </div>
-          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Перевірка характеристики</h2>
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Випробувати себе</h2>
           <div className="flex gap-2 flex-wrap">
             {(Object.keys(STAT_LABELS) as StatKey[]).map(k => (
               <button key={k} onClick={() => call('/api/character/check', { stat: k })} disabled={loading}
@@ -101,7 +101,7 @@ export default function ActionsPage() {
 
       {tab === 'locations' && (
         <div className="card mb-6">
-          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Локації табору</h2>
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Куди піти в таборі</h2>
           <div className="flex flex-col gap-2">
             {CAMP_LOCATIONS.map(loc => (
               <div key={loc.key} style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '10px 14px' }}>
@@ -113,7 +113,7 @@ export default function ActionsPage() {
                   </div>
                   <button onClick={() => call('/api/character/visit-location', { key: loc.key })} disabled={loading}
                     style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', flexShrink: 0 }}>
-                    Відвідати
+                    Піти туди
                   </button>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function ActionsPage() {
 
       {tab === 'items' && (
         <div className="card mb-6">
-          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Використати предмет</h2>
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Порпаєшся в припасах</h2>
           <div className="flex flex-col gap-2">
             {character.inventory.filter(s => { const it = getItem(s.itemId); return it && isConsumable(it) }).map(s => {
               const item = getItem(s.itemId)!
@@ -133,13 +133,13 @@ export default function ActionsPage() {
                   <span style={{ color: '#e5e5e5', fontSize: 14 }}>{item.name} <span style={{ color: '#666', fontSize: 12 }}>×{s.qty}</span></span>
                   <button onClick={() => call('/api/character/use-item', { itemId: s.itemId })} disabled={loading}
                     style={{ fontSize: 12, color: '#27ae60', background: 'none', border: '1px solid #1a2a1a', borderRadius: 4, padding: '4px 10px', cursor: 'pointer' }}>
-                    Використати
+                    Скористатись
                   </button>
                 </div>
               )
             })}
             {character.inventory.filter(s => { const it = getItem(s.itemId); return it && isConsumable(it) }).length === 0 && (
-              <p style={{ color: '#555', fontSize: 13 }}>Немає предметів, які можна використати.</p>
+              <p style={{ color: '#555', fontSize: 13 }}>Кишені порожні — нічим підкріпитись чи полікуватись.</p>
             )}
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function ActionsPage() {
 
       {tab === 'craft' && (
         <div className="card mb-6">
-          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Крафт</h2>
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Змайструвати щось із мотлоху</h2>
           <div className="flex flex-col gap-2">
             {CRAFT_RECIPES.map(r => {
               const resultItem = getItem(r.resultKey)
@@ -164,7 +164,7 @@ export default function ActionsPage() {
                   </div>
                   <button onClick={() => call('/api/character/craft', { recipeKey: r.key })} disabled={loading || !canCraft}
                     style={{ fontSize: 12, color: '#c9a227', background: 'none', border: '1px solid #2a2410', borderRadius: 4, padding: '4px 10px', cursor: canCraft ? 'pointer' : 'not-allowed' }}>
-                    Зробити
+                    Змайструвати
                   </button>
                 </div>
               )
@@ -175,10 +175,10 @@ export default function ActionsPage() {
 
       {tab === 'storage' && (
         <div className="card mb-6">
-          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Особистий ящик (безлімітний)</h2>
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Закопаний ящик — місця скільки завгодно</h2>
           <div className="flex flex-col gap-4">
             <div>
-              <p style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>В інвентарі — покласти в ящик</p>
+              <p style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>Сховати в ящик, поки не потрібне</p>
               <div className="flex flex-col gap-2">
                 {character.inventory.map(s => (
                   <div key={s.itemId} className="flex items-center justify-between" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '6px 10px' }}>
@@ -189,11 +189,11 @@ export default function ActionsPage() {
                     </button>
                   </div>
                 ))}
-                {character.inventory.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Інвентар порожній.</p>}
+                {character.inventory.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Нести нічого — руки порожні.</p>}
               </div>
             </div>
             <div>
-              <p style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>У ящику — забрати в інвентар</p>
+              <p style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>Дістати з ящика назад у руки</p>
               <div className="flex flex-col gap-2">
                 {character.storageBox.map(s => (
                   <div key={s.itemId} className="flex items-center justify-between" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '6px 10px' }}>
@@ -204,7 +204,7 @@ export default function ActionsPage() {
                     </button>
                   </div>
                 ))}
-                {character.storageBox.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Ящик порожній.</p>}
+                {character.storageBox.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Ящик поки порожній — ще нема чого ховати.</p>}
               </div>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function ActionsPage() {
 
       {tab === 'repair' && (
         <div className="card mb-6">
-          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Знос спорядження</h2>
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Спорядження нищиться швидше, ніж хочеться</h2>
           {(() => {
             const keys = new Set<string>()
             for (const slot of ['head', 'torso', 'legs', 'feet', 'accessory'] as const) {
@@ -225,7 +225,7 @@ export default function ActionsPage() {
               if (item && (item.type === 'weapon_melee' || item.type === 'weapon_ranged')) keys.add(s.itemId)
             }
             const rows = Array.from(keys).map(k => ({ key: k, item: getItem(k)!, durability: getDurability(character, k) })).filter(r => r.item)
-            if (rows.length === 0) return <p style={{ color: '#555', fontSize: 13 }}>Немає зброї чи броні для перевірки зносу.</p>
+            if (rows.length === 0) return <p style={{ color: '#555', fontSize: 13 }}>Нема на тобі й при тобі нічого, що могло б зноситись.</p>
             return (
               <div className="flex flex-col gap-2">
                 {rows.map(r => (
@@ -237,7 +237,7 @@ export default function ActionsPage() {
                     {r.durability < MAX_DURABILITY && (
                       <button onClick={() => call('/api/character/repair', { itemKey: r.key })} disabled={loading}
                         style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
-                        Полагодити ({repairScrapCost(r.item)} 🔩)
+                        Взятись за напилок ({repairScrapCost(r.item)} 🔩)
                       </button>
                     )}
                   </div>

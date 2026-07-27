@@ -29,7 +29,8 @@ export default function LoginPage() {
 
   return (
     <div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 20 }}>Вхід</h1>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Повернення до табору</h1>
+      <p style={{ color: '#666', marginBottom: 20, fontSize: 13, fontFamily: "'Special Elite', monospace" }}>Вартові впізнають тебе за іменем і паролем.</p>
       <form onSubmit={submit} className="card flex flex-col gap-4">
         <div>
           <label className="block text-sm mb-1" style={{ color: '#aaa' }}>Нікнейм</label>
@@ -40,7 +41,7 @@ export default function LoginPage() {
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </div>
         {error && <p style={{ color: '#c0392b', fontSize: 14 }}>🚫 {error}</p>}
-        <button type="submit" className="btn-primary" disabled={loading}>{loading ? '...' : 'Увійти'}</button>
+        <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Впускаю...' : 'Увійти'}</button>
       </form>
     </div>
   )

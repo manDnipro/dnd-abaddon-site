@@ -47,14 +47,14 @@ export default function SocialPage() {
     await load()
   }
 
-  if (character === undefined) return <p style={{ color: '#555' }}>Завантаження...</p>
-  if (character === null) return <p style={{ color: '#888' }}>У тебе ще немає персонажа.</p>
-  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Доступно лише після затвердження персонажа ГМ.</p>
+  if (character === undefined) return <p style={{ color: '#555' }}>Прислухаюсь до голосів у таборі...</p>
+  if (character === null) return <p style={{ color: '#888' }}>Спершу тобі потрібне ім'я тут.</p>
+  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Ти ще чужий(-а) для табору.</p>
 
   return (
     <div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Табірне життя</h1>
-      <p style={{ color: '#666', marginBottom: 20, fontSize: 13 }}>Знайомся з іншими вцілілими та кличи їх на спільні вилазки.</p>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Життя біля вогнища</h1>
+      <p style={{ color: '#666', marginBottom: 20, fontSize: 13 }}>Наодинці довше не протримаєшся — знайомся, довіряй, кличи із собою.</p>
 
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}
 
@@ -81,8 +81,8 @@ export default function SocialPage() {
       )}
 
       <div className="card mb-6">
-        <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>👋 Познайомитися</h2>
-        {others.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Зараз у таборі більше нікого немає.</p>}
+        <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>👋 Підійти й привітатись</h2>
+        {others.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Табір порожній — навколо тільки вітер.</p>}
         <div className="flex flex-col gap-2">
           {others.map(o => (
             <button key={o.id} onClick={() => call('/api/social/meet', { targetCharId: o.id })} disabled={loading}
@@ -94,20 +94,20 @@ export default function SocialPage() {
       </div>
 
       <div className="card mb-6">
-        <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>🔍🤝 Запросити на вилазку вдвох</h2>
+        <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>🔍🤝 Не піду сам — покличу когось</h2>
         {others.length === 0 ? (
-          <p style={{ color: '#555', fontSize: 13 }}>Зараз у таборі більше нікого немає.</p>
+          <p style={{ color: '#555', fontSize: 13 }}>Нема кого кликати з собою.</p>
         ) : (
           <>
             <select value={duoTarget} onChange={e => setDuoTarget(e.target.value)} className="mb-3">
-              <option value="">Обери гравця...</option>
+              <option value="">З ким підеш?</option>
               {others.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
             <select value={duoLevel} onChange={e => setDuoLevel(e.target.value)} className="mb-3">
               {EXPEDITION_LEVELS.map(l => <option key={l.key} value={l.key}>{l.label}</option>)}
             </select>
             <button onClick={() => call('/api/social/duo', { targetCharId: duoTarget, levelKey: duoLevel })} disabled={loading || !duoTarget} className="btn-primary">
-              Запросити
+              Покликати з собою
             </button>
           </>
         )}

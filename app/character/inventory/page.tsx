@@ -43,18 +43,19 @@ export default function InventoryPage() {
     setLoading(false)
   }
 
-  if (character === undefined) return <p style={{ color: '#555' }}>Завантаження...</p>
-  if (character === null) return <p style={{ color: '#888' }}>У тебе ще немає персонажа.</p>
-  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Інвентар доступний лише після затвердження персонажа ГМ.</p>
+  if (character === undefined) return <p style={{ color: '#555' }}>Перебираю мотлох...</p>
+  if (character === null) return <p style={{ color: '#888' }}>Нема на кому спорядження носити.</p>
+  if (character.status !== 'approved') return <p style={{ color: '#888' }}>ГМ ще не пропустив тебе за ворота.</p>
 
   return (
     <div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 20 }}>Спорядження — {character.name}</h1>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Що на тобі, {character.name}</h1>
+      <p style={{ color: '#666', marginBottom: 16, fontSize: 13, fontFamily: "'Special Elite', monospace" }}>Все, що зараз тримає тебе живим — тепло, броня, зброя в руці.</p>
 
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}
 
       <div className="card mb-6">
-        <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>Одягнено</h2>
+        <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>Вдягнене на тобі</h2>
         <div className="flex flex-col gap-2">
           {(Object.keys(CLOTHING_SLOT_LABELS) as ClothingSlot[]).map(slot => {
             const equippedId = character.equipped[slot]
@@ -80,8 +81,8 @@ export default function InventoryPage() {
       </div>
 
       <div className="card">
-        <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>Інвентар ({character.inventory.length})</h2>
-        {character.inventory.length === 0 && <p style={{ color: '#555' }}>Порожньо.</p>}
+        <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>При собі носиш ({character.inventory.length})</h2>
+        {character.inventory.length === 0 && <p style={{ color: '#555' }}>Кишені й рюкзак порожні.</p>}
         <div className="flex flex-col gap-2">
           {character.inventory.map(stack => {
             const item = getItem(stack.itemId)

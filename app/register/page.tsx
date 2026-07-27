@@ -29,10 +29,11 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 20 }}>Реєстрація</h1>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Новий запис у книзі табору</h1>
+      <p style={{ color: '#666', marginBottom: 20, fontSize: 13, fontFamily: "'Special Elite', monospace" }}>Ще одне ім'я серед тих, хто вирішив не здаватись.</p>
       <form onSubmit={submit} className="card flex flex-col gap-4">
         <div>
-          <label className="block text-sm mb-1" style={{ color: '#aaa' }}>Нікнейм</label>
+          <label className="block text-sm mb-1" style={{ color: '#aaa' }}>Як тебе кликати в таборі</label>
           <input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Виживший" required />
         </div>
         <div>
@@ -40,7 +41,7 @@ export default function RegisterPage() {
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Придумай пароль" required />
         </div>
         {error && <p style={{ color: '#c0392b', fontSize: 14 }}>🚫 {error}</p>}
-        <button type="submit" className="btn-primary" disabled={loading}>{loading ? '...' : 'Зареєструватись'}</button>
+        <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Записую...' : 'Увійти в табір'}</button>
       </form>
     </div>
   )

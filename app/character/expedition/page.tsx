@@ -37,10 +37,10 @@ export default function ExpeditionPage() {
     setCharacter(d.character ?? d)
   }
 
-  if (character === undefined) return <p style={{ color: '#555' }}>Завантаження...</p>
-  if (character === null) return <p style={{ color: '#888' }}>У тебе ще немає персонажа.</p>
-  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Вилазки доступні лише після затвердження персонажа ГМ.</p>
-  if (character.dead) return <p style={{ color: '#c0392b' }}>☠️ {character.name} загинув(-ла). Вилазки недоступні.</p>
+  if (character === undefined) return <p style={{ color: '#555' }}>Перевіряю спорядження...</p>
+  if (character === null) return <p style={{ color: '#888' }}>У тебе ще немає персонажа, нікуди йти.</p>
+  if (character.status !== 'approved') return <p style={{ color: '#888' }}>ГМ ще не пропустив тебе за ворота табору.</p>
+  if (character.dead) return <p style={{ color: '#c0392b' }}>☠️ {character.name} більше нікуди не піде.</p>
 
   const exp = character.expedition
   const secondsLeft = exp ? Math.max(0, Math.ceil((exp.arrivesAt - now) / 1000)) : 0
@@ -63,7 +63,7 @@ export default function ExpeditionPage() {
 
       {!exp && (
         <div className="card mb-6">
-          <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>Обери рівень складності</h2>
+          <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>Куди цього разу?</h2>
           <div className="flex flex-col gap-2">
             {EXPEDITION_LEVELS.map(lvl => (
               <button key={lvl.key} disabled={loading}
@@ -89,7 +89,7 @@ export default function ExpeditionPage() {
 
       {exp && exp.phase !== 'on_site' && !arrived && (
         <div className="card mb-6 text-center">
-          <p style={{ color: '#888', marginBottom: 8 }}>{exp.phase === 'traveling_out' ? '🚶 В дорозі до локації...' : '🏕️ Повертаєшся в табір...'}</p>
+          <p style={{ color: '#888', marginBottom: 8 }}>{exp.phase === 'traveling_out' ? '🚶 Крокуєш крізь тишу, прислухаючись до кожного шурхоту...' : '🏕️ Вогні табору вже видно за деревами...'}</p>
           <p style={{ color: '#c9a227', fontSize: 28, fontWeight: 700, fontFamily: 'monospace' }}>
             {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
           </p>
@@ -98,9 +98,9 @@ export default function ExpeditionPage() {
 
       {exp && arrived && (
         <div className="card mb-6 text-center">
-          <p style={{ color: '#27ae60', marginBottom: 12 }}>Час вийшов — підтверди прибуття.</p>
+          <p style={{ color: '#27ae60', marginBottom: 12 }}>{exp.phase === 'traveling_out' ? 'Місце вже видно попереду.' : 'Ще трохи — і ти вдома.'}</p>
           <button onClick={() => call('/api/expedition/resolve')} disabled={loading} className="btn-primary">
-            {exp.phase === 'traveling_out' ? 'Прибути на місце' : 'Повернутись у табір'}
+            {exp.phase === 'traveling_out' ? '👣 Ступити всередину' : '🏕️ Переступити поріг табору'}
           </button>
         </div>
       )}

@@ -44,14 +44,14 @@ export default function TradePage() {
     await load()
   }
 
-  if (character === undefined) return <p style={{ color: '#555' }}>Завантаження...</p>
-  if (character === null) return <p style={{ color: '#888' }}>У тебе ще немає персонажа.</p>
-  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Торгівля доступна лише після затвердження персонажа ГМ.</p>
+  if (character === undefined) return <p style={{ color: '#555' }}>Шукаю, хто ще торгує...</p>
+  if (character === null) return <p style={{ color: '#888' }}>Нема кому міняти — спершу створи персонажа.</p>
+  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Тобі ще не довіряють настільки, щоб торгувати.</p>
 
   return (
     <div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Торгівля з виживальцями</h1>
-      <p style={{ color: '#666', marginBottom: 20, fontSize: 13 }}>Обирай що хочеш отримати і що готовий віддати — торговець сам вирішить, чи це справедливо.</p>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Хто що міняє</h1>
+      <p style={{ color: '#666', marginBottom: 20, fontSize: 13 }}>Кожен тут виживає по-своєму. Запропонуй чесно — і, може, домовитесь.</p>
 
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}
 
@@ -68,7 +68,7 @@ export default function TradePage() {
 
             {expanded === trader.id && (
               <div className="mt-4">
-                <p style={{ color: '#c9a227', fontSize: 13, marginBottom: 8 }}>Товар</p>
+                <p style={{ color: '#c9a227', fontSize: 13, marginBottom: 8 }}>Що в нього є</p>
                 <div className="flex flex-col gap-1 mb-4">
                   {trader.stock.map(s => {
                     const item = getItem(s.itemKey)
@@ -88,7 +88,7 @@ export default function TradePage() {
                   </div>
                 )}
 
-                <p style={{ color: '#c9a227', fontSize: 13, marginBottom: 8 }}>Що ти віддаєш</p>
+                <p style={{ color: '#c9a227', fontSize: 13, marginBottom: 8 }}>Чим готовий поступитись</p>
                 <div className="flex flex-col gap-1 mb-4">
                   {character.inventory.map(s => {
                     const item = getItem(s.itemId)
@@ -109,7 +109,7 @@ export default function TradePage() {
                   </div>
                 )}
 
-                <button onClick={() => submitTrade(trader.id)} disabled={loading} className="btn-primary">Запропонувати обмін</button>
+                <button onClick={() => submitTrade(trader.id)} disabled={loading} className="btn-primary">Спробувати домовитись</button>
               </div>
             )}
           </div>

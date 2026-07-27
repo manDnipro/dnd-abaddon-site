@@ -50,7 +50,8 @@ export default function GMPage() {
   if (!authed) {
     return (
       <div>
-        <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 20 }}>Панель ГМ</h1>
+        <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Хроніки табору</h1>
+        <p style={{ color: '#666', marginBottom: 20, fontSize: 13, fontFamily: "'Special Elite', monospace" }}>Тільки головний гравець вирішує, кого пропустити за ворота.</p>
         <form onSubmit={login} className="card flex flex-col gap-4">
           <div>
             <label className="block text-sm mb-1" style={{ color: '#aaa' }}>Пароль ГМ</label>
@@ -65,10 +66,10 @@ export default function GMPage() {
 
   return (
     <div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 6 }}>Панель ГМ</h1>
-      <p style={{ color: '#666', marginBottom: 20 }}>Персонажі, що очікують підтвердження: {pending.length}</p>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 6 }}>Хто стукає у ворота</h1>
+      <p style={{ color: '#666', marginBottom: 20 }}>Чекають рішення: {pending.length}</p>
 
-      {pending.length === 0 && <p style={{ color: '#555' }}>Черга порожня.</p>}
+      {pending.length === 0 && <p style={{ color: '#555' }}>Нікого біля воріт — тиша.</p>}
 
       <div className="flex flex-col gap-3">
         {pending.map(c => (

@@ -45,9 +45,9 @@ export default function BarterPage() {
     await load()
   }
 
-  if (character === undefined) return <p style={{ color: '#555' }}>Завантаження...</p>
-  if (character === null) return <p style={{ color: '#888' }}>У тебе ще немає персонажа.</p>
-  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Обмін доступний лише після затвердження персонажа ГМ.</p>
+  if (character === undefined) return <p style={{ color: '#555' }}>Дивлюсь, хто ще не спить у таборі...</p>
+  if (character === null) return <p style={{ color: '#888' }}>Нема кому обмінюватись — спершу створи персонажа.</p>
+  if (character.status !== 'approved') return <p style={{ color: '#888' }}>Тобі ще не довіряють настільки.</p>
 
   const myItems = mySide === 'a' ? session?.itemsA : session?.itemsB
   const theirItems = mySide === 'a' ? session?.itemsB : session?.itemsA
@@ -56,15 +56,15 @@ export default function BarterPage() {
 
   return (
     <div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Обмін лутом</h1>
-      <p style={{ color: '#666', marginBottom: 20, fontSize: 13 }}>Обмінюйся речами з іншими вцілілими в таборі.</p>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Ти — мені, я — тобі</h1>
+      <p style={{ color: '#666', marginBottom: 20, fontSize: 13 }}>Чесний обмін між тими, хто ще довіряє один одному.</p>
 
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}
 
       {!session && (
         <div className="card mb-6">
-          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>З ким обмінятися?</h2>
-          {others.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Зараз у таборі більше нікого немає.</p>}
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>З ким поговорити про обмін?</h2>
+          {others.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Табір порожній — нема з ким мінятись.</p>}
           <div className="flex flex-col gap-2">
             {others.map(o => (
               <button key={o.id} onClick={() => call('/api/barter/start', { targetCharId: o.id })} disabled={loading}
@@ -78,11 +78,11 @@ export default function BarterPage() {
 
       {session && session.status === 'active' && (
         <div className="card mb-6">
-          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>Обмін з {otherName}</h2>
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>Домовляєшся з {otherName}</h2>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <p style={{ color: myConfirmed ? '#27ae60' : '#888', fontSize: 12, marginBottom: 8 }}>{myConfirmed ? '✅' : '⏳'} Твоя пропозиція</p>
+              <p style={{ color: myConfirmed ? '#27ae60' : '#888', fontSize: 12, marginBottom: 8 }}>{myConfirmed ? '✅' : '⏳'} Ти кладеш на стіл</p>
               <div className="flex flex-col gap-1">
                 {myItems?.map(s => (
                   <div key={s.itemId} className="flex justify-between items-center" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 4, padding: '4px 8px' }}>
@@ -94,7 +94,7 @@ export default function BarterPage() {
               </div>
             </div>
             <div>
-              <p style={{ color: theirConfirmed ? '#27ae60' : '#888', fontSize: 12, marginBottom: 8 }}>{theirConfirmed ? '✅' : '⏳'} Пропозиція {otherName}</p>
+              <p style={{ color: theirConfirmed ? '#27ae60' : '#888', fontSize: 12, marginBottom: 8 }}>{theirConfirmed ? '✅' : '⏳'} {otherName} кладе на стіл</p>
               <div className="flex flex-col gap-1">
                 {theirItems?.map(s => (
                   <div key={s.itemId} style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 4, padding: '4px 8px' }}>
@@ -106,7 +106,7 @@ export default function BarterPage() {
             </div>
           </div>
 
-          <p style={{ color: '#c9a227', fontSize: 13, marginBottom: 8 }}>Додати з інвентарю</p>
+          <p style={{ color: '#c9a227', fontSize: 13, marginBottom: 8 }}>Дістати з кишень для торгу</p>
           <div className="flex flex-col gap-1 mb-4">
             {character.inventory.map(s => (
               <button key={s.itemId} onClick={() => call('/api/barter/add', { itemId: s.itemId, qty: 1 })} disabled={loading}
@@ -118,9 +118,9 @@ export default function BarterPage() {
           </div>
 
           <div className="flex gap-3">
-            <button onClick={() => call('/api/barter/confirm')} disabled={loading} className="btn-primary">✅ Підтвердити</button>
-            <button onClick={() => call('/api/barter/cancel')} disabled={loading} className="btn-gold">🚫 Скасувати обмін</button>
-            <button onClick={() => load()} disabled={loading} style={{ color: '#888', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '0 14px', cursor: 'pointer' }}>🔄 Оновити</button>
+            <button onClick={() => call('/api/barter/confirm')} disabled={loading} className="btn-primary">✅ По руках</button>
+            <button onClick={() => call('/api/barter/cancel')} disabled={loading} className="btn-gold">🚫 Передумав(-ла)</button>
+            <button onClick={() => load()} disabled={loading} style={{ color: '#888', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '0 14px', cursor: 'pointer' }}>🔄 Що там у нього?</button>
           </div>
         </div>
       )}

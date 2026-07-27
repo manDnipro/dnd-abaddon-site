@@ -41,18 +41,19 @@ export default function CreateCharacterPage() {
 
   return (
     <div>
-      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 20 }}>Створення персонажа</h1>
+      <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Хто ти був до всього цього?</h1>
+      <p style={{ color: '#666', marginBottom: 20, fontSize: 13, fontFamily: "'Special Elite', monospace" }}>Дай собі ім'я і розподіли те, ким ти станеш серед руїн.</p>
       <form onSubmit={submit} className="card flex flex-col gap-4">
         <div>
-          <label className="block text-sm mb-1" style={{ color: '#aaa' }}>Імʼя персонажа</label>
+          <label className="block text-sm mb-1" style={{ color: '#aaa' }}>Ім'я, яке впізнають у таборі</label>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Наприклад: Волк" required />
         </div>
 
         <div>
           <div className="flex justify-between items-center mb-2">
-            <span style={{ color: '#aaa', fontSize: 14 }}>Характеристики (від {STAT_MIN} до {STAT_MAX})</span>
+            <span style={{ color: '#aaa', fontSize: 14 }}>Хист до виживання (від {STAT_MIN} до {STAT_MAX})</span>
             <span style={{ color: remaining === 0 ? '#27ae60' : '#c0392b', fontWeight: 700, fontSize: 14 }}>
-              Залишилось: {remaining}
+              Не розподілено: {remaining}
             </span>
           </div>
           <div className="flex flex-col gap-2">
@@ -73,7 +74,7 @@ export default function CreateCharacterPage() {
 
         {error && <p style={{ color: '#c0392b', fontSize: 14 }}>🚫 {error}</p>}
         <button type="submit" className="btn-primary" disabled={loading || remaining !== 0}>
-          {loading ? '...' : 'Надіслати на затвердження ГМ'}
+          {loading ? 'Передаю справу...' : 'Постукати у ворота табору'}
         </button>
       </form>
     </div>
