@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full">
         <ApocalypseBackground />
         <Navbar />
-        <main className="max-w-3xl mx-auto w-full px-4 py-10">
+        <main className="max-w-5xl mx-auto w-full px-4 py-10">
           {children}
         </main>
       </body>
