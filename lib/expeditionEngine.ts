@@ -14,7 +14,15 @@ import { EnemyTypeDef, getEnemyType, rollAmbushEnemyType, SCREAMER_CALL_CHANCE }
 
 export type SearchResult = {
   log: string[]
+  images: string[]
   died: boolean
+}
+
+const ENEMY_IMAGES: Partial<Record<string, string>> = {
+  mass: '/enemies/mass.png',
+  tank: '/enemies/tank.png',
+  screamer: '/enemies/screamer.png',
+  // no sprinter.png in the asset pack — falls back to text-only, same as the bot when an image is missing
 }
 
 // Loot never vanishes — a full inventory overflows into the personal camp storage box instead,
@@ -81,12 +89,14 @@ function applyDamage(character: Character, dmg: number, log: string[], cause: st
   return false
 }
 
-function fightOne(character: Character, level: ExpeditionLevel, enemyType: EnemyTypeDef, log: string[]): boolean {
+function fightOne(character: Character, level: ExpeditionLevel, enemyType: EnemyTypeDef, log: string[], images: string[]): boolean {
   const base = zombieStatsForLevel(level.index)
   const weapon = bestWeapon(character)
   let enemyHp = enemyType.hpModifier(base.hp)
   const label = enemyType.key === 'mass' ? 'Зомбі' : `${enemyType.namePrefix} (${enemyType.flavor})`
   log.push(`${enemyType.emoji} ${label} напав! (ОЗ: ${enemyHp})`)
+  const img = ENEMY_IMAGES[enemyType.key]
+  if (img) images.push(img)
 
   const weaponItem = weapon.id === 'fists' ? undefined : getItem(weapon.id)
   let calledHorde = false
@@ -111,7 +121,7 @@ function fightOne(character: Character, level: ExpeditionLevel, enemyType: Enemy
     if (enemyType.special === 'call_horde' && !calledHorde && Math.random() < SCREAMER_CALL_CHANCE) {
       calledHorde = true
       log.push(`📢 Крикун кличе підмогу!`)
-      const died = fightOne(character, level, getEnemyType('mass')!, log)
+      const died = fightOne(character, level, getEnemyType('mass')!, log, images)
       if (died) return true
     }
 
@@ -130,19 +140,19 @@ function fightOne(character: Character, level: ExpeditionLevel, enemyType: Enemy
   return false
 }
 
-function fightZombie(character: Character, level: ExpeditionLevel, log: string[]): boolean {
-  return fightOne(character, level, getEnemyType('mass')!, log)
+function fightZombie(character: Character, level: ExpeditionLevel, log: string[], images: string[]): boolean {
+  return fightOne(character, level, getEnemyType('mass')!, log, images)
 }
 
-function fightAmbush(character: Character, level: ExpeditionLevel, log: string[]): boolean {
-  return fightOne(character, level, rollAmbushEnemyType(level.index), log)
+function fightAmbush(character: Character, level: ExpeditionLevel, log: string[], images: string[]): boolean {
+  return fightOne(character, level, rollAmbushEnemyType(level.index), log, images)
 }
 
-function applyRisk(character: Character, level: ExpeditionLevel, log: string[]): boolean {
+function applyRisk(character: Character, level: ExpeditionLevel, log: string[], images: string[]): boolean {
   const risk = rollRiskType()
   switch (risk) {
     case 'ambush':
-      return fightAmbush(character, level, log)
+      return fightAmbush(character, level, log, images)
     case 'injury': {
       const dmg = rollDice(injuryDiceForLevel(level.index)).total
       return applyDamage(character, dmg, log, 'поранення на вилазці')
@@ -168,8 +178,16 @@ function applyRisk(character: Character, level: ExpeditionLevel, log: string[]):
   }
 }
 
+const NPC_PORTRAIT_COUNTS: Record<'male' | 'female', number> = { male: 17, female: 9 }
+function randomNpcPortrait(): string {
+  const gender: 'male' | 'female' = Math.random() < 0.5 ? 'male' : 'female'
+  const n = 1 + Math.floor(Math.random() * NPC_PORTRAIT_COUNTS[gender])
+  return `/npc/${gender}/portrait_${n}.png`
+}
+
 export function performSearch(character: Character, level: ExpeditionLevel): SearchResult {
   const log: string[] = []
+  const images: string[] = []
 
   character.hunger = clampHungerThirst(character.hunger - level.hungerCost)
   character.thirst = clampHungerThirst(character.thirst - level.thirstCost)
@@ -180,9 +198,10 @@ export function performSearch(character: Character, level: ExpeditionLevel): Sea
   if (Math.random() < SPECIAL_ENCOUNTER_CHANCE) {
     const type = rollSpecialEncounterType()
     if (type === 'weak_zombie') {
-      const died = fightZombie(character, { ...level, index: Math.max(1, level.index - 1) }, log)
-      if (died) return { log, died: true }
+      const died = fightZombie(character, { ...level, index: Math.max(1, level.index - 1) }, log, images)
+      if (died) return { log, images, died: true }
     } else if (type === 'friendly_npc') {
+      images.push(randomNpcPortrait())
       log.push(`🤝 Зустрів дружнього вцілілого — обмінялись новинами, нічого не сталось.`)
     } else {
       log.push(`👀 Знайшов цікаве місце — там може бути додатковий лут.`)
@@ -203,18 +222,18 @@ export function performSearch(character: Character, level: ExpeditionLevel): Sea
   } else {
     log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — невдача.`)
     if (Math.random() < level.riskChance) {
-      const died = applyRisk(character, level, log)
-      if (died) return { log, died: true }
+      const died = applyRisk(character, level, log, images)
+      if (died) return { log, images, died: true }
     }
   }
 
   if (character.hunger === 0 || character.thirst === 0) {
     const dmg = rollDice('1d4').total
     const died = applyDamage(character, dmg, log, character.hunger === 0 ? 'виснаження від голоду' : 'зневоднення')
-    if (died) return { log, died: true }
+    if (died) return { log, images, died: true }
   }
 
-  return { log, died: false }
+  return { log, images, died: false }
 }
 
 export const ITEM_LOOKUP = ITEM_CATALOG

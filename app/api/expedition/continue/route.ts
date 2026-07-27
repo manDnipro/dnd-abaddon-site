@@ -24,5 +24,5 @@ export async function POST() {
   if (result.died) character.expedition = null
 
   await redis.set(`char:${charId}`, JSON.stringify(character))
-  return NextResponse.json({ character, log: result.log })
+  return NextResponse.json({ character, log: result.log, images: result.images })
 }

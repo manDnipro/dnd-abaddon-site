@@ -7,6 +7,7 @@ import { EXPEDITION_LEVELS } from '@/lib/expedition'
 export default function ExpeditionPage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
   const [log, setLog] = useState<string[]>([])
+  const [lastImage, setLastImage] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [now, setNow] = useState(Date.now())
@@ -32,6 +33,7 @@ export default function ExpeditionPage() {
     setLoading(false)
     if (!res.ok) { setError(d.error || 'Помилка'); return }
     if (d.log) setLog(l => [...d.log, ...l])
+    if (d.images && d.images.length > 0) setLastImage(d.images[d.images.length - 1])
     setCharacter(d.character ?? d)
   }
 
@@ -113,6 +115,11 @@ export default function ExpeditionPage() {
       {log.length > 0 && (
         <div className="card" style={{ borderColor: '#3a1010' }}>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 14 }}>ЩОДЕННИК ВИЖИВШОГО</p>
+          {lastImage && (
+            <div style={{ position: 'relative', width: '100%', height: 220, borderRadius: 4, overflow: 'hidden', marginBottom: 16, border: '1px solid #2a241c' }}>
+              <Image src={lastImage} alt="Зустріч" fill style={{ objectFit: 'cover' }} />
+            </div>
+          )}
           <div className="flex flex-col gap-3">
             {log.map((line, i) => (
               <p key={i} style={{

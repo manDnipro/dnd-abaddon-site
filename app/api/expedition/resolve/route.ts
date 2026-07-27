@@ -22,11 +22,13 @@ export async function POST() {
 
   const level = getExpeditionLevel(character.expedition.levelKey)!
   let log: string[] = []
+  let images: string[] = []
 
   if (character.expedition.phase === 'traveling_out') {
     log.push(`🚶 ${character.name} прибув(-ла) на локацію: ${level.label}`)
     const result = performSearch(character, level)
     log = log.concat(result.log)
+    images = result.images
     if (result.died) {
       character.expedition = null
     } else {
@@ -38,5 +40,5 @@ export async function POST() {
   }
 
   await redis.set(`char:${charId}`, JSON.stringify(character))
-  return NextResponse.json({ character, log })
+  return NextResponse.json({ character, log, images })
 }
