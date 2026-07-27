@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Character, STAT_LABELS, Stats } from '@/lib/types'
 
 const FEATURES: { href: string; icon: string; title: string; desc: string }[] = [
@@ -79,7 +80,19 @@ export default function Home() {
           {character && (
             <div className="card mb-6" style={{ borderColor: character.dead ? '#3a1010' : '#a68a4a30' }}>
               <div className="flex justify-between items-start flex-wrap gap-3 mb-4">
-                <h2 style={{ color: '#e5e5e5', fontSize: 24 }}>{character.name}</h2>
+                <div className="flex items-center gap-3">
+                  {character.avatar ? (
+                    <div style={{ position: 'relative', width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', border: '2px solid #a68a4a', flexShrink: 0 }}>
+                      <Image src={character.avatar} alt={character.name} fill style={{ objectFit: 'cover' }} />
+                    </div>
+                  ) : (
+                    <Link href="/character/avatar" style={{
+                      width: 52, height: 52, borderRadius: '50%', border: '2px dashed #2a241c', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, color: '#555',
+                    }}>➕</Link>
+                  )}
+                  <h2 style={{ color: '#e5e5e5', fontSize: 24 }}>{character.name}</h2>
+                </div>
                 {character.status === 'pending' && <span className="tag">⏳ Очікує підтвердження ГМ</span>}
                 {character.status === 'approved' && !character.dead && <span className="tag" style={{ borderColor: '#27ae60', color: '#5cb87a' }}>✅ Затверджено</span>}
                 {character.status === 'rejected' && <span className="tag">❌ Відхилено {character.reviewNote ? `— ${character.reviewNote}` : ''}</span>}
@@ -110,6 +123,7 @@ export default function Home() {
                   <Link href="/character/expedition" className="btn-primary">🔍 Вилазка</Link>
                   <Link href="/character/inventory" className="btn-gold">🎒 Спорядження</Link>
                   <Link href="/character/actions" className="btn-gold">🛌 Дії</Link>
+                  <Link href="/character/avatar" style={{ color: '#8a8378', fontSize: 13, alignSelf: 'center', textDecoration: 'underline' }}>Змінити аватар</Link>
                 </div>
               )}
             </div>

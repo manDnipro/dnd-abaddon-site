@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
+import Image from 'next/image'
 import { Character } from '@/lib/types'
 import { EXPEDITION_LEVELS } from '@/lib/expedition'
 
@@ -45,6 +46,10 @@ export default function ExpeditionPage() {
 
   return (
     <div>
+      <div style={{ position: 'relative', width: '100%', height: 160, borderRadius: 4, overflow: 'hidden', marginBottom: 16, border: '1px solid #2a241c' }}>
+        <Image src="/expedition/expedition-art.png" alt="Вилазка" fill style={{ objectFit: 'cover' }} priority />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(8,7,6,0.9) 100%)' }} />
+      </div>
       <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Вилазка за припасами</h1>
       <p style={{ color: '#666', marginBottom: 16 }}>
         ОЗ: <span style={{ color: character.hp <= character.maxHp * 0.3 ? '#c0392b' : '#e5e5e5' }}>{character.hp}/{character.maxHp}</span>

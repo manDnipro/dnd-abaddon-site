@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { Character, STAT_LABELS, StatKey } from '@/lib/types'
 import { getItem, isConsumable } from '@/lib/items'
 import { CRAFT_RECIPES } from '@/lib/crafting'
@@ -50,6 +51,10 @@ export default function ActionsPage() {
 
   return (
     <div>
+      <div style={{ position: 'relative', width: '100%', height: 150, borderRadius: 4, overflow: 'hidden', marginBottom: 16, border: '1px solid #2a241c' }}>
+        <Image src="/camp/camp-map.png" alt="Табір" fill style={{ objectFit: 'cover' }} priority />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(8,7,6,0.9) 100%)' }} />
+      </div>
       <h1 style={{ color: '#e5e5e5', fontSize: 24, marginBottom: 4 }}>Дії — {character.name}</h1>
       <p style={{ color: '#666', marginBottom: 16, fontSize: 13 }}>
         ОЗ: {character.hp}/{character.maxHp} · Голод: {character.hunger} · Спрага: {character.thirst} · Мораль: {character.morale} · Репутація: {character.reputation}

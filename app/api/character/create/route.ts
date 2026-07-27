@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
     recentExpeditionTimestamps: [],
     huntingProf: 0,
     huntsSinceLevel: 0,
+    avatar: null,
   }
 
   await redis.set(`char:${id}`, JSON.stringify(character))

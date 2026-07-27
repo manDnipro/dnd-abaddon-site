@@ -88,4 +88,5 @@ export type Character = {
   recentExpeditionTimestamps: number[]
   huntingProf: number
   huntsSinceLevel: number
+  avatar: string | null
 }
