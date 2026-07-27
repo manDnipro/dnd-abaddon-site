@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Character, STAT_LABELS, Stats } from '@/lib/types'
+import { xpProgress, levelTitle } from '@/lib/levels'
 
 const FEATURES: { href: string; icon: string; title: string; desc: string }[] = [
   { href: '/character/expedition', icon: '🔍', title: 'Вилазка за припасами', desc: 'Виходь у зруйнований світ по лут, зброю та спорядження. Кожен крок — ризик.' },
@@ -101,6 +102,12 @@ export default function Home() {
 
               {character.status === 'approved' && !character.dead && (
                 <div className="flex flex-col gap-2 mb-5">
+                  <div className="flex justify-between items-center mb-1">
+                    <span style={{ color: '#c9a94f', fontSize: 13, fontFamily: "'Special Elite', monospace" }}>{levelTitle(xpProgress(character.xp).level)}</span>
+                    <span style={{ color: '#75705f', fontSize: 11, fontFamily: "'Special Elite', monospace" }}>
+                      🗡️ {character.meleeProf}/10 · 🔫 {character.firearmProf}/10 · 🏹 {character.huntingProf}/10
+                    </span>
+                  </div>
                   <VitalBar label="ОЗ" value={character.hp} max={character.maxHp} color="#b04a3a" />
                   <VitalBar label="Голод" value={character.hunger} max={100} color="#a68a4a" />
                   <VitalBar label="Спрага" value={character.thirst} max={100} color="#3a7ab0" />

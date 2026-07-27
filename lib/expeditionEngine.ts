@@ -8,6 +8,8 @@ import {
   illnessMoraleLossForLevel, illnessEnergyDrainForLevel, zombieStatsForLevel,
 } from './expedition'
 import { inventoryCapacity } from './inventory'
+import { weaponProficiencyPenalty, trainWeaponProficiency } from './weaponProficiency'
+import { XP_REWARDS } from './levels'
 
 export type SearchResult = {
   log: string[]
@@ -45,7 +47,8 @@ function bestWeapon(character: Character): { id: string; damageDice: string; sta
     const avg = averageDice(item.damageDice ?? '1d4')
     if (avg > bestAvg) {
       bestAvg = avg
-      best = { id: item.key, damageDice: item.damageDice ?? '1d4', statMod: statModifier(character.stats[item.statUsed ?? 'str']) }
+      const baseMod = statModifier(character.stats[item.statUsed ?? 'str'])
+      best = { id: item.key, damageDice: item.damageDice ?? '1d4', statMod: baseMod + weaponProficiencyPenalty(character, item) }
     }
   }
   return best ?? { id: 'fists', damageDice: '1d2', statMod: statModifier(character.stats.str) }
@@ -77,16 +80,22 @@ function fightZombie(character: Character, level: ExpeditionLevel, log: string[]
   let zombieHp = zombie.hp
   log.push(`🧟 Зомбі напав! (ОЗ зомбі: ${zombieHp})`)
 
+  const weaponItem = weapon.id === 'fists' ? undefined : getItem(weapon.id)
+
   for (let round = 1; round <= 20; round++) {
     const playerAttack = resolveAttack(weapon.statMod, DEFAULT_DEFENSE, weapon.damageDice)
     if (playerAttack.hit) {
       zombieHp -= playerAttack.damage
-      log.push(`⚔️ Атака (${weapon.id === 'fists' ? 'голі руки' : getItem(weapon.id)?.name}): ${playerAttack.critical ? 'КРИТ! ' : ''}${playerAttack.damage} шкоди зомбі. Залишилось ОЗ зомбі: ${Math.max(0, zombieHp)}`)
+      log.push(`⚔️ Атака (${weapon.id === 'fists' ? 'голі руки' : weaponItem?.name}): ${playerAttack.critical ? 'КРИТ! ' : ''}${playerAttack.damage} шкоди зомбі. Залишилось ОЗ зомбі: ${Math.max(0, zombieHp)}`)
     } else {
       log.push(`⚔️ Промах по зомбі (кидок ${playerAttack.attackRoll.total}).`)
     }
+    const profGain = trainWeaponProficiency(character, weaponItem)
+    if (profGain) log.push(profGain)
+
     if (zombieHp <= 0) {
-      log.push(`✅ Зомбі знищено!`)
+      character.xp += XP_REWARDS.combatWin
+      log.push(`✅ Зомбі знищено! (+${XP_REWARDS.combatWin} XP)`)
       return false
     }
 
@@ -162,7 +171,9 @@ export function performSearch(character: Character, level: ExpeditionLevel): Sea
   const success = searchRoll.total >= level.dc
 
   if (success) {
-    log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — успіх!`)
+    const xpGain = XP_REWARDS.expeditionByTier[level.index] ?? 5
+    character.xp += xpGain
+    log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — успіх! (+${xpGain} XP)`)
     const loot = rollLoot(level.index)
     addToInventory(character, loot.itemKey, loot.quantity, log)
   } else {

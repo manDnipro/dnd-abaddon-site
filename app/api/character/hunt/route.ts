@@ -6,6 +6,7 @@ import { getItem } from '@/lib/items'
 import { addStack } from '@/lib/stacks'
 import { HUNTING_DC, HUNTING_HUNGER_COST, HUNTING_THIRST_COST, HUNTING_MISHAP_CHANCE, HUNTS_PER_PROFICIENCY, MAX_HUNTING_PROFICIENCY, rollHuntingCatch } from '@/lib/hunting'
 import { huntLine } from '@/lib/flavor'
+import { XP_REWARDS } from '@/lib/levels'
 
 export async function POST() {
   const result = await loadOwnCharacter()
@@ -26,7 +27,8 @@ export async function POST() {
   if (success) {
     const catchKey = rollHuntingCatch()
     addStack(character.inventory, catchKey, 1)
-    log.push(huntLine(character.name, true, getItem(catchKey)?.name ?? catchKey))
+    character.xp += XP_REWARDS.hunt
+    log.push(huntLine(character.name, true, getItem(catchKey)?.name ?? catchKey) + ` (+${XP_REWARDS.hunt} XP)`)
     character.huntsSinceLevel += 1
     if (character.huntsSinceLevel >= HUNTS_PER_PROFICIENCY && character.huntingProf < MAX_HUNTING_PROFICIENCY) {
       character.huntingProf += 1

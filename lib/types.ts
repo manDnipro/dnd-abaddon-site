@@ -90,4 +90,8 @@ export type Character = {
   huntsSinceLevel: number
   avatar: string | null
   canteenUses: number[]
+
+  xp: number
+  meleeProf: number
+  firearmProf: number
 }
