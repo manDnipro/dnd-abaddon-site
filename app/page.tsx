@@ -21,10 +21,12 @@ export default function Home() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
   const [weather, setWeather] = useState<Weather | null>(null)
   const [awayLog, setAwayLog] = useState<string[]>([])
+  const [worldEvents, setWorldEvents] = useState<{ text: string; at: number }[]>([])
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setNickname(d.nickname))
     fetch('/api/weather').then(r => r.json()).then(setWeather)
+    fetch('/api/world/events').then(r => r.json()).then(setWorldEvents)
   }, [])
 
   useEffect(() => {
@@ -71,6 +73,19 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {worldEvents.length > 0 && (
+        <section className="mt-8">
+          <div className="card" style={{ borderColor: '#3a1010' }}>
+            <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 12 }}>ЧУТКИ З ТАБОРУ</p>
+            <div className="flex flex-col gap-2">
+              {worldEvents.map((e, i) => (
+                <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace", opacity: i === 0 ? 1 : 0.6 }}>{e.text}</p>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {nickname === undefined && <p style={{ color: '#555', marginTop: 24, fontFamily: "'Special Elite', monospace", fontSize: 13 }}>Сканую радіочастоти...</p>}
 
