@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import ApocalypseBackground from "@/components/ApocalypseBackground";
 
 export const metadata: Metadata = {
   title: "ABADDON — Гра виживання",
@@ -10,7 +11,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="uk" className="h-full">
-      <body className="min-h-full" style={{ background: '#0a0a0a' }}>
+      <body className="min-h-full">
+        <ApocalypseBackground />
+        <Navbar />
         <main className="max-w-3xl mx-auto w-full px-4 py-10">
           {children}
         </main>
