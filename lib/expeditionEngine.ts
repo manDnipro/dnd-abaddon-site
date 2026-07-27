@@ -11,6 +11,7 @@ import { inventoryCapacity } from './inventory'
 import { weaponProficiencyPenalty, trainWeaponProficiency } from './weaponProficiency'
 import { XP_REWARDS } from './levels'
 import { EnemyTypeDef, getEnemyType, rollAmbushEnemyType, SCREAMER_CALL_CHANCE } from './enemyTypes'
+import { getDurability, isBroken, wearWeaponOnUse, wearArmorOnHit, PROTECTIVE_SLOTS } from './durability'
 
 export type SearchResult = {
   log: string[]
@@ -45,8 +46,9 @@ function addToInventory(character: Character, itemId: string, qty: number, log: 
 
 function equippedArmorTotal(character: Character): number {
   let total = 0
-  for (const itemId of Object.values(character.equipped)) {
-    if (!itemId) continue
+  for (const slot of PROTECTIVE_SLOTS) {
+    const itemId = character.equipped[slot]
+    if (!itemId || isBroken(getDurability(character, itemId))) continue
     const item = getItem(itemId)
     total += item?.armor ?? 0
   }
@@ -59,6 +61,7 @@ function bestWeapon(character: Character): { id: string; damageDice: string; sta
   for (const stack of character.inventory) {
     const item = getItem(stack.itemId)
     if (!item || (item.type !== 'weapon_melee' && item.type !== 'weapon_ranged')) continue
+    if (isBroken(getDurability(character, item.key))) continue
     const avg = averageDice(item.damageDice ?? '1d4')
     if (avg > bestAvg) {
       bestAvg = avg
@@ -109,6 +112,10 @@ function fightOne(character: Character, level: ExpeditionLevel, enemyType: Enemy
     } else {
       log.push(`⚔️ Промах (кидок ${playerAttack.attackRoll.total} проти захисту ${enemyType.defense}).`)
     }
+    if (weapon.id !== 'fists') {
+      wearWeaponOnUse(character, weapon.id)
+      if (isBroken(getDurability(character, weapon.id))) log.push(`🔧 ${weaponItem?.name} зламалась від зносу!`)
+    }
     const profGain = trainWeaponProficiency(character, weaponItem)
     if (profGain) log.push(profGain)
 
@@ -127,6 +134,7 @@ function fightOne(character: Character, level: ExpeditionLevel, enemyType: Enemy
 
     const enemyAttack = resolveAttack(enemyType.attackBonus, DEFAULT_DEFENSE + Math.floor(equippedArmorTotal(character) / 2), base.damageDice)
     if (enemyAttack.hit) {
+      wearArmorOnHit(character)
       const died = applyDamage(character, enemyAttack.damage, log, `атака (${label})`)
       if (died) return true
       if (rollInfectionCheck(base.infectionChance)) {

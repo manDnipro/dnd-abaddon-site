@@ -1,5 +1,6 @@
 import { Character, ClothingSlot } from './types'
 import { getItem } from './items'
+import { getDurability, isBroken } from './durability'
 
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
 
@@ -67,11 +68,16 @@ export function rollDailyWeather(season: Season): RolledWeather {
 
 const SLOTS: ClothingSlot[] = ['head', 'torso', 'legs', 'feet', 'accessory', 'backpack']
 
+function isUsable(character: Character, slot: ClothingSlot, key: string): boolean {
+  return slot === 'backpack' || !isBroken(getDurability(character, key))
+}
+
 export function totalWarmth(character: Character): number {
   return SLOTS.reduce((sum, slot) => {
     const key = character.equipped[slot]
     const def = key ? getItem(key) : undefined
-    return sum + (def?.warmth ?? 0)
+    if (!def || !key || !isUsable(character, slot, key)) return sum
+    return sum + (def.warmth ?? 0)
   }, 0)
 }
 
@@ -79,7 +85,8 @@ export function totalArmor(character: Character): number {
   return SLOTS.reduce((sum, slot) => {
     const key = character.equipped[slot]
     const def = key ? getItem(key) : undefined
-    return sum + (def?.armor ?? 0)
+    if (!def || !key || !isUsable(character, slot, key)) return sum
+    return sum + (def.armor ?? 0)
   }, 0)
 }
 

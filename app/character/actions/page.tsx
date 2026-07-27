@@ -6,8 +6,9 @@ import { getItem, isConsumable } from '@/lib/items'
 import { CRAFT_RECIPES } from '@/lib/crafting'
 import { countOf } from '@/lib/stacks'
 import { CAMP_LOCATIONS } from '@/lib/campLocations'
+import { getDurability, durabilityLabel, repairScrapCost, MAX_DURABILITY } from '@/lib/durability'
 
-type Tab = 'quick' | 'locations' | 'items' | 'craft' | 'storage'
+type Tab = 'quick' | 'locations' | 'items' | 'craft' | 'storage' | 'repair'
 
 export default function ActionsPage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -49,6 +50,7 @@ export default function ActionsPage() {
     { key: 'items', label: 'Предмети' },
     { key: 'craft', label: 'Крафт' },
     { key: 'storage', label: 'Ящик' },
+    { key: 'repair', label: 'Ремонт' },
   ]
 
   return (
@@ -206,6 +208,43 @@ export default function ActionsPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {tab === 'repair' && (
+        <div className="card mb-6">
+          <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Знос спорядження</h2>
+          {(() => {
+            const keys = new Set<string>()
+            for (const slot of ['head', 'torso', 'legs', 'feet', 'accessory'] as const) {
+              const k = character.equipped[slot]
+              if (k) keys.add(k)
+            }
+            for (const s of character.inventory) {
+              const item = getItem(s.itemId)
+              if (item && (item.type === 'weapon_melee' || item.type === 'weapon_ranged')) keys.add(s.itemId)
+            }
+            const rows = Array.from(keys).map(k => ({ key: k, item: getItem(k)!, durability: getDurability(character, k) })).filter(r => r.item)
+            if (rows.length === 0) return <p style={{ color: '#555', fontSize: 13 }}>Немає зброї чи броні для перевірки зносу.</p>
+            return (
+              <div className="flex flex-col gap-2">
+                {rows.map(r => (
+                  <div key={r.key} className="flex items-center justify-between" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '8px 12px' }}>
+                    <div>
+                      <div style={{ color: '#e5e5e5', fontSize: 13 }}>{r.item.name}</div>
+                      <div style={{ color: '#888', fontSize: 11 }}>{durabilityLabel(r.durability)}</div>
+                    </div>
+                    {r.durability < MAX_DURABILITY && (
+                      <button onClick={() => call('/api/character/repair', { itemKey: r.key })} disabled={loading}
+                        style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
+                        Полагодити ({repairScrapCost(r.item)} 🔩)
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
         </div>
       )}
 

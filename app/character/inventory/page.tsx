@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Character, ClothingSlot } from '@/lib/types'
 import { getItem, RARITY_LABELS, getItemRarity, CLOTHING_SLOT_LABELS } from '@/lib/items'
+import { getDurability, durabilityLabel, MAX_DURABILITY } from '@/lib/durability'
 
 export default function InventoryPage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -64,6 +65,7 @@ export default function InventoryPage() {
                   <span style={{ color: '#666', fontSize: 12 }}>{CLOTHING_SLOT_LABELS[slot]}: </span>
                   <span style={{ color: item ? '#e5e5e5' : '#444', fontSize: 14 }}>{item ? item.name : '—'}</span>
                   {item && <span style={{ color: '#888', fontSize: 11, marginLeft: 8 }}>{RARITY_LABELS[getItemRarity(item)]}</span>}
+                  {item && (() => { const d = getDurability(character, equippedId!); return d < MAX_DURABILITY ? <span style={{ fontSize: 11, marginLeft: 8, color: d <= 0 ? '#c0392b' : '#a68a4a' }}>{durabilityLabel(d)}</span> : null })()}
                 </div>
                 {item && (
                   <button onClick={() => unequip(slot)} disabled={loading}
@@ -92,6 +94,7 @@ export default function InventoryPage() {
                   <span style={{ color: '#666', fontSize: 12, marginLeft: 8 }}>×{stack.qty}</span>
                   <span style={{ color: '#888', fontSize: 11, marginLeft: 8 }}>{RARITY_LABELS[getItemRarity(item)]}</span>
                   {item.damageDice && <span style={{ color: '#c0392b', fontSize: 11, marginLeft: 8 }}>⚔ {item.damageDice}</span>}
+                  {(() => { const d = getDurability(character, stack.itemId); return d < MAX_DURABILITY ? <span style={{ fontSize: 11, marginLeft: 8, color: d <= 0 ? '#c0392b' : '#a68a4a' }}>{durabilityLabel(d)}</span> : null })()}
                 </div>
                 {canEquip && (
                   <button onClick={() => equip(item.key)} disabled={loading}
