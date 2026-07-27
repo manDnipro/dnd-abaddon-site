@@ -10,6 +10,7 @@ import {
 import { inventoryCapacity } from './inventory'
 import { weaponProficiencyPenalty, trainWeaponProficiency } from './weaponProficiency'
 import { XP_REWARDS } from './levels'
+import { EnemyTypeDef, getEnemyType, rollAmbushEnemyType, SCREAMER_CALL_CHANCE } from './enemyTypes'
 
 export type SearchResult = {
   log: string[]
@@ -80,51 +81,68 @@ function applyDamage(character: Character, dmg: number, log: string[], cause: st
   return false
 }
 
-function fightZombie(character: Character, level: ExpeditionLevel, log: string[]): boolean {
-  const zombie = zombieStatsForLevel(level.index)
+function fightOne(character: Character, level: ExpeditionLevel, enemyType: EnemyTypeDef, log: string[]): boolean {
+  const base = zombieStatsForLevel(level.index)
   const weapon = bestWeapon(character)
-  let zombieHp = zombie.hp
-  log.push(`🧟 Зомбі напав! (ОЗ зомбі: ${zombieHp})`)
+  let enemyHp = enemyType.hpModifier(base.hp)
+  const label = enemyType.key === 'mass' ? 'Зомбі' : `${enemyType.namePrefix} (${enemyType.flavor})`
+  log.push(`${enemyType.emoji} ${label} напав! (ОЗ: ${enemyHp})`)
 
   const weaponItem = weapon.id === 'fists' ? undefined : getItem(weapon.id)
+  let calledHorde = false
 
   for (let round = 1; round <= 20; round++) {
-    const playerAttack = resolveAttack(weapon.statMod, DEFAULT_DEFENSE, weapon.damageDice)
+    const playerAttack = resolveAttack(weapon.statMod, enemyType.defense, weapon.damageDice)
     if (playerAttack.hit) {
-      zombieHp -= playerAttack.damage
-      log.push(`⚔️ Атака (${weapon.id === 'fists' ? 'голі руки' : weaponItem?.name}): ${playerAttack.critical ? 'КРИТ! ' : ''}${playerAttack.damage} шкоди зомбі. Залишилось ОЗ зомбі: ${Math.max(0, zombieHp)}`)
+      enemyHp -= playerAttack.damage
+      log.push(`⚔️ Атака (${weapon.id === 'fists' ? 'голі руки' : weaponItem?.name}): ${playerAttack.critical ? 'КРИТ! ' : ''}${playerAttack.damage} шкоди. Залишилось ОЗ: ${Math.max(0, enemyHp)}`)
     } else {
-      log.push(`⚔️ Промах по зомбі (кидок ${playerAttack.attackRoll.total}).`)
+      log.push(`⚔️ Промах (кидок ${playerAttack.attackRoll.total} проти захисту ${enemyType.defense}).`)
     }
     const profGain = trainWeaponProficiency(character, weaponItem)
     if (profGain) log.push(profGain)
 
-    if (zombieHp <= 0) {
+    if (enemyHp <= 0) {
       character.xp += XP_REWARDS.combatWin
-      log.push(`✅ Зомбі знищено! (+${XP_REWARDS.combatWin} XP)`)
+      log.push(`✅ ${label} знищено! (+${XP_REWARDS.combatWin} XP)`)
       return false
     }
 
-    const zombieAttack = resolveAttack(0, DEFAULT_DEFENSE + Math.floor(equippedArmorTotal(character) / 2), zombie.damageDice)
-    if (zombieAttack.hit) {
-      const died = applyDamage(character, zombieAttack.damage, log, 'укус зомбі')
+    if (enemyType.special === 'call_horde' && !calledHorde && Math.random() < SCREAMER_CALL_CHANCE) {
+      calledHorde = true
+      log.push(`📢 Крикун кличе підмогу!`)
+      const died = fightOne(character, level, getEnemyType('mass')!, log)
       if (died) return true
-      if (rollInfectionCheck(zombie.infectionChance)) {
+    }
+
+    const enemyAttack = resolveAttack(enemyType.attackBonus, DEFAULT_DEFENSE + Math.floor(equippedArmorTotal(character) / 2), base.damageDice)
+    if (enemyAttack.hit) {
+      const died = applyDamage(character, enemyAttack.damage, log, `атака (${label})`)
+      if (died) return true
+      if (rollInfectionCheck(base.infectionChance)) {
         character.infection = clampInfection(character.infection + infectionAmountForLevel(level.index))
         log.push(`☣️ Укус заразив ${character.name}! Інфекція: ${character.infection}/100`)
       }
     } else {
-      log.push(`🧟 Зомбі промахнувся.`)
+      log.push(`${enemyType.emoji} Ворог промахнувся.`)
     }
   }
   return false
+}
+
+function fightZombie(character: Character, level: ExpeditionLevel, log: string[]): boolean {
+  return fightOne(character, level, getEnemyType('mass')!, log)
+}
+
+function fightAmbush(character: Character, level: ExpeditionLevel, log: string[]): boolean {
+  return fightOne(character, level, rollAmbushEnemyType(level.index), log)
 }
 
 function applyRisk(character: Character, level: ExpeditionLevel, log: string[]): boolean {
   const risk = rollRiskType()
   switch (risk) {
     case 'ambush':
-      return fightZombie(character, level, log)
+      return fightAmbush(character, level, log)
     case 'injury': {
       const dmg = rollDice(injuryDiceForLevel(level.index)).total
       return applyDamage(character, dmg, log, 'поранення на вилазці')
