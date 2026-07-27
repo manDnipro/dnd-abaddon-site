@@ -16,15 +16,21 @@ export type SearchResult = {
   died: boolean
 }
 
+// Loot never vanishes — a full inventory overflows into the personal camp storage box instead,
+// matching the bot's addItemWithOverflow behavior.
 function addToInventory(character: Character, itemId: string, qty: number, log: string[]) {
-  if (character.inventory.some(s => s.itemId === itemId) || character.inventory.length < inventoryCapacity(character)) {
+  const item = getItem(itemId)
+  const alreadyCarried = character.inventory.some(s => s.itemId === itemId)
+  if (alreadyCarried || character.inventory.length < inventoryCapacity(character)) {
     const stack = character.inventory.find(s => s.itemId === itemId)
     if (stack) stack.qty += qty
     else character.inventory.push({ itemId, qty })
-    const item = getItem(itemId)
     log.push(`🎒 Знайдено: ${item?.name ?? itemId} ×${qty}`)
   } else {
-    log.push(`🎒 Інвентар повний — знахідку довелось залишити.`)
+    const boxStack = character.storageBox.find(s => s.itemId === itemId)
+    if (boxStack) boxStack.qty += qty
+    else character.storageBox.push({ itemId, qty })
+    log.push(`🎒 Знайдено: ${item?.name ?? itemId} ×${qty} — інвентар повний, відправлено в особистий ящик.`)
   }
 }
 
