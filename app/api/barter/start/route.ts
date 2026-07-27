@@ -1,0 +1,29 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { loadOwnCharacter } from '@/lib/loadCharacter'
+import { getActiveBarterFor, createBarterSession } from '@/lib/barterStore'
+import { redis } from '@/lib/redis'
+import { Character } from '@/lib/types'
+
+export async function POST(req: NextRequest) {
+  const result = await loadOwnCharacter()
+  if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
+  const { charId, character } = result
+
+  if (character.expedition) return NextResponse.json({ error: 'Обмінюватися можна лише в таборі' }, { status: 400 })
+
+  const existing = await getActiveBarterFor(charId)
+  if (existing) return NextResponse.json({ error: 'У тебе вже є активний обмін' }, { status: 409 })
+
+  const { targetCharId } = await req.json() as { targetCharId: string }
+  const raw = await redis.get<string>(`char:${targetCharId}`)
+  if (!raw) return NextResponse.json({ error: 'Персонажа не знайдено' }, { status: 404 })
+  const target: Character = typeof raw === 'string' ? JSON.parse(raw) : raw
+  if (target.status !== 'approved' || target.dead) return NextResponse.json({ error: 'Цей гравець недоступний для обміну' }, { status: 400 })
+  if (target.expedition) return NextResponse.json({ error: 'Цей гравець зараз не в таборі' }, { status: 400 })
+
+  const targetExisting = await getActiveBarterFor(targetCharId)
+  if (targetExisting) return NextResponse.json({ error: 'У цього гравця вже є активний обмін' }, { status: 409 })
+
+  const session = await createBarterSession(charId, targetCharId)
+  return NextResponse.json(session)
+}

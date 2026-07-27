@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
 
   if (action === 'reject') {
     await redis.del(`char:owner:${character.owner}`)
+  } else {
+    await redis.sadd('char:approved', id)
   }
 
   return NextResponse.json(character)

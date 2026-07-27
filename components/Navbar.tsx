@@ -8,6 +8,8 @@ const LINKS = [
   { href: '/character/create', label: 'Створити персонажа' },
   { href: '/character/inventory', label: 'Спорядження' },
   { href: '/character/actions', label: 'Дії' },
+  { href: '/character/trade', label: 'Торгівля' },
+  { href: '/character/barter', label: 'Обмін' },
   { href: '/character/expedition', label: 'Вилазка' },
   { href: '/gm', label: 'ГМ' },
 ]
