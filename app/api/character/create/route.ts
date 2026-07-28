@@ -17,9 +17,15 @@ export async function POST(req: NextRequest) {
   const statError = validateStatSpread(stats)
   if (statError) return NextResponse.json({ error: statError }, { status: 400 })
 
-  const existing = await redis.get<string>(`char:owner:${owner}`)
-  if (existing) {
-    return NextResponse.json({ error: 'У вас вже є персонаж' }, { status: 409 })
+  const existingId = await redis.get<string>(`char:owner:${owner}`)
+  if (existingId) {
+    const existingRaw = await redis.get<string>(`char:${existingId}`)
+    const existing: Character | null = existingRaw ? (typeof existingRaw === 'string' ? JSON.parse(existingRaw) : existingRaw) : null
+    if (existing && !existing.dead) {
+      return NextResponse.json({ error: 'У вас вже є персонаж' }, { status: 409 })
+    }
+    // Their previous character died — a fresh one gets a brand new id (never reused) and the
+    // account mapping moves to point at it; the dead one stays in Redis as-is, an untouched record.
   }
 
   const id = await redis.incr('char:id')
