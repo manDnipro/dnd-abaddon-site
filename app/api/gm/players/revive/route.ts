@@ -12,6 +12,18 @@ export async function POST(req: NextRequest) {
   const character: Character = typeof raw === 'string' ? JSON.parse(raw) : raw
 
   const wasDead = character.dead
+  if (wasDead) {
+    // The player may have already made a brand new character after this one died — reviving this
+    // one too would leave the account with two "living" characters at once (one of them orphaned,
+    // since char:owner can only point at one), the exact duplicate-record bug this whole invariant
+    // exists to prevent. Block it if the account has moved on.
+    const currentCharId = await redis.get<string>(`char:owner:${character.owner}`)
+    if (currentCharId && currentCharId !== charId) {
+      return NextResponse.json({
+        error: `Гравець ${character.owner} уже створив нового персонажа (#${currentCharId}) — цього старого (#${charId}) воскресити не можна, буде два живих одразу.`,
+      }, { status: 409 })
+    }
+  }
 
   character.dead = false
   character.hp = character.maxHp
