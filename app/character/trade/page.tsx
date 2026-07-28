@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Character } from '@/lib/types'
 import { getItem, estimateTradeValue } from '@/lib/items'
 import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
+import DiceLogLine from '@/components/DiceLogLine'
 
 type Trader = { id: string; name: string; tradeLevel: number; stock: { itemKey: string; quantity: number }[]; trust: number }
 
@@ -122,7 +123,7 @@ export default function TradePage() {
         <div className="card" style={{ borderColor: '#3a1010' }}>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 14 }}>ПЕРЕГОВОРИ</p>
           <div className="flex flex-col gap-2">
-            {log.map((line, i) => <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{line}</p>)}
+            {log.map((line, i) => <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}><DiceLogLine text={line} /></p>)}
           </div>
         </div>
       )}

@@ -4,6 +4,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Character } from '@/lib/types'
 import { EXPEDITION_LEVELS } from '@/lib/expedition'
+import DiceLogLine from '@/components/DiceLogLine'
+import DiceRulesInfo from '@/components/DiceRulesInfo'
 
 function logLineColor(line: string): string {
   if (/^(💥|☠️|🩸)/.test(line)) return '#c0392b'
@@ -183,6 +185,7 @@ export default function ExpeditionPage() {
       {log.length > 0 && (
         <div className="card" style={{ borderColor: '#3a1010' }}>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 14 }}>ЩОДЕННИК ВИЖИВШОГО</p>
+          <DiceRulesInfo />
           {lastImage && (
             lastImage.startsWith('/npc/') ? (
               // NPC portraits are small (~214px) stock thumbnails — stretching them into a full-width
@@ -202,7 +205,7 @@ export default function ExpeditionPage() {
                 color: '#c9c4ba', fontSize: 14, lineHeight: 1.7, fontFamily: "'Special Elite', monospace",
                 borderLeft: `2px solid ${logLineColor(line)}`, paddingLeft: 12, opacity: i === 0 ? 1 : 0.6,
               }}>
-                {line}
+                <DiceLogLine text={line} />
               </p>
             ))}
           </div>

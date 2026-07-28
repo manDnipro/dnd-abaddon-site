@@ -8,6 +8,8 @@ import { countOf } from '@/lib/stacks'
 import { CAMP_LOCATIONS } from '@/lib/campLocations'
 import { getDurability, durabilityLabel, repairScrapCost, MAX_DURABILITY } from '@/lib/durability'
 import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
+import DiceLogLine from '@/components/DiceLogLine'
+import DiceRulesInfo from '@/components/DiceRulesInfo'
 
 type Tab = 'quick' | 'locations' | 'items' | 'craft' | 'storage' | 'repair'
 
@@ -253,13 +255,14 @@ export default function ActionsPage() {
       {log.length > 0 && (
         <div className="card" style={{ borderColor: '#3a1010' }}>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 14 }}>ЩОДЕННИК ВИЖИВШОГО</p>
+          <DiceRulesInfo />
           <div className="flex flex-col gap-3">
             {log.map((line, i) => (
               <p key={i} style={{
                 color: '#c9c4ba', fontSize: 14, lineHeight: 1.7, fontFamily: "'Special Elite', monospace",
                 borderLeft: '2px solid #3a1010', paddingLeft: 12, opacity: i === 0 ? 1 : 0.6,
               }}>
-                {line}
+                <DiceLogLine text={line} />
               </p>
             ))}
           </div>
