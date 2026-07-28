@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { loadOwnCharacter, saveCharacter } from '@/lib/loadCharacter'
 import { getItem, estimateTradeValue } from '@/lib/items'
 import { countOf, addStack, removeStack } from '@/lib/stacks'
-import { TRADER_ROSTER, getTrader, getOrSeedStock, saveStock, removeFromStock, getTrust, adjustTrust } from '@/lib/npcTraders'
+import { TRADER_ROSTER, getTrader, getOrSeedStock, saveStock, removeFromStock, getTrust, adjustTrust, getNextRestockAt } from '@/lib/npcTraders'
 import { resolveNegotiationRoll } from '@/lib/tradeNegotiation'
 import { trainStat } from '@/lib/statTraining'
 
@@ -15,7 +15,8 @@ export async function GET() {
   for (const trader of TRADER_ROSTER) {
     const stock = await getOrSeedStock(trader.id, trader.tradeLevel)
     const trust = await getTrust(charId, trader.id)
-    traders.push({ ...trader, stock, trust })
+    const nextRestockAt = await getNextRestockAt(trader.id)
+    traders.push({ ...trader, stock, trust, nextRestockAt })
   }
   return NextResponse.json(traders)
 }

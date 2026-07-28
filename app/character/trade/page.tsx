@@ -5,7 +5,15 @@ import { getItem, estimateTradeValue } from '@/lib/items'
 import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
 import DiceLogLine from '@/components/DiceLogLine'
 
-type Trader = { id: string; name: string; tradeLevel: number; stock: { itemKey: string; quantity: number }[]; trust: number }
+type Trader = { id: string; name: string; tradeLevel: number; stock: { itemKey: string; quantity: number }[]; trust: number; nextRestockAt: number }
+
+function restockLabel(nextRestockAt: number): string {
+  const ms = nextRestockAt - Date.now()
+  if (ms <= 0) return 'от-от оновиться'
+  const mins = Math.round(ms / 60_000)
+  if (mins < 60) return `оновиться через ${mins} хв`
+  return `оновиться через ${Math.floor(mins / 60)} год ${mins % 60} хв`
+}
 
 export default function TradePage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -65,6 +73,7 @@ export default function TradePage() {
               <div>
                 <span style={{ color: '#e5e5e5', fontSize: 15 }}>{trader.name}</span>
                 <span style={{ color: '#666', fontSize: 11, marginLeft: 8 }}>довіра: {trader.trust}</span>
+                <span style={{ color: '#555', fontSize: 11, marginLeft: 8 }}>· асортимент {restockLabel(trader.nextRestockAt)}</span>
               </div>
               <span style={{ color: '#a68a4a', fontSize: 12 }}>{expanded === trader.id ? '▲' : '▼'}</span>
             </div>
