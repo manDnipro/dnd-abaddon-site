@@ -4,6 +4,7 @@ import { clampHungerThirst, clampInfection, clampMorale } from '@/lib/types'
 import { getItem, isConsumable } from '@/lib/items'
 import { removeStack } from '@/lib/stacks'
 import { useItemLine, poisonLine } from '@/lib/flavor'
+import { appendCharacterLog } from '@/lib/characterLog'
 
 export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
@@ -37,5 +38,6 @@ export async function POST(req: NextRequest) {
   }
 
   await saveCharacter(charId, character)
+  await appendCharacterLog(charId, log)
   return NextResponse.json({ character, log })
 }

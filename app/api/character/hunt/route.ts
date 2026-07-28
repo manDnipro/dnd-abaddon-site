@@ -7,6 +7,7 @@ import { addStack } from '@/lib/stacks'
 import { HUNTING_DC, HUNTING_HUNGER_COST, HUNTING_THIRST_COST, HUNTING_MISHAP_CHANCE, HUNTS_PER_PROFICIENCY, MAX_HUNTING_PROFICIENCY, rollHuntingCatch } from '@/lib/hunting'
 import { huntLine } from '@/lib/flavor'
 import { XP_REWARDS } from '@/lib/levels'
+import { appendCharacterLog } from '@/lib/characterLog'
 
 export async function POST() {
   const result = await loadOwnCharacter()
@@ -44,5 +45,6 @@ export async function POST() {
   }
 
   await saveCharacter(charId, character)
+  await appendCharacterLog(charId, log)
   return NextResponse.json({ character, log })
 }

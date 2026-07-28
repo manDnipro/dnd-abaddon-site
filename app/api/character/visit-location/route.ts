@@ -6,6 +6,7 @@ import { getCampLocation } from '@/lib/campLocations'
 import { reputationTier, CANTEEN_MAX_USES } from '@/lib/reputation'
 import { getItem } from '@/lib/items'
 import { addStack } from '@/lib/stacks'
+import { appendCharacterLog } from '@/lib/characterLog'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -52,5 +53,6 @@ export async function POST(req: NextRequest) {
   }
 
   await saveCharacter(charId, character)
+  await appendCharacterLog(charId, log)
   return NextResponse.json({ character, log })
 }

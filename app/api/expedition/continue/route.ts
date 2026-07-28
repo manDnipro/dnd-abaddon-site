@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { Character } from '@/lib/types'
 import { getExpeditionLevel } from '@/lib/expedition'
 import { performSearch } from '@/lib/expeditionEngine'
+import { appendCharacterLog } from '@/lib/characterLog'
 
 export async function POST() {
   const owner = await getSession()
@@ -24,5 +25,6 @@ export async function POST() {
   if (result.died) character.expedition = null
 
   await redis.set(`char:${charId}`, JSON.stringify(character))
+  await appendCharacterLog(charId, result.log)
   return NextResponse.json({ character, log: result.log, images: result.images })
 }

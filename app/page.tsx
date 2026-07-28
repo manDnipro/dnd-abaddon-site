@@ -5,28 +5,24 @@ import Image from 'next/image'
 import { Character, STAT_LABELS, Stats } from '@/lib/types'
 import { xpProgress, levelTitle } from '@/lib/levels'
 
-const FEATURES: { href: string; icon: string; title: string; desc: string }[] = [
-  { href: '/character/expedition', icon: '🔍', title: 'Вилазка за припасами', desc: 'Кожні двері назовні — азартна ставка. Лут, зброя й ризик знайти більше, ніж шукав.' },
-  { href: '/character/inventory', icon: '🎒', title: 'Спорядження', desc: 'Те, що на тобі, — між життям і рештками. Обирай уважно, що вдягаєш перед виходом.' },
-  { href: '/character/actions', icon: '🛌', title: 'Табір', desc: 'Тут відпочивають, латають рани, крафтять і ховають зайве в ящик, поки ще є час.' },
-  { href: '/character/social', icon: '🔥', title: 'Табірне життя', desc: 'Знайомся з іншими вцілілими біля багаття, кличи на вилазку разом — самому важче вижити.' },
-  { href: '/character/trade', icon: '🤝', title: 'Торгівля', desc: 'Виживальці міняють лут на лут. Довіра будується угодами, не словами.' },
-  { href: '/gm', icon: '📜', title: 'Панель ГМ', desc: 'Хроніки табору. Хто заходить у ворота — вирішує головний гравець.' },
-]
-
 type Weather = { seasonLabel: string; label: string; temperature: number }
+type LogLine = { text: string; at: number }
+type Mission = { title: string; text: string; at: number }
 
 export default function Home() {
   const [nickname, setNickname] = useState<string | null | undefined>(undefined)
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
   const [weather, setWeather] = useState<Weather | null>(null)
   const [awayLog, setAwayLog] = useState<string[]>([])
-  const [worldEvents, setWorldEvents] = useState<{ text: string; at: number }[]>([])
+  const [worldEvents, setWorldEvents] = useState<LogLine[]>([])
+  const [charLog, setCharLog] = useState<LogLine[]>([])
+  const [missions, setMissions] = useState<Mission[]>([])
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setNickname(d.nickname))
     fetch('/api/weather').then(r => r.json()).then(setWeather)
     fetch('/api/world/events').then(r => r.json()).then(setWorldEvents)
+    fetch('/api/world/missions').then(r => r.json()).then(setMissions)
   }, [])
 
   useEffect(() => {
@@ -35,6 +31,7 @@ export default function Home() {
       setCharacter(d.character)
       if (d.dailyTickLog?.length) setAwayLog(d.dailyTickLog)
     })
+    fetch('/api/character/log').then(r => r.json()).then(d => { if (Array.isArray(d)) setCharLog(d) })
   }, [nickname])
 
   async function logout() {
@@ -73,19 +70,6 @@ export default function Home() {
           </div>
         )}
       </section>
-
-      {worldEvents.length > 0 && (
-        <section className="mt-8">
-          <div className="card" style={{ borderColor: '#3a1010' }}>
-            <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 12 }}>ЧУТКИ З ТАБОРУ</p>
-            <div className="flex flex-col gap-2">
-              {worldEvents.map((e, i) => (
-                <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace", opacity: i === 0 ? 1 : 0.6 }}>{e.text}</p>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {nickname === undefined && <p style={{ color: '#555', marginTop: 24, fontFamily: "'Special Elite', monospace", fontSize: 13 }}>Сканую радіочастоти...</p>}
 
@@ -179,18 +163,47 @@ export default function Home() {
         </section>
       )}
 
-      {/* FEATURE GRID */}
-      <section className="mt-12">
-        <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 4 }}>СВІТ ЗА ПАРКАНОМ ТАБОРУ</p>
-        <h2 style={{ color: '#d8cfc0', fontSize: 28, marginBottom: 20 }}>Що чекає виживших</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {FEATURES.map(f => (
-            <Link key={f.href} href={f.href} className="card" style={{ display: 'block', textDecoration: 'none' }}>
-              <div style={{ fontSize: 30, marginBottom: 10 }}>{f.icon}</div>
-              <h3 style={{ color: '#d8cfc0', fontSize: 17, marginBottom: 6 }}>{f.title}</h3>
-              <p style={{ color: '#8a8378', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{f.desc}</p>
-            </Link>
-          ))}
+      {/* NEWS / HISTORY / MISSIONS */}
+      <section className="mt-12 flex flex-col gap-6">
+        <div>
+          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>НОВИНИ ГРИ</p>
+          <div className="card" style={{ borderColor: '#3a1010' }}>
+            {worldEvents.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Новин поки немає.</p>}
+            <div className="flex flex-col gap-2">
+              {worldEvents.map((e, i) => (
+                <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace", opacity: i === 0 ? 1 : 0.6 }}>{e.text}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {nickname && character && (
+          <div>
+            <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>ІСТОРІЯ ПЕРСОНАЖА</p>
+            <div className="card">
+              {charLog.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Ще нічого не сталось — поки що.</p>}
+              <div className="flex flex-col gap-2">
+                {charLog.map((e, i) => (
+                  <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace", opacity: i === 0 ? 1 : 0.55 }}>{e.text}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div>
+          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>МІСІЇ РП ВІД ГМ</p>
+          <div className="card">
+            {missions.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>ГМ поки не оголосив жодної місії.</p>}
+            <div className="flex flex-col gap-4">
+              {missions.map((m, i) => (
+                <div key={i}>
+                  <p style={{ color: '#c9a94f', fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{m.title}</p>
+                  <p style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{m.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>

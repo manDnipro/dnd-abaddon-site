@@ -21,6 +21,8 @@ export default function GMPage() {
   const [tab, setTab] = useState<Tab>('queue')
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null)
   const [eventText, setEventText] = useState('')
+  const [missionTitle, setMissionTitle] = useState('')
+  const [missionText, setMissionText] = useState('')
   const [itemKey, setItemKey] = useState('')
   const [itemQty, setItemQty] = useState(1)
   const [statKey, setStatKey] = useState<StatKey>('str')
@@ -348,7 +350,20 @@ export default function GMPage() {
                 Оголосити
               </button>
             </div>
-            <p style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Побачать усі на головній сторінці.</p>
+            <p style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Побачать усі на головній сторінці, розділ "Новини гри".</p>
+          </div>
+
+          <div className="card">
+            <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>Оголосити РП-місію</h2>
+            <div className="flex flex-col gap-2">
+              <input value={missionTitle} onChange={e => setMissionTitle(e.target.value)} placeholder="Назва місії" />
+              <textarea value={missionText} onChange={e => setMissionText(e.target.value)} rows={3} placeholder="Опис місії для гравців" />
+              <button onClick={async () => { await call('/api/gm/mission', { title: missionTitle, text: missionText }); setMissionTitle(''); setMissionText('') }}
+                disabled={loading || !missionTitle.trim() || !missionText.trim()} className="btn-primary">
+                Оголосити місію
+              </button>
+            </div>
+            <p style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Побачать усі на головній сторінці, розділ "Місії РП від ГМ".</p>
           </div>
         </div>
       )}

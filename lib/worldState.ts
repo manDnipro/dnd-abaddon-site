@@ -67,3 +67,15 @@ export async function listWorldEvents(): Promise<WorldEvent[]> {
   const raw = await redis.lrange<string>('world:events', -10, -1)
   return raw.map(r => typeof r === 'string' ? JSON.parse(r) : r).reverse()
 }
+
+export interface WorldMission { title: string; text: string; at: number }
+
+export async function addWorldMission(title: string, text: string) {
+  await redis.rpush('world:missions', JSON.stringify({ title, text, at: Date.now() }))
+  await redis.ltrim('world:missions', -20, -1)
+}
+
+export async function listWorldMissions(): Promise<WorldMission[]> {
+  const raw = await redis.lrange<string>('world:missions', -10, -1)
+  return raw.map(r => typeof r === 'string' ? JSON.parse(r) : r).reverse()
+}

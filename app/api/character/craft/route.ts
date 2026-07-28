@@ -4,6 +4,7 @@ import { getRecipe } from '@/lib/crafting'
 import { getItem } from '@/lib/items'
 import { addStack, countOf, removeStack } from '@/lib/stacks'
 import { XP_REWARDS } from '@/lib/levels'
+import { appendCharacterLog } from '@/lib/characterLog'
 
 export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
@@ -42,5 +43,7 @@ export async function POST(req: NextRequest) {
 
   await saveCharacter(charId, character)
   const resultItem = getItem(recipe.resultKey)
-  return NextResponse.json({ character, log: [`🔨 Виготовлено: ${resultItem?.name ?? recipe.resultKey} ×${recipe.resultQuantity} (+${XP_REWARDS.craft} XP)`] })
+  const log = [`🔨 Виготовлено: ${resultItem?.name ?? recipe.resultKey} ×${recipe.resultQuantity} (+${XP_REWARDS.craft} XP)`]
+  await appendCharacterLog(charId, log)
+  return NextResponse.json({ character, log })
 }

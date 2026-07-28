@@ -4,6 +4,7 @@ import { clampHungerThirst, statModifier } from '@/lib/types'
 import { rollDice } from '@/lib/dice'
 import { reputationTier, REST_HEAL_DICE, REST_HUNGER_COST, REST_THIRST_COST } from '@/lib/reputation'
 import { restLine } from '@/lib/flavor'
+import { appendCharacterLog } from '@/lib/characterLog'
 
 export async function POST() {
   const result = await loadOwnCharacter()
@@ -23,5 +24,7 @@ export async function POST() {
   character.thirst = clampHungerThirst(character.thirst - REST_THIRST_COST)
 
   await saveCharacter(charId, character)
-  return NextResponse.json({ character, log: [restLine(character.name, tier.label, heal, character.hp, character.maxHp)] })
+  const log = [restLine(character.name, tier.label, heal, character.hp, character.maxHp)]
+  await appendCharacterLog(charId, log)
+  return NextResponse.json({ character, log })
 }
