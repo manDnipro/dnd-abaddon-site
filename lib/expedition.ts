@@ -204,3 +204,41 @@ const ZOMBIE_STATS_BY_LEVEL = byIndex<ZombieStats>([
 export function zombieStatsForLevel(index: number): ZombieStats {
   return ZOMBIE_STATS_BY_LEVEL(index)
 }
+
+// Fatigue: more than the free-attempt threshold worth of expeditions within the window triggers an
+// endurance save on the next one. Base threshold is 2 free expeditions (risk starts on the 3rd); every
+// full 10 character levels grants one extra free expedition before the risk kicks in.
+export const FATIGUE_THRESHOLD_BASE = 2
+export const FATIGUE_WINDOW_MINUTES = 30
+const FATIGUE_SAVE_BASE_DC = 10
+const FATIGUE_SAVE_DC_STEP = 2
+const FATIGUE_INJURY_DICE_STEPS = ['1d4', '1d6', '1d8', '1d10']
+const FATIGUE_ILLNESS_BASE = 8
+const FATIGUE_ILLNESS_STEP = 4
+const FATIGUE_ILLNESS_CAP = 24
+
+export function fatigueThreshold(level: number): number {
+  return FATIGUE_THRESHOLD_BASE + Math.floor((level - 1) / 10)
+}
+
+/** How far past the free threshold this attempt is (1 = first fatigued attempt, 2 = next, ...). */
+export function fatigueExcessCount(recentExpeditions: number, level: number): number {
+  return Math.max(1, recentExpeditions - fatigueThreshold(level) + 1)
+}
+
+export function fatigueSaveDC(excessCount: number): number {
+  return FATIGUE_SAVE_BASE_DC + excessCount * FATIGUE_SAVE_DC_STEP
+}
+
+export function fatigueInjuryDice(excessCount: number): string {
+  return FATIGUE_INJURY_DICE_STEPS[Math.min(excessCount - 1, FATIGUE_INJURY_DICE_STEPS.length - 1)]
+}
+
+export function fatigueIllnessAmount(excessCount: number): number {
+  return Math.min(FATIGUE_ILLNESS_BASE + (excessCount - 1) * FATIGUE_ILLNESS_STEP, FATIGUE_ILLNESS_CAP)
+}
+
+export type FatigueEffect = 'injury' | 'illness'
+export function rollFatigueEffect(): FatigueEffect {
+  return Math.random() < 0.5 ? 'injury' : 'illness'
+}

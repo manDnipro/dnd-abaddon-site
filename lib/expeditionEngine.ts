@@ -6,10 +6,12 @@ import {
   ExpeditionLevel, rollLoot, rollSearchLocation, SPECIAL_ENCOUNTER_CHANCE, rollSpecialEncounterType,
   rollRiskType, injuryDiceForLevel, traumaDiceForLevel, traumaMoraleLossForLevel, infectionAmountForLevel,
   illnessMoraleLossForLevel, illnessEnergyDrainForLevel, zombieStatsForLevel,
+  fatigueThreshold, fatigueExcessCount, fatigueSaveDC, fatigueInjuryDice, fatigueIllnessAmount,
+  rollFatigueEffect, FATIGUE_WINDOW_MINUTES,
 } from './expedition'
 import { inventoryCapacity } from './inventory'
 import { weaponProficiencyPenalty, trainWeaponProficiency } from './weaponProficiency'
-import { XP_REWARDS } from './levels'
+import { XP_REWARDS, levelFromXp } from './levels'
 import { EnemyTypeDef, getEnemyType, rollAmbushEnemyType, SCREAMER_CALL_CHANCE } from './enemyTypes'
 import { getDurability, isBroken, wearWeaponOnUse, wearArmorOnHit, PROTECTIVE_SLOTS } from './durability'
 
@@ -232,6 +234,31 @@ export function performSearch(character: Character, level: ExpeditionLevel): Sea
     if (Math.random() < level.riskChance) {
       const died = applyRisk(character, level, log, images)
       if (died) return { log, images, died: true }
+    }
+  }
+
+  const level_ = levelFromXp(character.xp)
+  const recentCount = character.recentExpeditionTimestamps.filter(t => Date.now() - t < FATIGUE_WINDOW_MINUTES * 60_000).length
+  if (recentCount >= fatigueThreshold(level_)) {
+    const excessCount = fatigueExcessCount(recentCount, level_)
+    const saveDC = fatigueSaveDC(excessCount)
+    const saveRoll = rollD20(statModifier(character.stats.end))
+    const resisted = saveRoll.total >= saveDC
+    if (resisted) {
+      log.push(`💪 Втома накопичується (${recentCount + 1}-ма вилазка за ${FATIGUE_WINDOW_MINUTES} хв), але організм встояв: ${saveRoll.total} проти СК ${saveDC}.`)
+    } else {
+      log.push(`😩 Виснаження бере своє (${recentCount + 1}-ма вилазка за ${FATIGUE_WINDOW_MINUTES} хв): ${saveRoll.total} проти СК ${saveDC} — не вдалось встояти!`)
+      if (rollFatigueEffect() === 'injury') {
+        const dmg = rollDice(fatigueInjuryDice(excessCount)).total
+        const died = applyDamage(character, dmg, log, 'виснаження')
+        if (died) return { log, images, died: true }
+      } else {
+        const amount = fatigueIllnessAmount(excessCount)
+        character.morale = clampMorale(character.morale - amount)
+        character.hunger = clampHungerThirst(character.hunger - amount)
+        character.thirst = clampHungerThirst(character.thirst - amount)
+        log.push(`🤢 Легка хвороба від виснаження: мораль -${amount}, додатково голод/спрага -${amount}.`)
+      }
     }
   }
 
