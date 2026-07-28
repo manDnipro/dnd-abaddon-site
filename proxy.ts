@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, NextFetchEvent } from 'next/server'
 
 // Catches every mutating API call site-wide and mirrors it to Discord — a raw activity trail on
 // top of the richer, descriptive logs (lib/characterLog.ts, lib/worldState.ts) that already cover
@@ -14,14 +14,18 @@ function whoFromCookies(req: NextRequest): string {
   return nickname ?? gm ?? 'анонім'
 }
 
-export function proxy(req: NextRequest) {
+export function proxy(req: NextRequest, event: NextFetchEvent) {
   if (WEBHOOK_URL && req.method === 'POST') {
     const who = whoFromCookies(req)
-    fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: `🌐 \`POST ${req.nextUrl.pathname}\` — ${who}` }),
-    }).catch(() => {})
+    // event.waitUntil keeps the Edge runtime alive long enough for this to actually complete —
+    // a bare un-awaited fetch() here gets killed the instant the response is returned.
+    event.waitUntil(
+      fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: `🌐 \`POST ${req.nextUrl.pathname}\` — ${who}` }),
+      }).catch(() => {})
+    )
   }
   return NextResponse.next()
 }

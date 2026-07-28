@@ -10,7 +10,7 @@ export async function appendCharacterLog(charId: string, lines: string[]) {
   // Redis only needs to hold what the "Історія персонажа" feed actually displays (last 10) plus a
   // small buffer — Discord is the durable full history now, no need to keep growing this list.
   await redis.ltrim(`char:log:${charId}`, -15, -1)
-  logToDiscord(`**[char ${charId}]**\n${lines.join('\n')}`)
+  await logToDiscord(`**[char ${charId}]**\n${lines.join('\n')}`)
 }
 
 export async function getCharacterLog(charId: string): Promise<CharacterLogEntry[]> {

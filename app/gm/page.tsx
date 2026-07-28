@@ -249,7 +249,7 @@ export default function GMPage() {
                     border: `1px solid ${selectedPlayer === p.id ? '#a68a4a' : '#1e2230'}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', textAlign: 'left',
                   }}>
                   <span style={{ color: p.dead ? '#c0392b' : '#e5e5e5', fontSize: 14 }}>{p.dead ? '☠️ ' : ''}{p.name}</span>
-                  <span style={{ color: '#666', fontSize: 12 }}>ОЗ {p.hp}/{p.maxHp} · {p.owner}</span>
+                  <span style={{ color: '#666', fontSize: 12 }}>ОЗ {p.hp}/{p.maxHp} · {p.owner} · #{p.id}</span>
                 </button>
               ))}
               {players.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Табір порожній.</p>}
@@ -417,7 +417,7 @@ export default function GMPage() {
               <label style={{ color: '#888', fontSize: 12, marginTop: 6 }}>Для кого</label>
               <select value={missionTarget} onChange={e => setMissionTarget(e.target.value)}>
                 <option value="">Для всіх гравців</option>
-                {players.filter(p => !p.dead).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                {players.filter(p => !p.dead).map(p => <option key={p.id} value={p.id}>{p.name} — акаунт {p.owner} (#{p.id})</option>)}
               </select>
 
               <label className="flex items-center gap-2" style={{ color: '#888', fontSize: 12, marginTop: 6 }}>
@@ -523,7 +523,7 @@ export default function GMPage() {
                   return (
                     <div key={m.id} className="flex justify-between items-start gap-3" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '8px 12px' }}>
                       <div>
-                        <div style={{ color: '#e5e5e5', fontSize: 13 }}>{m.title} <span style={{ color: '#666', fontSize: 11 }}>— {m.targetName ?? 'усі гравці'}</span></div>
+                        <div style={{ color: '#e5e5e5', fontSize: 13 }}>{m.title} <span style={{ color: '#666', fontSize: 11 }}>— {m.targetName ? `${m.targetName} (#${m.targetCharId})` : 'усі гравці'}</span></div>
                         <div style={{ color: '#666', fontSize: 11, marginTop: 2 }}>
                           {m.checkStat ? `${STAT_LABELS[m.checkStat]} проти СК ${m.checkDC}` : 'без кидка'} · нагорода: {missionRewardSummary(m.reward) ?? 'немає'}
                           {completedCount > 0 && <> · виконано: {completedCount}</>}

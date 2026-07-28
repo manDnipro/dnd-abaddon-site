@@ -11,13 +11,21 @@ function chunk(text: string, size: number): string[] {
   return parts
 }
 
-export function logToDiscord(content: string) {
+// Must be awaited by callers, not fired-and-forgotten — Vercel's Node.js serverless functions can
+// freeze/terminate the moment the response is sent, killing any promise that's still in flight and
+// wasn't awaited. That silently dropped every log in production while still "working" locally
+// (a long-running `next dev` process never gets frozen mid-request the same way).
+export async function logToDiscord(content: string): Promise<void> {
   if (!WEBHOOK_URL) return
   for (const part of chunk(content, 1900)) {
-    fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: part }),
-    }).catch(() => {})
+    try {
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: part }),
+      })
+    } catch {
+      // best-effort — a down/slow webhook must never break gameplay
+    }
   }
 }

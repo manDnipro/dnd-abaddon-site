@@ -62,7 +62,7 @@ export interface WorldEvent { text: string; at: number }
 export async function addWorldEvent(text: string) {
   await redis.rpush('world:events', JSON.stringify({ text, at: Date.now() }))
   await redis.ltrim('world:events', -10, -1)
-  logToDiscord(`**[world event]**\n${text}`)
+  await logToDiscord(`**[world event]**\n${text}`)
 }
 
 export async function listWorldEvents(): Promise<WorldEvent[]> {
