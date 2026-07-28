@@ -161,6 +161,21 @@ export default function Home() {
           </div>
         </div>
 
+        {nickname && character && character.lastExpeditionLog.length > 0 && (
+          <div>
+            <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>
+              🎒 ЩО ПРИНІС(-ЛА) З ОСТАННЬОЇ ВИЛАЗКИ
+            </p>
+            <div className="card" style={{ borderColor: '#3a1010' }}>
+              <div className="flex flex-col gap-2">
+                {character.lastExpeditionLog.map((line, i) => (
+                  <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{line}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {nickname && character && (
           <div>
             <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>ІСТОРІЯ ПЕРСОНАЖА</p>

@@ -6,6 +6,7 @@ import { getExpeditionLevel } from '@/lib/expedition'
 import { performSearch } from '@/lib/expeditionEngine'
 import { tryCampJob } from '@/lib/campJobEngine'
 import { appendCharacterLog } from '@/lib/characterLog'
+import { pushExpeditionLog, finalizeExpeditionLog } from '@/lib/expeditionLog'
 
 export async function POST() {
   const owner = await getSession()
@@ -31,8 +32,10 @@ export async function POST() {
     const result = performSearch(character, level)
     log = log.concat(result.log)
     images = result.images
+    pushExpeditionLog(character, log)
     if (result.died) {
       character.expedition = null
+      finalizeExpeditionLog(character)
     } else {
       character.expedition = { ...character.expedition, phase: 'on_site', arrivesAt: 0 }
     }
@@ -42,6 +45,8 @@ export async function POST() {
     const job = tryCampJob(character)
     log = log.concat(job.log)
     if (job.image) images.push(job.image)
+    pushExpeditionLog(character, log)
+    finalizeExpeditionLog(character)
   }
 
   await redis.set(`char:${charId}`, JSON.stringify(character))

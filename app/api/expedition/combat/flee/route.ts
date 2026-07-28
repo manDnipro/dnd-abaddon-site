@@ -7,6 +7,7 @@ import { resolveEnemyAttack } from '@/lib/combatEngine'
 import { runPostSearchChecks } from '@/lib/expeditionEngine'
 import { rollD20 } from '@/lib/dice'
 import { appendCharacterLog } from '@/lib/characterLog'
+import { pushExpeditionLog, finalizeExpeditionLog } from '@/lib/expeditionLog'
 
 export async function POST() {
   const owner = await getSession()
@@ -45,6 +46,8 @@ export async function POST() {
     }
   }
 
+  pushExpeditionLog(character, log)
+  if (!character.expedition) finalizeExpeditionLog(character)
   await redis.set(`char:${charId}`, JSON.stringify(character))
   await appendCharacterLog(charId, log)
   return NextResponse.json({ character, log })

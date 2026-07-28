@@ -58,6 +58,8 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.durability === undefined) { patched.durability = {}; changed = true }
   if (patched.bio === undefined) { patched.bio = ''; changed = true }
   if (patched.combat === undefined) { patched.combat = null; changed = true }
+  if (patched.currentExpeditionLog === undefined) { patched.currentExpeditionLog = []; changed = true }
+  if (patched.lastExpeditionLog === undefined) { patched.lastExpeditionLog = []; changed = true }
 
   return changed ? patched : null
 }

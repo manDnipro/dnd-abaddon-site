@@ -3,6 +3,7 @@ import { redis } from '@/lib/redis'
 import { getSession } from '@/lib/auth'
 import { Character } from '@/lib/types'
 import { getExpeditionLevel, travelMinutesForLevel } from '@/lib/expedition'
+import { pushExpeditionLog } from '@/lib/expeditionLog'
 
 export async function POST(req: NextRequest) {
   const owner = await getSession()
@@ -25,6 +26,8 @@ export async function POST(req: NextRequest) {
   const travelMs = travelMinutesForLevel(level.index) * 60_000
   character.expedition = { levelKey, phase: 'traveling_out', arrivesAt: Date.now() + travelMs }
   character.recentExpeditionTimestamps = [...character.recentExpeditionTimestamps, Date.now()].filter(t => Date.now() - t < 30 * 60_000)
+  character.currentExpeditionLog = []
+  pushExpeditionLog(character, [`🚩 ${character.name} вирушає на вилазку: ${level.label}`])
 
   await redis.set(`char:${charId}`, JSON.stringify(character))
   return NextResponse.json(character)

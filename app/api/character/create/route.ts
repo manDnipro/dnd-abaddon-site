@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
     storageBox: [],
     expedition: null,
     combat: null,
+    currentExpeditionLog: [],
+    lastExpeditionLog: [],
     recentExpeditionTimestamps: [],
     huntingProf: 0,
     huntsSinceLevel: 0,

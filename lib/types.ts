@@ -103,6 +103,8 @@ export type Character = {
 
   expedition: ExpeditionState
   combat: CombatState | null
+  currentExpeditionLog: string[]
+  lastExpeditionLog: string[]
 
   recentExpeditionTimestamps: number[]
   huntingProf: number

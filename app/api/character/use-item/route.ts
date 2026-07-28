@@ -6,6 +6,7 @@ import { removeStack } from '@/lib/stacks'
 import { useItemLine, poisonLine } from '@/lib/flavor'
 import { appendCharacterLog } from '@/lib/characterLog'
 import { resolveEnemyAttack } from '@/lib/combatEngine'
+import { pushExpeditionLog, finalizeExpeditionLog } from '@/lib/expeditionLog'
 
 export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest) {
   const stack = character.inventory.find(s => s.itemId === itemId)
   if (!stack || stack.qty < 1) return NextResponse.json({ error: 'Предмета немає в інвентарі' }, { status: 400 })
 
+  const wasOnExpedition = Boolean(character.expedition)
   const log: string[] = []
   character.inventory = removeStack(character.inventory, itemId, 1)
 
@@ -50,6 +52,11 @@ export async function POST(req: NextRequest) {
   } else if (character.dead) {
     character.combat = null
     character.expedition = null
+  }
+
+  if (wasOnExpedition) {
+    pushExpeditionLog(character, log)
+    if (!character.expedition) finalizeExpeditionLog(character)
   }
 
   await saveCharacter(charId, character)
