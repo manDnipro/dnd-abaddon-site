@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react'
 import { Character, STAT_LABELS, Stats, StatKey, STAT_BUDGET, STAT_MIN, STAT_MAX } from '@/lib/types'
 import { getItem } from '@/lib/items'
 
-type Tab = 'queue' | 'players' | 'npcs' | 'world'
+type Tab = 'queue' | 'players' | 'npcs' | 'world' | 'inbox'
 type Weather = { seasonLabel?: string; label: string; temperature: number; season: string }
 type NpcInfo = { id: string; name: string; tradeLevel: number; stock: { itemKey: string; quantity: number }[] }
+type GMLetter = { type: 'message' | 'report'; from: string; targetName?: string; text: string; at: number }
 
 const STAT_KEYS = Object.keys(STAT_LABELS) as StatKey[]
 
@@ -29,14 +30,17 @@ export default function GMPage() {
   const [newName, setNewName] = useState('')
   const [newOwner, setNewOwner] = useState('')
   const [newStats, setNewStats] = useState<Stats>({ str: 3, agi: 3, end: 3, per: 3, int: 3, cha: 3 })
+  const [inbox, setInbox] = useState<GMLetter[]>([])
 
   async function loadAll() {
-    const [pendingRes, playersRes, weatherRes, npcsRes] = await Promise.all([
+    const [pendingRes, playersRes, weatherRes, npcsRes, inboxRes] = await Promise.all([
       fetch('/api/gm/characters'),
       fetch('/api/gm/players'),
       fetch('/api/weather'),
       fetch('/api/gm/npcs'),
+      fetch('/api/gm/inbox'),
     ])
+    if (inboxRes.ok) setInbox(await inboxRes.json())
     if (pendingRes.ok) {
       setPending(await pendingRes.json())
       setAuthed(true)
@@ -123,6 +127,7 @@ export default function GMPage() {
     { key: 'players', label: 'Гравці' },
     { key: 'npcs', label: 'NPC' },
     { key: 'world', label: 'Світ' },
+    { key: 'inbox', label: `Пошта (${inbox.length})` },
   ]
 
   return (
@@ -335,6 +340,24 @@ export default function GMPage() {
             </div>
             <p style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Побачать усі на головній сторінці.</p>
           </div>
+        </div>
+      )}
+
+      {tab === 'inbox' && (
+        <div className="flex flex-col gap-3">
+          {inbox.length === 0 && <p style={{ color: '#555' }}>Пошта порожня.</p>}
+          {inbox.map((l, i) => (
+            <div key={i} className="card" style={{ borderColor: l.type === 'report' ? '#3a1010' : '#2a241c' }}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="tag" style={l.type === 'report' ? {} : { borderColor: '#3a3a8a', color: '#7289da' }}>
+                  {l.type === 'report' ? `🚩 Скарга на ${l.targetName}` : '✉️ Лист'}
+                </span>
+                <span style={{ color: '#555', fontSize: 11 }}>{new Date(l.at).toLocaleString('uk-UA')}</span>
+              </div>
+              <p style={{ color: '#666', fontSize: 12, marginBottom: 6 }}>Від: {l.from}</p>
+              <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6 }}>{l.text}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>
