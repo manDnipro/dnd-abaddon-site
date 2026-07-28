@@ -1,10 +1,12 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Character } from '@/lib/types'
 import { EXPEDITION_LEVELS } from '@/lib/expedition'
 
 export default function ExpeditionPage() {
+  const router = useRouter()
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
   const [log, setLog] = useState<string[]>([])
   const [lastImage, setLastImage] = useState<string | null>(null)
@@ -111,7 +113,13 @@ export default function ExpeditionPage() {
       {exp && arrived && (
         <div className="card mb-6 text-center">
           <p style={{ color: '#27ae60', marginBottom: 12 }}>{exp.phase === 'traveling_out' ? 'Місце вже видно попереду.' : 'Ще трохи — і ти вдома.'}</p>
-          <button onClick={() => call('/api/expedition/resolve')} disabled={loading} className="btn-primary">
+          <button
+            onClick={async () => {
+              const returning = exp.phase === 'traveling_back'
+              await call('/api/expedition/resolve')
+              if (returning) router.push('/')
+            }}
+            disabled={loading} className="btn-primary">
             {exp.phase === 'traveling_out' ? '👣 Ступити всередину' : '🏕️ Переступити поріг табору'}
           </button>
         </div>
