@@ -62,9 +62,9 @@ export default function ExpeditionPage() {
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}
 
       {!exp && (
-        <div className="card mb-6">
+        <div className="mb-6">
           <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>Куди цього разу?</h2>
-          <div className="flex flex-col gap-2">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
             {EXPEDITION_LEVELS.map(lvl => (
               <button key={lvl.key} disabled={loading}
                 onClick={async () => {
@@ -78,9 +78,20 @@ export default function ExpeditionPage() {
                   if (!res.ok) { setError(d.error || 'Помилка'); return }
                   setCharacter(d)
                 }}
-                className="text-left" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '10px 14px', cursor: 'pointer' }}>
-                <div style={{ color: '#e5e5e5', fontSize: 14 }}>{lvl.label}</div>
-                <div style={{ color: '#555', fontSize: 11 }}>СК {lvl.dc} · голод -{lvl.hungerCost} · спрага -{lvl.thirstCost} · ризик {Math.round(lvl.riskChance * 100)}%</div>
+                style={{
+                  position: 'relative', padding: 0, border: '1px solid #2a241c', borderRadius: 6,
+                  overflow: 'hidden', cursor: loading ? 'default' : 'pointer', background: '#0a0a0a',
+                  aspectRatio: '340 / 979', opacity: loading ? 0.6 : 1,
+                }}>
+                <Image src={`/expedition/${lvl.key === 'easy' ? 'level1' : lvl.key === 'medium' ? 'level2' : lvl.key === 'hard' ? 'level3' : 'level4'}.jpg`}
+                  alt={lvl.label} fill style={{ objectFit: 'cover' }} />
+                <div style={{
+                  position: 'absolute', left: 0, right: 0, bottom: 0, padding: '8px 10px',
+                  background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.85))',
+                }}>
+                  <div style={{ color: '#e5e5e5', fontSize: 12, fontWeight: 700 }}>{lvl.label}</div>
+                  <div style={{ color: '#aaa', fontSize: 10 }}>СК {lvl.dc} · ризик {Math.round(lvl.riskChance * 100)}%</div>
+                </div>
               </button>
             ))}
           </div>
