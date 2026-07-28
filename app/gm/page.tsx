@@ -26,6 +26,7 @@ export default function GMPage() {
   const [statKey, setStatKey] = useState<StatKey>('str')
   const [statValue, setStatValue] = useState(3)
   const [hpValue, setHpValue] = useState(0)
+  const [bioText, setBioText] = useState('')
   const [npcs, setNpcs] = useState<NpcInfo[]>([])
   const [newName, setNewName] = useState('')
   const [newOwner, setNewOwner] = useState('')
@@ -220,7 +221,7 @@ export default function GMPage() {
             <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Огляд групи ({players.length})</h2>
             <div className="flex flex-col gap-2">
               {players.map(p => (
-                <button key={p.id} onClick={() => { setSelectedPlayer(p.id); setHpValue(p.hp); setStatValue(p.stats.str) }}
+                <button key={p.id} onClick={() => { setSelectedPlayer(p.id); setHpValue(p.hp); setStatValue(p.stats.str); setBioText(p.bio || '') }}
                   className="flex items-center justify-between" style={{
                     background: selectedPlayer === p.id ? 'rgba(166,138,74,0.1)' : '#0a0a0a',
                     border: `1px solid ${selectedPlayer === p.id ? '#a68a4a' : '#1e2230'}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', textAlign: 'left',
@@ -273,6 +274,15 @@ export default function GMPage() {
                   Забрати
                 </button>
                 {itemKey && getItem(itemKey) && <span style={{ color: '#666', fontSize: 12 }}>→ {getItem(itemKey)?.name}</span>}
+              </div>
+
+              <div className="mb-3">
+                <span style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>Особливості (видно у картці персонажа)</span>
+                <textarea value={bioText} onChange={e => setBioText(e.target.value)} rows={3} placeholder="Напр.: Брат одного з вартових табору..." className="mb-2" />
+                <button onClick={() => call('/api/gm/players/bio', { charId: player.id, bio: bioText })} disabled={loading}
+                  style={{ fontSize: 12, color: '#c9a227', background: 'none', border: '1px solid #2a2410', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
+                  Зберегти особливості
+                </button>
               </div>
 
               <details className="mt-4">

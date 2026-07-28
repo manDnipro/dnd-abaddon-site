@@ -96,4 +96,5 @@ export type Character = {
   firearmProf: number
   lastDailyTickAt: number
   durability: Record<string, number>
+  bio: string
 }

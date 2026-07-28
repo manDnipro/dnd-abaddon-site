@@ -50,6 +50,7 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.firearmProf === undefined) { patched.firearmProf = 0; changed = true }
   if (patched.lastDailyTickAt === undefined) { patched.lastDailyTickAt = Date.now(); changed = true }
   if (patched.durability === undefined) { patched.durability = {}; changed = true }
+  if (patched.bio === undefined) { patched.bio = ''; changed = true }
 
   return changed ? patched : null
 }

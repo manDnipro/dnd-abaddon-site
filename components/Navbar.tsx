@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 
 const BASE_LINKS = [
   { href: '/', label: 'Головна' },
+  { href: '/character/sheet', label: 'Картка' },
   { href: '/character/inventory', label: 'Спорядження' },
   { href: '/character/actions', label: 'Дії' },
   { href: '/character/trade', label: 'Торгівля' },
@@ -116,7 +117,7 @@ export default function Navbar() {
                   position: 'absolute', right: 0, top: 44, width: 220, background: '#0d0b09', border: '1px solid #2a241c',
                   borderRadius: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.6)', zIndex: 60, overflow: 'hidden',
                 }}>
-                  <MenuItem label="Твій профіль" href="/" onClick={() => setPanel(null)} />
+                  <MenuItem label="📋 Картка персонажа" href="/character/sheet" onClick={() => setPanel(null)} />
                   <MenuItem label="✉️ Звернутися до ГМ" onClick={() => setPanel('message')} />
                   <MenuItem label="🚩 Поскаржитись на гравця" onClick={openReport} />
                   <MenuItem label="🚪 Вийти з акаунту" onClick={logout} danger />
