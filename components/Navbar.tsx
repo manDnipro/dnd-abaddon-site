@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -19,10 +20,14 @@ export default function Navbar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [hasLivingCharacter, setHasLivingCharacter] = useState(false)
+  const [avatar, setAvatar] = useState<string | null>(null)
+  const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
     fetch('/api/character/mine').then(r => r.json()).then(d => {
       setHasLivingCharacter(!!d.character && !d.character.dead)
+      setAvatar(d.character?.avatar ?? null)
+      setLoggedIn(d.character !== undefined)
     }).catch(() => {})
   }, [pathname])
 
@@ -44,10 +49,21 @@ export default function Navbar() {
           ))}
         </div>
 
-        <button onClick={() => setOpen(o => !o)} className="sm:hidden"
-          style={{ background: 'none', border: '1px solid #2a241c', color: '#a68a4a', padding: '6px 10px', borderRadius: 3, fontSize: 18, lineHeight: 1, cursor: 'pointer' }}>
-          {open ? '✕' : '☰'}
-        </button>
+        <div className="flex items-center gap-3">
+          {loggedIn && (
+            <Link href="/" title="Профіль" style={{
+              position: 'relative', width: 34, height: 34, borderRadius: '50%', overflow: 'hidden',
+              border: '2px solid #a68a4a', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: '#0a0908', color: '#a68a4a', fontSize: 15,
+            }}>
+              {avatar ? <Image src={avatar} alt="Профіль" fill style={{ objectFit: 'cover' }} /> : '👤'}
+            </Link>
+          )}
+          <button onClick={() => setOpen(o => !o)} className="sm:hidden"
+            style={{ background: 'none', border: '1px solid #2a241c', color: '#a68a4a', padding: '6px 10px', borderRadius: 3, fontSize: 18, lineHeight: 1, cursor: 'pointer' }}>
+            {open ? '✕' : '☰'}
+          </button>
+        </div>
       </div>
 
       {open && (
