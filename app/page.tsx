@@ -2,12 +2,20 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Character } from '@/lib/types'
+import { Character, STAT_LABELS, formatModifier, statModifier } from '@/lib/types'
 import { characterTitle } from '@/lib/characterTitle'
+import { RPMission } from '@/lib/rpMissions'
+import { getItem } from '@/lib/items'
 
 type Weather = { seasonLabel: string; label: string; temperature: number }
 type LogLine = { text: string; at: number }
-type Mission = { title: string; text: string; at: number }
+
+function missionRewardLabel(m: RPMission): string | null {
+  if (m.reward.type === 'item') return `🎁 ${getItem(m.reward.itemKey ?? '')?.name ?? m.reward.itemKey} ×${m.reward.itemQty}`
+  if (m.reward.type === 'hp') return `❤️ +${m.reward.hpAmount} ОЗ`
+  if (m.reward.type === 'stat' && m.reward.statKey) return `${STAT_LABELS[m.reward.statKey]} +${m.reward.statAmount}`
+  return null
+}
 
 export default function Home() {
   const [nickname, setNickname] = useState<string | null | undefined>(undefined)
@@ -16,14 +24,19 @@ export default function Home() {
   const [awayLog, setAwayLog] = useState<string[]>([])
   const [worldEvents, setWorldEvents] = useState<LogLine[]>([])
   const [charLog, setCharLog] = useState<LogLine[]>([])
-  const [missions, setMissions] = useState<Mission[]>([])
+  const [missions, setMissions] = useState<RPMission[]>([])
+  const [missionLoading, setMissionLoading] = useState<string | null>(null)
+  const [missionResult, setMissionResult] = useState<{ id: string; log: string[] } | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setNickname(d.nickname))
     fetch('/api/weather').then(r => r.json()).then(setWeather)
     fetch('/api/world/events').then(r => r.json()).then(setWorldEvents)
-    fetch('/api/world/missions').then(r => r.json()).then(setMissions)
   }, [])
+
+  function loadMissions() {
+    fetch('/api/character/missions').then(r => r.json()).then(d => { if (Array.isArray(d)) setMissions(d) })
+  }
 
   useEffect(() => {
     if (!nickname) return
@@ -32,7 +45,22 @@ export default function Home() {
       if (d.dailyTickLog?.length) setAwayLog(d.dailyTickLog)
     })
     fetch('/api/character/log').then(r => r.json()).then(d => { if (Array.isArray(d)) setCharLog(d) })
+    loadMissions()
   }, [nickname])
+
+  async function attemptMission(missionId: string) {
+    setMissionLoading(missionId)
+    setMissionResult(null)
+    const res = await fetch('/api/character/missions/attempt', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ missionId }),
+    })
+    const d = await res.json()
+    setMissionLoading(null)
+    if (!res.ok) return
+    setCharacter(d.character)
+    setMissionResult({ id: missionId, log: d.log })
+    loadMissions()
+  }
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -190,20 +218,41 @@ export default function Home() {
           </div>
         )}
 
-        <div>
-          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>МІСІЇ РП ВІД ГМ</p>
-          <div className="card">
-            {missions.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>ГМ поки не оголосив жодної місії.</p>}
-            <div className="flex flex-col gap-4">
-              {missions.map((m, i) => (
-                <div key={i}>
-                  <p style={{ color: '#c9a94f', fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{m.title}</p>
-                  <p style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{m.text}</p>
-                </div>
-              ))}
+        {nickname && character && character.status === 'approved' && !character.dead && (
+          <div>
+            <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>МІСІЇ РП ВІД ГМ</p>
+            <div className="card">
+              {missions.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Наразі для тебе немає місій.</p>}
+              <div className="flex flex-col gap-4">
+                {missions.map(m => {
+                  const rewardLabel = missionRewardLabel(m)
+                  const checkLabel = m.checkStat
+                    ? `🎲 ${STAT_LABELS[m.checkStat]} ${formatModifier(statModifier(character.stats[m.checkStat]))} проти СК ${m.checkDC}`
+                    : null
+                  return (
+                    <div key={m.id} style={{ borderTop: '1px solid #1e2230', paddingTop: 12 }}>
+                      <p style={{ color: '#c9a94f', fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{m.title}</p>
+                      <p style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace", marginBottom: 6 }}>{m.text}</p>
+                      <p style={{ color: '#666', fontSize: 11, marginBottom: 8 }}>
+                        {checkLabel ?? 'без кидка'}{rewardLabel && <> · нагорода: {rewardLabel}</>}
+                      </p>
+                      <button onClick={() => attemptMission(m.id)} disabled={missionLoading === m.id} className="btn-gold">
+                        {missionLoading === m.id ? 'Виконую...' : '📜 Виконати'}
+                      </button>
+                      {missionResult?.id === m.id && (
+                        <div className="flex flex-col gap-1" style={{ marginTop: 10 }}>
+                          {missionResult.log.map((line, i) => (
+                            <p key={i} style={{ color: '#a99c8a', fontSize: 12, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{line}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </section>
     </div>
   )
