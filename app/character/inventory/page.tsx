@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Character, ClothingSlot } from '@/lib/types'
 import { getItem, RARITY_LABELS, getItemRarity, CLOTHING_SLOT_LABELS } from '@/lib/items'
 import { getDurability, durabilityLabel, MAX_DURABILITY } from '@/lib/durability'
+import EquipmentSilhouette from '@/components/EquipmentSilhouette'
 
 export default function InventoryPage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -56,6 +57,8 @@ export default function InventoryPage() {
 
       <div className="card mb-6">
         <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>Вдягнене на тобі</h2>
+        <EquipmentSilhouette character={character} onUnequip={unequip} disabled={loading} />
+        <p style={{ color: '#555', fontSize: 11, textAlign: 'center', margin: '10px 0 16px' }}>Тицяй на значок, щоб зняти</p>
         <div className="flex flex-col gap-2">
           {(Object.keys(CLOTHING_SLOT_LABELS) as ClothingSlot[]).map(slot => {
             const equippedId = character.equipped[slot]
