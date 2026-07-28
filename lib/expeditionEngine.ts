@@ -238,16 +238,19 @@ export function performSearch(character: Character, level: ExpeditionLevel): Sea
   }
 
   const level_ = levelFromXp(character.xp)
-  const recentCount = character.recentExpeditionTimestamps.filter(t => Date.now() - t < FATIGUE_WINDOW_MINUTES * 60_000).length
-  if (recentCount >= fatigueThreshold(level_)) {
-    const excessCount = fatigueExcessCount(recentCount, level_)
+  // recentExpeditionTimestamps already includes the current expedition's own start timestamp
+  // (pushed by /api/expedition/start before this search runs), so the count of PRIOR expeditions
+  // in the window is one less than the raw array length.
+  const priorCount = Math.max(0, character.recentExpeditionTimestamps.filter(t => Date.now() - t < FATIGUE_WINDOW_MINUTES * 60_000).length - 1)
+  if (priorCount >= fatigueThreshold(level_)) {
+    const excessCount = fatigueExcessCount(priorCount, level_)
     const saveDC = fatigueSaveDC(excessCount)
     const saveRoll = rollD20(statModifier(character.stats.end))
     const resisted = saveRoll.total >= saveDC
     if (resisted) {
-      log.push(`💪 Втома накопичується (${recentCount + 1}-ма вилазка за ${FATIGUE_WINDOW_MINUTES} хв), але організм встояв: ${saveRoll.total} проти СК ${saveDC}.`)
+      log.push(`💪 Втома накопичується (${priorCount + 1}-ма вилазка за ${FATIGUE_WINDOW_MINUTES} хв), але організм встояв: ${saveRoll.total} проти СК ${saveDC}.`)
     } else {
-      log.push(`😩 Виснаження бере своє (${recentCount + 1}-ма вилазка за ${FATIGUE_WINDOW_MINUTES} хв): ${saveRoll.total} проти СК ${saveDC} — не вдалось встояти!`)
+      log.push(`😩 Виснаження бере своє (${priorCount + 1}-ма вилазка за ${FATIGUE_WINDOW_MINUTES} хв): ${saveRoll.total} проти СК ${saveDC} — не вдалось встояти!`)
       if (rollFatigueEffect() === 'injury') {
         const dmg = rollDice(fatigueInjuryDice(excessCount)).total
         const died = applyDamage(character, dmg, log, 'виснаження')
