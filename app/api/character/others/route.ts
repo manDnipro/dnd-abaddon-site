@@ -10,16 +10,30 @@ export async function GET() {
   const { charId, character: myCharacter } = result
 
   const ids = await getApprovedCharacterIds()
-  const others: { id: string; name: string }[] = []
+  const byOwner = new Map<string, Character[]>()
   for (const id of ids) {
     if (id === charId) continue
     const raw = await redis.get<string>(`char:${id}`)
     if (!raw) continue
     const c: Character = typeof raw === 'string' ? JSON.parse(raw) : raw
-    // Belt-and-suspenders: also exclude by owner, in case a stale duplicate record from an old
-    // schema migration shares the same account but got a different char id.
-    if (c.owner === myCharacter.owner) continue
-    if (c.status === 'approved' && !c.dead && !c.expedition) others.push({ id: c.id, name: c.name })
+    if (c.owner === myCharacter.owner) continue // never list yourself, even under a stale duplicate id
+    if (c.status !== 'approved' || c.dead || c.expedition) continue
+    const list = byOwner.get(c.owner) ?? []
+    list.push(c)
+    byOwner.set(c.owner, list)
+  }
+
+  const others: { id: string; name: string }[] = []
+  for (const [owner, list] of byOwner) {
+    if (list.length === 1) {
+      others.push({ id: list[0].id, name: list[0].name })
+      continue
+    }
+    // Same stale-duplicate issue as the GM roster — pick whichever record the account's char:owner
+    // mapping actually resolves to, so barter/social target the character that owner can actually use.
+    const linkedId = await redis.get<string>(`char:owner:${owner}`)
+    const linked = list.find(c => c.id === linkedId) ?? list.reduce((a, b) => (Number(b.id) > Number(a.id) ? b : a))
+    others.push({ id: linked.id, name: linked.name })
   }
   return NextResponse.json(others)
 }
