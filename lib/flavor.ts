@@ -49,3 +49,20 @@ const POISON_LINES = [
 export function poisonLine(name: string, dmg: number): string {
   return `🤢 ${name} ${pick(POISON_LINES)}. -${dmg} ОЗ.`
 }
+
+const REPAIR_SUCCESS_LINES = [
+  'впевненою рукою підганяє останню деталь на місце',
+  'зосереджено доводить роботу до кінця, не поспішаючи',
+  'знаходить потрібний кут — і механізм нарешті слухається',
+]
+const REPAIR_FAIL_LINES = [
+  'намагається зосередитись, але тут відволікається і впускає голку — доведеться перепробувати',
+  'заплутується в дрібних деталях, і щось стає не на своє місце',
+  'руки тремтять більше, ніж хотілося б — робота виходить неохайною',
+  'відволікається на далекий шум і губить думку на середині роботи',
+]
+export function repairLine(name: string, itemName: string, success: boolean): string {
+  return success
+    ? `🔧 ${name} ${pick(REPAIR_SUCCESS_LINES)} — ${itemName} як новий(-а).`
+    : `🔧 ${name} ${pick(REPAIR_FAIL_LINES)}: ${itemName} полагоджено лише частково.`
+}

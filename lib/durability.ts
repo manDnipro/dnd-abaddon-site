@@ -1,5 +1,5 @@
 import { Character, ClothingSlot } from './types'
-import { ItemDefinition, estimateTradeValue } from './items'
+import { ItemDefinition, ItemRarity, estimateTradeValue, getItemRarity } from './items'
 import { MAX_LEVEL, levelFromXp } from './levels'
 
 export const MAX_DURABILITY = 100
@@ -59,3 +59,14 @@ export function wearArmorOnHit(character: Character): void {
 export function repairScrapCost(item: ItemDefinition): number {
   return Math.max(1, Math.ceil(estimateTradeValue(item) / 2))
 }
+
+// Finicky work — fiddly springs, stripped threads, a needle that just won't cooperate. The fancier
+// the gear, the harder it is to get right, same curve as the weapon-proficiency rarity gate.
+const REPAIR_DC_BY_RARITY: Record<ItemRarity, number> = {
+  common: 8, uncommon: 10, rare: 12, epic: 15, legendary: 18,
+}
+export function repairDC(item: ItemDefinition): number {
+  return REPAIR_DC_BY_RARITY[getItemRarity(item)]
+}
+// A botched attempt isn't wasted work — you still made some progress, just not full restoration.
+export const REPAIR_FAIL_RESTORE_FRACTION = 0.4

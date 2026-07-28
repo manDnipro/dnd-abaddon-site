@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadOwnCharacter, saveCharacter, blockIfInCombat } from '@/lib/loadCharacter'
 import { getItem } from '@/lib/items'
-import { getDurability, MAX_DURABILITY, repairScrapCost } from '@/lib/durability'
+import { getDurability, MAX_DURABILITY, repairScrapCost, repairDC, REPAIR_FAIL_RESTORE_FRACTION } from '@/lib/durability'
 import { countOf, removeStack } from '@/lib/stacks'
+import { statModifier } from '@/lib/types'
+import { rollD20 } from '@/lib/dice'
+import { repairLine } from '@/lib/flavor'
+import { trainStat } from '@/lib/statTraining'
 
 export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
@@ -31,8 +35,22 @@ export async function POST(req: NextRequest) {
   remaining -= fromInv
   if (remaining > 0) character.storageBox = removeStack(character.storageBox, 'scrap', remaining)
 
-  character.durability = { ...character.durability, [itemKey]: MAX_DURABILITY }
+  const dc = repairDC(item)
+  const roll = rollD20(statModifier(character.stats.per))
+  const success = roll.total >= dc
+  const log = [`🎲 Ремонт (${item.name}): ${roll.total} проти СК ${dc}${success ? ' — впорався!' : ' — не все вдалось з першого разу.'}`]
+
+  if (success) {
+    character.durability = { ...character.durability, [itemKey]: MAX_DURABILITY }
+  } else {
+    const restored = Math.round((MAX_DURABILITY - current) * REPAIR_FAIL_RESTORE_FRACTION)
+    character.durability = { ...character.durability, [itemKey]: Math.min(MAX_DURABILITY, current + restored) }
+  }
+  log.push(repairLine(character.name, item.name, success))
+
+  const growth = trainStat(character, 'per', success)
+  if (growth) log.push(growth)
 
   await saveCharacter(charId, character)
-  return NextResponse.json({ character, log: [`🔧 ${item.name} відремонтовано за ${cost} металобрухту.`] })
+  return NextResponse.json({ character, log })
 }
