@@ -5,6 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Character } from '@/lib/types'
 import { EXPEDITION_LEVELS } from '@/lib/expedition'
 
+function logLineColor(line: string): string {
+  if (/^(💥|☠️|🩸)/.test(line)) return '#c0392b'
+  if (/^(✅|🎒|🏃.*вдалась)/.test(line)) return '#5cb87a'
+  if (/^(⚔️|🗡️|⚠️)/.test(line)) return '#e0a03a'
+  if (/^(☣️|🤒|🤢)/.test(line)) return '#8e44ad'
+  if (/^(🤝|💪)/.test(line)) return '#a68a4a'
+  return '#3a1010'
+}
+
 export default function ExpeditionPage() {
   const router = useRouter()
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -125,7 +134,46 @@ export default function ExpeditionPage() {
         </div>
       )}
 
-      {exp && exp.phase === 'on_site' && (
+      {character.combat && (() => {
+        const c = character.combat!
+        const hpPct = Math.max(0, Math.round((c.hp / c.maxHp) * 100))
+        const canSneak = c.hp === c.maxHp
+        return (
+          <div className="card mb-6" style={{ borderColor: '#6b1010', boxShadow: '0 0 24px rgba(107,16,16,0.25)' }}>
+            <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#e05555', letterSpacing: '0.2em', marginBottom: 14 }}>⚔️ БІЙ</p>
+            <div className="flex items-center gap-4 flex-wrap mb-4">
+              {c.image && (
+                <div style={{ position: 'relative', width: 96, height: 96, borderRadius: 6, overflow: 'hidden', border: '2px solid #6b1010', flexShrink: 0 }}>
+                  <Image src={c.image} alt={c.enemyLabel} fill style={{ objectFit: 'cover' }} sizes="96px" />
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ color: '#e5e5e5', fontSize: 16, fontWeight: 700, marginBottom: 6 }}>{c.enemyEmoji} {c.enemyLabel}</div>
+                <div style={{ background: '#1a0a0a', border: '1px solid #3a1010', borderRadius: 4, height: 14, overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${hpPct}%`, height: '100%',
+                    background: hpPct > 50 ? '#8a2020' : hpPct > 20 ? '#a86a20' : '#c0392b',
+                    transition: 'width 0.3s ease',
+                  }} />
+                </div>
+                <div style={{ color: '#999', fontSize: 11, marginTop: 4 }}>ОЗ ворога: {c.hp}/{c.maxHp}</div>
+              </div>
+            </div>
+            <div className="flex gap-3 flex-wrap">
+              <button onClick={() => call('/api/expedition/combat/attack')} disabled={loading} className="btn-primary">⚔️ Атакувати</button>
+              {canSneak && (
+                <button onClick={() => call('/api/expedition/combat/stealth')} disabled={loading} className="btn-gold">🗡️ Атакувати скритно</button>
+              )}
+              <button onClick={() => call('/api/expedition/combat/flee')} disabled={loading}
+                style={{ background: 'none', border: '1px solid #3a1010', color: '#c9a94f', borderRadius: 4, padding: '10px 18px', cursor: loading ? 'default' : 'pointer' }}>
+                🏃 Втекти
+              </button>
+            </div>
+          </div>
+        )
+      })()}
+
+      {exp && exp.phase === 'on_site' && !character.combat && (
         <div className="card mb-6 flex gap-3">
           <button onClick={() => call('/api/expedition/continue')} disabled={loading} className="btn-primary">🔍 Продовжити вилазку</button>
           <button onClick={() => call('/api/expedition/return')} disabled={loading} className="btn-gold">🏕️ Повернутися в табір</button>
@@ -152,7 +200,7 @@ export default function ExpeditionPage() {
             {log.map((line, i) => (
               <p key={i} style={{
                 color: '#c9c4ba', fontSize: 14, lineHeight: 1.7, fontFamily: "'Special Elite', monospace",
-                borderLeft: '2px solid #3a1010', paddingLeft: 12, opacity: i === 0 ? 1 : 0.6,
+                borderLeft: `2px solid ${logLineColor(line)}`, paddingLeft: 12, opacity: i === 0 ? 1 : 0.6,
               }}>
                 {line}
               </p>

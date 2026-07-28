@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   character.morale = 100
   // Only clear a stuck expedition when actually reviving from death — a living character being
   // fully healed shouldn't get yanked out of an expedition they're mid-way through.
-  if (wasDead) character.expedition = null
+  if (wasDead) { character.expedition = null; character.combat = null }
 
   await redis.set(`char:${charId}`, JSON.stringify(character))
   return NextResponse.json(character)

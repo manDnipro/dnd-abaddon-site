@@ -17,6 +17,7 @@ export async function POST() {
   if (!character.expedition || character.expedition.phase !== 'on_site') {
     return NextResponse.json({ error: 'Ви не на місці вилазки' }, { status: 400 })
   }
+  if (character.combat) return NextResponse.json({ error: 'Спершу розберись з ворогом' }, { status: 409 })
 
   const level = getExpeditionLevel(character.expedition.levelKey)!
   const travelMs = travelMinutesForLevel(level.index) * 60_000

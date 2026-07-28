@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     equipped: EMPTY_EQUIPPED,
     storageBox: [],
     expedition: null,
+    combat: null,
     recentExpeditionTimestamps: [],
     huntingProf: 0,
     huntsSinceLevel: 0,

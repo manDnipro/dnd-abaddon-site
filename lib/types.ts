@@ -60,6 +60,24 @@ export type ExpeditionState = {
   arrivesAt: number // timestamp — when the current travel phase completes
 } | null
 
+// A pending, interactive fight — set when a zombie encounter fires during a search instead of
+// auto-resolving. The player picks attack / stealth / flee via /api/expedition/combat/* each round.
+export interface CombatState {
+  enemyKey: string
+  enemyLabel: string
+  enemyEmoji: string
+  image: string | null
+  hp: number
+  maxHp: number
+  defense: number
+  attackBonus: number
+  damageDice: string
+  infectionChance: number
+  levelIndex: number
+  special?: 'call_horde'
+  hordeCalled: boolean
+}
+
 export type Character = {
   id: string
   owner: string
@@ -84,6 +102,7 @@ export type Character = {
   storageBox: InventoryStack[]
 
   expedition: ExpeditionState
+  combat: CombatState | null
 
   recentExpeditionTimestamps: number[]
   huntingProf: number
