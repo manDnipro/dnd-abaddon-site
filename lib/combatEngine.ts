@@ -78,7 +78,7 @@ export function startCombatState(enemyType: EnemyTypeDef, levelIndex: number, we
   }
 }
 
-export interface AttackRoundResult { log: string[]; enemyDied: boolean }
+export interface AttackRoundResult { log: string[]; enemyDied: boolean; hit: boolean }
 
 /** Resolves the player's own attack this round (weapon wear + proficiency growth included). */
 export function resolvePlayerAttack(character: Character, combat: CombatState, sneak: boolean): AttackRoundResult {
@@ -112,7 +112,7 @@ export function resolvePlayerAttack(character: Character, combat: CombatState, s
   if (combat.hp <= 0) {
     character.xp += XP_REWARDS.combatWin
     log.push(`✅ ${combat.enemyLabel} знищено! (+${XP_REWARDS.combatWin} XP)`)
-    return { log, enemyDied: true }
+    return { log, enemyDied: true, hit: attack.hit }
   }
 
   if (combat.special === 'call_horde' && !combat.hordeCalled && Math.random() < SCREAMER_CALL_CHANCE) {
@@ -123,25 +123,41 @@ export function resolvePlayerAttack(character: Character, combat: CombatState, s
     log.push(`📢 Крикун кличе підмогу! До бою приєднується орда (+${reinforcement} ОЗ ворога).`)
   }
 
-  return { log, enemyDied: false }
+  return { log, enemyDied: false, hit: attack.hit }
 }
 
 export interface EnemyRoundResult { log: string[]; playerDied: boolean }
 
-export function resolveEnemyAttack(character: Character, combat: CombatState): EnemyRoundResult {
+const SPRINTER_FLURRY_CHANCE = 0.35
+
+/** opts.bonus/opts.cause let callers make the enemy's counterattack sharper when the player made a
+ *  mistake (missed swing, botched stealth, failed flee) — the enemy reacts to the opening, not just
+ *  swings on a fixed schedule. allowFlurry gates the sprinter's chance at a second, immediate strike
+ *  (guarded so it can only trigger once, not recursively). */
+export function resolveEnemyAttack(character: Character, combat: CombatState, opts?: { bonus?: number; cause?: string }, allowFlurry = true): EnemyRoundResult {
   const log: string[] = []
   const armor = equippedArmorTotal(character)
-  const attack = resolveAttack(combat.attackBonus, DEFAULT_DEFENSE + Math.floor(armor / 2), combat.damageDice)
+  const bonus = opts?.bonus ?? 0
+  const attack = resolveAttack(combat.attackBonus + bonus, DEFAULT_DEFENSE + Math.floor(armor / 2), combat.damageDice)
+  const verb = opts?.cause ? `${opts.cause} — контратака` : 'атака'
   if (attack.hit) {
     wearArmorOnHit(character)
-    const died = applyDamage(character, attack.damage, log, `атака (${combat.enemyLabel})`)
+    const died = applyDamage(character, attack.damage, log, `${verb} (${combat.enemyLabel})`)
     if (died) return { log, playerDied: true }
     if (rollInfectionCheck(combat.infectionChance)) {
       character.infection = clampInfection(character.infection + infectionAmountForLevel(combat.levelIndex))
       log.push(`☣️ Укус заразив ${character.name}! Інфекція: ${character.infection}/100`)
     }
   } else {
-    log.push(`${combat.enemyEmoji} ${combat.enemyLabel} промахнувся.`)
+    log.push(`${combat.enemyEmoji} ${combat.enemyLabel} промахнувся${opts?.cause ? ' у контратаці' : ''}.`)
   }
+
+  if (allowFlurry && combat.enemyKey === 'sprinter' && character.hp > 0 && Math.random() < SPRINTER_FLURRY_CHANCE) {
+    log.push(`⚡ ${combat.enemyLabel} блискавично б'є вдруге!`)
+    const second = resolveEnemyAttack(character, combat, undefined, false)
+    log.push(...second.log)
+    if (second.playerDied) return { log, playerDied: true }
+  }
+
   return { log, playerDied: false }
 }

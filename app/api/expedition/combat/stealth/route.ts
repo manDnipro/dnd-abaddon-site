@@ -34,8 +34,8 @@ export async function POST() {
       if (tail.died) character.expedition = null
     }
   } else {
-    // A failed stealth attempt burns the round — the enemy reacts immediately.
-    const enemyRound = resolveEnemyAttack(character, combat)
+    // A failed stealth attempt burns the round AND blows your cover — the enemy reacts hard.
+    const enemyRound = resolveEnemyAttack(character, combat, { bonus: 3, cause: 'тебе викрито' })
     log = log.concat(enemyRound.log)
     if (enemyRound.playerDied) {
       character.combat = null

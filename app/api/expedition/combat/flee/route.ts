@@ -36,7 +36,8 @@ export async function POST() {
     }
   } else {
     log.push(`🏃 Спроба втекти провалилась: ${roll.total} проти СК ${fleeDC} — ${combat.enemyLabel.toLowerCase()} встигає атакувати.`)
-    const enemyRound = resolveEnemyAttack(character, combat)
+    // Turning your back is the worst opening you can give an enemy — punishing counterattack.
+    const enemyRound = resolveEnemyAttack(character, combat, { bonus: 3, cause: 'ти повертаєшся спиною' })
     log = log.concat(enemyRound.log)
     if (enemyRound.playerDied) {
       character.combat = null

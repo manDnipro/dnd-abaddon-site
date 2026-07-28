@@ -32,7 +32,8 @@ export async function POST() {
       if (tail.died) character.expedition = null
     }
   } else {
-    const enemyRound = resolveEnemyAttack(character, combat)
+    // A missed swing leaves you open — the enemy presses the opening instead of just taking its turn.
+    const enemyRound = resolveEnemyAttack(character, combat, playerRound.hit ? undefined : { bonus: 2, cause: 'ти хибиш' })
     log = log.concat(enemyRound.log)
     if (enemyRound.playerDied) {
       character.combat = null
