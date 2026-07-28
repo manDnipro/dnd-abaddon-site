@@ -1,11 +1,10 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-const LINKS = [
+const BASE_LINKS = [
   { href: '/', label: 'Головна' },
-  { href: '/character/create', label: 'Створити персонажа' },
   { href: '/character/inventory', label: 'Спорядження' },
   { href: '/character/actions', label: 'Дії' },
   { href: '/character/trade', label: 'Торгівля' },
@@ -14,10 +13,20 @@ const LINKS = [
   { href: '/character/expedition', label: 'Вилазка' },
   { href: '/gm', label: 'ГМ' },
 ]
+const CREATE_LINK = { href: '/character/create', label: 'Створити персонажа' }
 
 export default function Navbar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [hasLivingCharacter, setHasLivingCharacter] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/character/mine').then(r => r.json()).then(d => {
+      setHasLivingCharacter(!!d.character && !d.character.dead)
+    }).catch(() => {})
+  }, [pathname])
+
+  const links = hasLivingCharacter ? BASE_LINKS : [BASE_LINKS[0], CREATE_LINK, ...BASE_LINKS.slice(1)]
 
   return (
     <nav style={{ borderBottom: '1px solid #2a241c', background: 'rgba(10,9,8,0.9)', backdropFilter: 'blur(6px)' }} className="sticky top-0 z-50">
@@ -27,7 +36,7 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden sm:flex items-center gap-4 flex-wrap">
-          {LINKS.map(l => (
+          {links.map(l => (
             <Link key={l.href} href={l.href} className="nav-link"
               style={pathname === l.href ? { color: '#c9a94f' } : {}}>
               {l.label}
@@ -43,7 +52,7 @@ export default function Navbar() {
 
       {open && (
         <div className="sm:hidden flex flex-col" style={{ borderTop: '1px solid #2a241c', padding: '10px 16px', background: 'rgba(8,7,6,0.98)' }}>
-          {LINKS.map(l => (
+          {links.map(l => (
             <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
               style={{
                 padding: '12px 8px', fontFamily: "'Special Elite', monospace", fontSize: 14, letterSpacing: '0.05em',
