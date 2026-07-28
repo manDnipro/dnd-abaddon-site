@@ -1,16 +1,8 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { Character, STAT_LABELS, formatModifier, statModifier } from '@/lib/types'
-import { RPMission } from '@/lib/rpMissions'
-import { getItem } from '@/lib/items'
+import { RPMission, missionRewardSummary } from '@/lib/rpMissions'
 import { PlayerMessage } from '@/lib/playerInbox'
-
-function missionRewardLabel(m: RPMission): string | null {
-  if (m.reward.type === 'item') return `🎁 ${getItem(m.reward.itemKey ?? '')?.name ?? m.reward.itemKey} ×${m.reward.itemQty}`
-  if (m.reward.type === 'hp') return `❤️ +${m.reward.hpAmount} ОЗ`
-  if (m.reward.type === 'stat' && m.reward.statKey) return `${STAT_LABELS[m.reward.statKey]} +${m.reward.statAmount}`
-  return null
-}
 
 type PDATab = 'missions' | 'messages'
 
@@ -106,7 +98,7 @@ export default function PlayerPDA() {
               ) : (
                 <div className="flex flex-col gap-4">
                   {missions.map(m => {
-                    const rewardLabel = missionRewardLabel(m)
+                    const rewardLabel = missionRewardSummary(m.reward)
                     const checkLabel = m.checkStat
                       ? `🎲 ${STAT_LABELS[m.checkStat]} ${formatModifier(statModifier(character.stats[m.checkStat]))} проти СК ${m.checkDC}`
                       : null

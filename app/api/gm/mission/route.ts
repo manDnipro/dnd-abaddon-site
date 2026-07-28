@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isGM } from '@/lib/auth'
 import { redis } from '@/lib/redis'
 import { Character, StatKey } from '@/lib/types'
-import { createRPMission, MissionReward, MissionRewardType } from '@/lib/rpMissions'
+import { createRPMission, MissionReward, MissionRewardType, MissionRewardItem } from '@/lib/rpMissions'
+import { getItem } from '@/lib/items'
 
 export async function POST(req: NextRequest) {
   if (!await isGM()) return NextResponse.json({ error: 'Немає доступу' }, { status: 403 })
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json() as {
     title: string; text: string; targetCharId: string | null
     checkStat: StatKey | null; checkDC: number
-    rewardType: MissionRewardType; itemKey?: string; itemQty?: number; hpAmount?: number; statKey?: StatKey; statAmount?: number
+    rewardType: MissionRewardType; items?: MissionRewardItem[]; hpAmount?: number; statKey?: StatKey; statAmount?: number
   }
   const { title, text, targetCharId, checkStat, checkDC, rewardType } = body
   if (!title?.trim() || !text?.trim()) return NextResponse.json({ error: 'Заповни назву й опис місії' }, { status: 400 })
@@ -25,9 +26,9 @@ export async function POST(req: NextRequest) {
 
   const reward: MissionReward = { type: rewardType }
   if (rewardType === 'item') {
-    if (!body.itemKey?.trim()) return NextResponse.json({ error: 'Вкажи ключ предмета для нагороди' }, { status: 400 })
-    reward.itemKey = body.itemKey.trim()
-    reward.itemQty = Math.max(1, Math.floor(body.itemQty || 1))
+    const items = (body.items ?? []).filter(i => i.itemKey && getItem(i.itemKey))
+    if (items.length === 0) return NextResponse.json({ error: 'Обери хоча б один предмет для нагороди' }, { status: 400 })
+    reward.items = items.map(i => ({ itemKey: i.itemKey, qty: Math.max(1, Math.floor(i.qty || 1)) }))
   } else if (rewardType === 'hp') {
     if (!body.hpAmount || body.hpAmount <= 0) return NextResponse.json({ error: 'Вкажи скільки ОЗ відновити' }, { status: 400 })
     reward.hpAmount = Math.floor(body.hpAmount)

@@ -4,18 +4,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Character, STAT_LABELS, formatModifier, statModifier } from '@/lib/types'
 import { characterTitle } from '@/lib/characterTitle'
-import { RPMission } from '@/lib/rpMissions'
-import { getItem } from '@/lib/items'
+import { RPMission, missionRewardSummary } from '@/lib/rpMissions'
 
 type Weather = { seasonLabel: string; label: string; temperature: number }
 type LogLine = { text: string; at: number }
-
-function missionRewardLabel(m: RPMission): string | null {
-  if (m.reward.type === 'item') return `🎁 ${getItem(m.reward.itemKey ?? '')?.name ?? m.reward.itemKey} ×${m.reward.itemQty}`
-  if (m.reward.type === 'hp') return `❤️ +${m.reward.hpAmount} ОЗ`
-  if (m.reward.type === 'stat' && m.reward.statKey) return `${STAT_LABELS[m.reward.statKey]} +${m.reward.statAmount}`
-  return null
-}
 
 export default function Home() {
   const [nickname, setNickname] = useState<string | null | undefined>(undefined)
@@ -225,7 +217,7 @@ export default function Home() {
               {missions.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Наразі для тебе немає місій.</p>}
               <div className="flex flex-col gap-4">
                 {missions.map(m => {
-                  const rewardLabel = missionRewardLabel(m)
+                  const rewardLabel = missionRewardSummary(m.reward)
                   const checkLabel = m.checkStat
                     ? `🎲 ${STAT_LABELS[m.checkStat]} ${formatModifier(statModifier(character.stats[m.checkStat]))} проти СК ${m.checkDC}`
                     : null

@@ -1,8 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Character, STAT_LABELS, Stats, StatKey, STAT_BUDGET, STAT_MIN, STAT_MAX } from '@/lib/types'
-import { getItem } from '@/lib/items'
-import { RPMission, MissionRewardType } from '@/lib/rpMissions'
+import { getItem, ITEM_CATALOG } from '@/lib/items'
+import { RPMission, MissionRewardType, MissionRewardItem, missionRewardSummary } from '@/lib/rpMissions'
+
+const ALL_ITEMS = Object.values(ITEM_CATALOG).sort((a, b) => a.name.localeCompare(b.name, 'uk'))
 
 type Tab = 'queue' | 'players' | 'npcs' | 'world' | 'inbox'
 type Weather = { seasonLabel?: string; label: string; temperature: number; season: string }
@@ -29,8 +31,9 @@ export default function GMPage() {
   const [missionCheckStat, setMissionCheckStat] = useState<StatKey>('per')
   const [missionCheckDC, setMissionCheckDC] = useState(12)
   const [missionRewardType, setMissionRewardType] = useState<MissionRewardType>('none')
-  const [missionRewardItemKey, setMissionRewardItemKey] = useState('')
-  const [missionRewardItemQty, setMissionRewardItemQty] = useState(1)
+  const [missionRewardItems, setMissionRewardItems] = useState<MissionRewardItem[]>([])
+  const [pickItemKey, setPickItemKey] = useState(ALL_ITEMS[0]?.key ?? '')
+  const [pickItemQty, setPickItemQty] = useState(1)
   const [missionRewardHp, setMissionRewardHp] = useState(10)
   const [missionRewardStat, setMissionRewardStat] = useState<StatKey>('str')
   const [missionRewardStatAmount, setMissionRewardStatAmount] = useState(1)
@@ -442,10 +445,33 @@ export default function GMPage() {
                 <option value="stat">Підняти характеристику</option>
               </select>
               {missionRewardType === 'item' && (
-                <div className="flex gap-2 items-center">
-                  <input value={missionRewardItemKey} onChange={e => setMissionRewardItemKey(e.target.value)} placeholder="ключ предмета (напр. bandage)" style={{ flex: 1 }} />
-                  <input type="number" min={1} value={missionRewardItemQty} onChange={e => setMissionRewardItemQty(Number(e.target.value))} style={{ width: 70 }} />
-                  {missionRewardItemKey && getItem(missionRewardItemKey) && <span style={{ color: '#666', fontSize: 12 }}>→ {getItem(missionRewardItemKey)?.name}</span>}
+                <div className="flex flex-col gap-2">
+                  {missionRewardItems.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      {missionRewardItems.map((it, i) => (
+                        <div key={i} className="flex items-center justify-between" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 4, padding: '4px 10px' }}>
+                          <span style={{ color: '#ccc', fontSize: 12 }}>{getItem(it.itemKey)?.name ?? it.itemKey} ×{it.qty}</span>
+                          <button type="button" onClick={() => setMissionRewardItems(items => items.filter((_, idx) => idx !== i))}
+                            style={{ color: '#c0392b', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2 items-center">
+                    <select value={pickItemKey} onChange={e => setPickItemKey(e.target.value)} style={{ flex: 1 }}>
+                      {ALL_ITEMS.map(it => <option key={it.key} value={it.key}>{it.name}</option>)}
+                    </select>
+                    <input type="number" min={1} value={pickItemQty} onChange={e => setPickItemQty(Number(e.target.value))} style={{ width: 60 }} />
+                    <button type="button"
+                      onClick={() => {
+                        if (!pickItemKey) return
+                        setMissionRewardItems(items => [...items, { itemKey: pickItemKey, qty: Math.max(1, pickItemQty) }])
+                        setPickItemQty(1)
+                      }}
+                      style={{ fontSize: 12, color: '#27ae60', background: 'none', border: '1px solid #1a2a1a', borderRadius: 4, padding: '6px 10px', cursor: 'pointer' }}>
+                      + Додати
+                    </button>
+                  </div>
                 </div>
               )}
               {missionRewardType === 'hp' && (
@@ -472,13 +498,14 @@ export default function GMPage() {
                     checkStat: missionUseCheck ? missionCheckStat : null,
                     checkDC: missionCheckDC,
                     rewardType: missionRewardType,
-                    itemKey: missionRewardItemKey, itemQty: missionRewardItemQty,
+                    items: missionRewardItems,
                     hpAmount: missionRewardHp,
                     statKey: missionRewardStat, statAmount: missionRewardStatAmount,
                   })
-                  setMissionTitle(''); setMissionText(''); setMissionTarget(''); setMissionUseCheck(false); setMissionRewardType('none')
+                  setMissionTitle(''); setMissionText(''); setMissionTarget(''); setMissionUseCheck(false); setMissionRewardType('none'); setMissionRewardItems([])
                 }}
-                disabled={loading || !missionTitle.trim() || !missionText.trim()} className="btn-primary" style={{ marginTop: 8 }}>
+                disabled={loading || !missionTitle.trim() || !missionText.trim() || (missionRewardType === 'item' && missionRewardItems.length === 0)}
+                className="btn-primary" style={{ marginTop: 8 }}>
                 Створити місію
               </button>
             </div>
@@ -498,7 +525,7 @@ export default function GMPage() {
                       <div>
                         <div style={{ color: '#e5e5e5', fontSize: 13 }}>{m.title} <span style={{ color: '#666', fontSize: 11 }}>— {m.targetName ?? 'усі гравці'}</span></div>
                         <div style={{ color: '#666', fontSize: 11, marginTop: 2 }}>
-                          {m.checkStat ? `${STAT_LABELS[m.checkStat]} проти СК ${m.checkDC}` : 'без кидка'} · нагорода: {m.reward.type === 'none' ? 'немає' : m.reward.type === 'item' ? `${getItem(m.reward.itemKey ?? '')?.name ?? m.reward.itemKey} ×${m.reward.itemQty}` : m.reward.type === 'hp' ? `+${m.reward.hpAmount} ОЗ` : `${STAT_LABELS[m.reward.statKey!]} +${m.reward.statAmount}`}
+                          {m.checkStat ? `${STAT_LABELS[m.checkStat]} проти СК ${m.checkDC}` : 'без кидка'} · нагорода: {missionRewardSummary(m.reward) ?? 'немає'}
                           {completedCount > 0 && <> · виконано: {completedCount}</>}
                         </div>
                       </div>
