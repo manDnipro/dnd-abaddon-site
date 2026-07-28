@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadOwnCharacter } from '@/lib/loadCharacter'
+import { loadOwnCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { redis } from '@/lib/redis'
 import { Character } from '@/lib/types'
 import { createDuoInvite } from '@/lib/socialStore'
@@ -9,6 +9,8 @@ export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
+  const guard = blockIfOnExpedition(character)
+  if (guard) return guard
 
   if (character.dead) return NextResponse.json({ error: 'Твій персонаж мертвий' }, { status: 403 })
   if (character.expedition) return NextResponse.json({ error: 'Запрошувати можна лише з табору' }, { status: 400 })

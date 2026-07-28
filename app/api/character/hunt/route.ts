@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { loadOwnCharacter, saveCharacter } from '@/lib/loadCharacter'
+import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { clampHungerThirst, statModifier } from '@/lib/types'
 import { rollD20 } from '@/lib/dice'
 import { getItem } from '@/lib/items'
@@ -13,6 +13,8 @@ export async function POST() {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
+  const guard = blockIfOnExpedition(character)
+  if (guard) return guard
 
   if (character.status !== 'approved') return NextResponse.json({ error: 'Персонаж ще не затверджений ГМ' }, { status: 403 })
   if (character.dead) return NextResponse.json({ error: 'Персонаж мертвий' }, { status: 403 })

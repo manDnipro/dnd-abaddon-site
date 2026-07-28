@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadOwnCharacter, saveCharacter } from '@/lib/loadCharacter'
+import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { STAT_LABELS, StatKey, statModifier, formatModifier, maxHpForEndurance } from '@/lib/types'
 import { rollD20 } from '@/lib/dice'
 
@@ -10,6 +10,8 @@ export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
+  const guard = blockIfOnExpedition(character)
+  if (guard) return guard
 
   const { stat } = await req.json() as { stat: StatKey }
   if (!STAT_LABELS[stat]) return NextResponse.json({ error: 'Невідома характеристика' }, { status: 400 })

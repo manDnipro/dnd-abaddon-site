@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadOwnCharacter, saveCharacter } from '@/lib/loadCharacter'
+import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { redis } from '@/lib/redis'
 import { Character } from '@/lib/types'
 import { getPendingDuoFor, resolveDuoInvite } from '@/lib/socialStore'
@@ -9,6 +9,8 @@ export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
+  const guard = blockIfOnExpedition(character)
+  if (guard) return guard
 
   const { action } = await req.json() as { action: 'accept' | 'decline' }
   const invite = await getPendingDuoFor(charId)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadOwnCharacter, saveCharacter } from '@/lib/loadCharacter'
+import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { addStack, countOf, removeStack } from '@/lib/stacks'
 import { inventoryCapacity, distinctSlotsUsed } from '@/lib/inventory'
 
@@ -8,6 +8,8 @@ export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
+  const guard = blockIfOnExpedition(character)
+  if (guard) return guard
 
   const { action, itemId, qty } = await req.json() as { action: 'store' | 'take'; itemId: string; qty: number }
   const amount = Math.max(1, Math.floor(qty || 1))

@@ -1,9 +1,17 @@
+import { NextResponse } from 'next/server'
 import { redis } from './redis'
 import { getSession } from './auth'
 import { Character } from './types'
 import { migrateLegacyCharacter } from './migrateCharacter'
 import { getOrRollWeather } from './worldState'
 import { runDueDailyTicks } from './dailyTick'
+
+/** Camp locations (crafting, resting, trading, socializing, storage, stat checks...) are only
+ *  reachable while the character is actually at camp — not out on an expedition. */
+export function blockIfOnExpedition(character: Character): NextResponse | null {
+  if (!character.expedition) return null
+  return NextResponse.json({ error: '🚶 Ти зараз на вилазці — це недоступно, поки не повернешся в табір.' }, { status: 409 })
+}
 
 export async function loadOwnCharacter(): Promise<{ owner: string; charId: string; character: Character; dailyTickLog: string[] } | { error: string; status: number }> {
   const owner = await getSession()

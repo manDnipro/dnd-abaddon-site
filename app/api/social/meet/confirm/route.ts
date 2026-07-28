@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadOwnCharacter } from '@/lib/loadCharacter'
+import { loadOwnCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { redis } from '@/lib/redis'
 import { getPendingMeetFor, resolveMeetRequest } from '@/lib/socialStore'
 import { STAT_LABELS, Stats } from '@/lib/types'
@@ -8,6 +8,8 @@ export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
+  const guard = blockIfOnExpedition(character)
+  if (guard) return guard
 
   const { action } = await req.json() as { action: 'confirm' | 'decline' }
   const meet = await getPendingMeetFor(charId)
