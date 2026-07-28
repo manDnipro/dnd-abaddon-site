@@ -99,14 +99,15 @@ export default function GMPage() {
     setLoading(false)
   }
 
-  async function call(url: string, body: object) {
+  async function call(url: string, body: object): Promise<boolean> {
     setLoading(true)
     setError('')
     const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     const d = await res.json()
     setLoading(false)
-    if (!res.ok) { setError(d.error || 'Помилка'); return }
+    if (!res.ok) { setError(d.error || 'Помилка'); return false }
     await loadAll()
+    return true
   }
 
   if (!authed) {
@@ -277,7 +278,7 @@ export default function GMPage() {
                 <div className="flex gap-2">
                   <input value={playerMessageDraft} onChange={e => setPlayerMessageDraft(e.target.value)} placeholder="Текст повідомлення..." style={{ flex: 1 }} />
                   <button
-                    onClick={async () => { await call('/api/gm/players/message', { charId: player.id, text: playerMessageDraft }); setPlayerMessageDraft('') }}
+                    onClick={async () => { if (await call('/api/gm/players/message', { charId: player.id, text: playerMessageDraft })) setPlayerMessageDraft('') }}
                     disabled={loading || !playerMessageDraft.trim()} className="btn-gold">
                     Надіслати
                   </button>
@@ -386,7 +387,7 @@ export default function GMPage() {
             <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>Оголосити подію табору</h2>
             <div className="flex gap-2">
               <input value={eventText} onChange={e => setEventText(e.target.value)} placeholder="Наприклад: здалеку чути виття..." style={{ flex: 1 }} />
-              <button onClick={async () => { await call('/api/gm/event', { text: eventText }); setEventText('') }} disabled={loading || !eventText.trim()} className="btn-primary">
+              <button onClick={async () => { if (await call('/api/gm/event', { text: eventText })) setEventText('') }} disabled={loading || !eventText.trim()} className="btn-primary">
                 Оголосити
               </button>
             </div>
@@ -398,7 +399,7 @@ export default function GMPage() {
             <div className="flex gap-2">
               <input value={broadcastText} onChange={e => setBroadcastText(e.target.value)} placeholder="Важливе повідомлення для всіх живих гравців..." style={{ flex: 1 }} />
               <button
-                onClick={async () => { await call('/api/gm/broadcast', { text: broadcastText }); setBroadcastText('') }}
+                onClick={async () => { if (await call('/api/gm/broadcast', { text: broadcastText })) setBroadcastText('') }}
                 disabled={loading || !broadcastText.trim()} className="btn-primary">
                 📢 Розіслати
               </button>
@@ -492,7 +493,7 @@ export default function GMPage() {
 
               <button
                 onClick={async () => {
-                  await call('/api/gm/mission', {
+                  const ok = await call('/api/gm/mission', {
                     title: missionTitle, text: missionText,
                     targetCharId: missionTarget || null,
                     checkStat: missionUseCheck ? missionCheckStat : null,
@@ -502,12 +503,17 @@ export default function GMPage() {
                     hpAmount: missionRewardHp,
                     statKey: missionRewardStat, statAmount: missionRewardStatAmount,
                   })
-                  setMissionTitle(''); setMissionText(''); setMissionTarget(''); setMissionUseCheck(false); setMissionRewardType('none'); setMissionRewardItems([])
+                  if (ok) {
+                    setMissionTitle(''); setMissionText(''); setMissionTarget(''); setMissionUseCheck(false); setMissionRewardType('none'); setMissionRewardItems([])
+                  }
                 }}
                 disabled={loading || !missionTitle.trim() || !missionText.trim() || (missionRewardType === 'item' && missionRewardItems.length === 0)}
                 className="btn-primary" style={{ marginTop: 8 }}>
                 Створити місію
               </button>
+              {missionRewardType === 'item' && missionRewardItems.length === 0 && (
+                <p style={{ color: '#c0392b', fontSize: 11 }}>Додай хоча б один предмет вище (кнопка "+ Додати"), щоб можна було створити місію.</p>
+              )}
             </div>
             <p style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
               Гравець(-ці) побачать її на головній сторінці й самі натиснуть "Виконати" — кидок (якщо є) і нагорода відбудуться в них.
@@ -560,8 +566,9 @@ export default function GMPage() {
                   placeholder={`Відповісти ${l.from}...`} style={{ flex: 1 }} />
                 <button
                   onClick={async () => {
-                    await call('/api/gm/inbox/reply', { toNickname: l.from, text: replyDrafts[i] ?? '' })
-                    setReplyDrafts(d => ({ ...d, [i]: '' }))
+                    if (await call('/api/gm/inbox/reply', { toNickname: l.from, text: replyDrafts[i] ?? '' })) {
+                      setReplyDrafts(d => ({ ...d, [i]: '' }))
+                    }
                   }}
                   disabled={loading || !(replyDrafts[i] ?? '').trim()} className="btn-gold">
                   Надіслати
