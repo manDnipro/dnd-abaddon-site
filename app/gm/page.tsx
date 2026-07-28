@@ -6,7 +6,7 @@ import { RPMission, MissionRewardType, MissionRewardItem, missionRewardSummary }
 
 const ALL_ITEMS = Object.values(ITEM_CATALOG).sort((a, b) => a.name.localeCompare(b.name, 'uk'))
 
-type Tab = 'queue' | 'players' | 'npcs' | 'world' | 'inbox'
+type Tab = 'queue' | 'players' | 'npcs' | 'world' | 'inbox' | 'logs'
 type Weather = { seasonLabel?: string; label: string; temperature: number; season: string }
 type NpcInfo = { id: string; name: string; tradeLevel: number; stock: { itemKey: string; quantity: number }[] }
 type GMLetter = { type: 'message' | 'report'; from: string; targetName?: string; text: string; at: number }
@@ -49,6 +49,7 @@ export default function GMPage() {
   const [newOwner, setNewOwner] = useState('')
   const [newStats, setNewStats] = useState<Stats>({ str: 3, agi: 3, end: 3, per: 3, int: 3, cha: 3 })
   const [inbox, setInbox] = useState<GMLetter[]>([])
+  const [logs, setLogs] = useState<{ at: number; text: string }[]>([])
   const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({})
   const [playerMessageDraft, setPlayerMessageDraft] = useState('')
   const [broadcastText, setBroadcastText] = useState('')
@@ -85,6 +86,11 @@ export default function GMPage() {
     })
     if (res.ok) loadAll()
     else setError((await res.json()).error || 'Помилка')
+  }
+
+  async function fetchLogs() {
+    const res = await fetch('/api/gm/logs')
+    if (res.ok) setLogs(await res.json())
   }
 
   async function review(id: string, action: 'approve' | 'reject') {
@@ -152,6 +158,7 @@ export default function GMPage() {
     { key: 'npcs', label: 'NPC' },
     { key: 'world', label: 'Світ' },
     { key: 'inbox', label: `Пошта (${inbox.length})` },
+    { key: 'logs', label: 'Логи' },
   ]
 
   return (
@@ -160,7 +167,7 @@ export default function GMPage() {
 
       <div className="flex gap-2 mb-4 flex-wrap">
         {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+          <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'logs') fetchLogs() }}
             style={{
               fontSize: 13, padding: '6px 14px', borderRadius: 4, cursor: 'pointer',
               background: tab === t.key ? 'rgba(166,138,74,0.15)' : 'transparent',
@@ -576,6 +583,27 @@ export default function GMPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {tab === 'logs' && (
+        <div className="card">
+          <div className="flex justify-between items-center mb-3">
+            <h2 style={{ color: '#c9a227', fontSize: 15 }}>Активність на сервері (останні 48 год)</h2>
+            <button onClick={fetchLogs} style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
+              🔄 Оновити
+            </button>
+          </div>
+          {logs.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Поки що порожньо.</p>}
+          <div className="flex flex-col gap-1" style={{ maxHeight: 600, overflowY: 'auto' }}>
+            {logs.map((l, i) => (
+              <div key={i} className="flex gap-3" style={{ fontSize: 12, borderBottom: '1px solid #1e2230', padding: '4px 0' }}>
+                <span style={{ color: '#555', flexShrink: 0, fontFamily: 'monospace' }}>{new Date(l.at).toLocaleString('uk-UA')}</span>
+                <span style={{ color: '#ccc' }}>{l.text}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ color: '#555', fontSize: 11, marginTop: 10 }}>Записи старші за 48 годин видаляються автоматично.</p>
         </div>
       )}
     </div>

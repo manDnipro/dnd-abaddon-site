@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse, NextFetchEvent } from 'next/server'
+import { logServerActivity } from '@/lib/serverLog'
 
-// Catches every mutating API call site-wide and mirrors it to Discord — a raw activity trail on
-// top of the richer, descriptive logs (lib/characterLog.ts, lib/worldState.ts) that already cover
-// most gameplay actions with full context. This one's the safety net: it fires for literally every
-// route, present and future, without needing each one wired up individually.
-const WEBHOOK_URL = process.env.DISCORD_LOG_WEBHOOK_URL
+// Catches every mutating API call site-wide and records it in the rolling server activity log the
+// GM panel reads — a raw trail on top of the richer, descriptive logs (lib/characterLog.ts,
+// lib/worldState.ts) that already cover most gameplay actions with full context. This one's the
+// safety net: it fires for literally every route, present and future, without needing each one
+// wired up individually. Uses the same Upstash Redis (REST/fetch-based, Edge-compatible) every
+// other feature already relies on — no external webhook dependency to misconfigure.
 
 function whoFromCookies(req: NextRequest): string {
   const sessionRaw = req.cookies.get('session')?.value
@@ -15,17 +17,9 @@ function whoFromCookies(req: NextRequest): string {
 }
 
 export function proxy(req: NextRequest, event: NextFetchEvent) {
-  if (WEBHOOK_URL && req.method === 'POST') {
+  if (req.method === 'POST') {
     const who = whoFromCookies(req)
-    // event.waitUntil keeps the Edge runtime alive long enough for this to actually complete —
-    // a bare un-awaited fetch() here gets killed the instant the response is returned.
-    event.waitUntil(
-      fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: `🌐 \`POST ${req.nextUrl.pathname}\` — ${who}` }),
-      }).catch(() => {})
-    )
+    event.waitUntil(logServerActivity(`POST ${req.nextUrl.pathname} — ${who}`))
   }
   return NextResponse.next()
 }

@@ -1,6 +1,6 @@
 import { redis } from './redis'
 import { Season, nextSeason, rollDailyWeather, SEASON_DURATION_MS } from './weather'
-import { logToDiscord } from './discordLog'
+import { logServerActivity } from './serverLog'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -62,7 +62,7 @@ export interface WorldEvent { text: string; at: number }
 export async function addWorldEvent(text: string) {
   await redis.rpush('world:events', JSON.stringify({ text, at: Date.now() }))
   await redis.ltrim('world:events', -10, -1)
-  await logToDiscord(`**[world event]**\n${text}`)
+  await logServerActivity(`[world event] ${text}`)
 }
 
 export async function listWorldEvents(): Promise<WorldEvent[]> {
