@@ -14,7 +14,17 @@ const SEARCH_LOCATIONS = [
   'порпається у смітнику за магазином', 'обшукує покинуте авто на узбіччі', 'лазить руїнами розваленої будівлі',
   'нишпорить у покинутому будинку', 'перевіряє полиці закинутого магазину', 'оглядає покинуту заправку',
   'риється у підвалі занедбаного будинку', 'обходить закинутий склад', 'шукає по кишенях в покинутому наметі',
-  'перетрушує вміст покинутої шафки в роздягальні',
+  'перетрушує вміст покинутої шафки в роздягальні', 'пробирається крізь завалений під’їзд багатоповерхівки',
+  'обшукує кабінет директора в закинутій школі', 'нишпорить серед розбитих полиць аптеки',
+  'риється у кузові перевернутої фури на трасі', 'обстежує занедбану автомайстерню',
+  'зазирає під сидіння покинутого автобуса', 'обходить іржаві контейнери на пустирі',
+  'перевіряє шафки в роздягальні спортзалу', 'лазить по горищу зруйнованого маєтку',
+  'нишпорить серед пожежі, що давно згасла, на складі', 'обшукує кабінет лікаря в закинутій поліклініці',
+  'риється в багажнику розбитого позашляховика', 'заходить у затоплений підвал багатоповерхівки',
+  'обходить руїни заправної станції з вибитими вікнами', 'перевіряє наплічники біля трупів на блокпості',
+  'зазирає у прострелений вагончик на будівництві', 'обшукує полиці бібліотеки, засипаної штукатуркою',
+  'нишпорить серед завалених стелажів супермаркету', 'риється у покинутому наметі мисливців',
+  'обходить іржаву дитячу площадку в пошуках схованки', 'обшукує кабінет директора закинутого заводу',
 ]
 export function rollSearchLocation(): string {
   return SEARCH_LOCATIONS[Math.floor(Math.random() * SEARCH_LOCATIONS.length)]
@@ -27,6 +37,59 @@ const SPECIAL_ENCOUNTER_TABLE: { type: SpecialEncounterType; weight: number }[] 
 ]
 export function rollSpecialEncounterType(): SpecialEncounterType {
   return weightedPick(SPECIAL_ENCOUNTER_TABLE).type
+}
+
+// Flavor lines for the on-site "interesting location" side-find — varies what the extra loot was tucked into.
+const INTERESTING_LOCATIONS = [
+  'схованку під підлогою покинутого будинку', 'замасковану заначку в дуплі дерева', 'забутий рюкзак туриста',
+  'сейф із зірваними дверцятами', 'сховок під сходами', 'тайник за розхитаною цеглиною в стіні',
+  'закопаний ящик під старою альтанкою', 'заначку в бачку унітазу занедбаної квартири',
+  'запасний баул під матрацом покинутого ліжка', 'нішу за фальшивою стінкою в підвалі',
+  'старий сейф-скриньку, вмуровану в підлогу гаража', 'мисливську схованку в стовбурі трухлявого дерева',
+  'валізу, заховану на дні пересохлого колодязя', 'потаємну шафку за картиною в закинутому будинку',
+]
+export function rollInterestingLocation(): string {
+  return INTERESTING_LOCATIONS[Math.floor(Math.random() * INTERESTING_LOCATIONS.length)]
+}
+
+export type NpcGender = 'male' | 'female'
+export interface FriendlyNpcTemplate { name: string; gender: NpcGender }
+const FRIENDLY_NPC_NAMES: FriendlyNpcTemplate[] = [
+  { name: 'Мандрівний торговець', gender: 'male' }, { name: 'Мандрівна торговка', gender: 'female' },
+  { name: 'Виснажений вцілілий', gender: 'male' }, { name: 'Виснажена вціліла', gender: 'female' },
+  { name: 'Колишній солдат', gender: 'male' }, { name: 'Колишня військова медсестра', gender: 'female' },
+  { name: 'Місцевий фермер', gender: 'male' }, { name: 'Місцева фермерка', gender: 'female' },
+  { name: 'Загублений хлопчина з собакою', gender: 'male' }, { name: 'Загублена дівчинка з собакою', gender: 'female' },
+  { name: 'Старий мисливець-відлюдник', gender: 'male' }, { name: 'Втомлена мандрівниця з рюкзаком', gender: 'female' },
+  { name: 'Колишній механік із заправки', gender: 'male' }, { name: 'Колишня вчителька з довколишньої школи', gender: 'female' },
+  { name: 'Мовчазний сталкер у протигазі', gender: 'male' }, { name: 'Радистка-одиначка з обгорілою рацією', gender: 'female' },
+]
+export function rollFriendlyNpcTemplate(): FriendlyNpcTemplate {
+  return FRIENDLY_NPC_NAMES[Math.floor(Math.random() * FRIENDLY_NPC_NAMES.length)]
+}
+
+// Flavor for the brief chat with a friendly NPC met on the road — always ends peacefully, but the
+// specifics of the exchange vary so two encounters never read quite the same.
+const FRIENDLY_NPC_LINES = [
+  'ділиться чуткою про безпечний маршрут неподалік', 'попереджає про кубло заражених за поворотом',
+  'пригощає теплим чаєм із термоса й розповідає новини табору', 'показує на карті позначену небезпечну зону',
+  'коротко розповідає, як вижив цей час, і бажає вдачі', 'ділиться сигаретою та мовчить решту розмови',
+  'згадує старі часи до Спалаху — стає сумно, але легше на серці', 'застерігає не ходити вночі цими вулицями',
+  'обмінюється парою слів про загиблих спільних знайомих', 'показує саморобний оберіг «на удачу» і всміхається',
+]
+export function rollFriendlyNpcLine(): string {
+  return FRIENDLY_NPC_LINES[Math.floor(Math.random() * FRIENDLY_NPC_LINES.length)]
+}
+
+// Vivid appearance lines for a zombie/ambush encounter — picked at random so combat logs don't repeat.
+const ZOMBIE_INTRO_LINES = [
+  'вивалюється з-за рогу, хрипко харчачи', 'спотикаючись, шкандибає просто назустріч',
+  'вискакує з темного дверного прорізу', 'продирається крізь завал сміття, тягнучи ногу',
+  'з гуркотом валиться зі сходів просто під ноги', 'виповзає з-під перекинутого автомобіля',
+  'з’являється з густого туману, хрипко втягуючи повітря', 'ламає прогнилі дошки й вивалюється назустріч',
+]
+export function rollZombieIntroLine(): string {
+  return ZOMBIE_INTRO_LINES[Math.floor(Math.random() * ZOMBIE_INTRO_LINES.length)]
 }
 
 export const LOOT_TIERS: Record<number, LootEntry[]> = {

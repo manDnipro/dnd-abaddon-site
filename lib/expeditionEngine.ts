@@ -7,7 +7,8 @@ import {
   rollRiskType, injuryDiceForLevel, traumaDiceForLevel, traumaMoraleLossForLevel, infectionAmountForLevel,
   illnessMoraleLossForLevel, illnessEnergyDrainForLevel, zombieStatsForLevel,
   fatigueThreshold, fatigueExcessCount, fatigueSaveDC, fatigueInjuryDice, fatigueIllnessAmount,
-  rollFatigueEffect, FATIGUE_WINDOW_MINUTES,
+  rollFatigueEffect, FATIGUE_WINDOW_MINUTES, rollInterestingLocation, rollFriendlyNpcTemplate,
+  rollFriendlyNpcLine, rollZombieIntroLine,
 } from './expedition'
 import { inventoryCapacity } from './inventory'
 import { weaponProficiencyPenalty, trainWeaponProficiency } from './weaponProficiency'
@@ -99,7 +100,7 @@ function fightOne(character: Character, level: ExpeditionLevel, enemyType: Enemy
   const weapon = bestWeapon(character)
   let enemyHp = enemyType.hpModifier(base.hp)
   const label = enemyType.key === 'mass' ? 'Зомбі' : `${enemyType.namePrefix} (${enemyType.flavor})`
-  log.push(`${enemyType.emoji} ${label} напав! (ОЗ: ${enemyHp})`)
+  log.push(`${enemyType.emoji} ${label} ${rollZombieIntroLine()}! (ОЗ: ${enemyHp})`)
   const img = ENEMY_IMAGES[enemyType.key]
   if (img) images.push(img)
 
@@ -189,10 +190,10 @@ function applyRisk(character: Character, level: ExpeditionLevel, log: string[], 
 }
 
 const NPC_PORTRAIT_COUNTS: Record<'male' | 'female', number> = { male: 17, female: 9 }
-function randomNpcPortrait(): string {
-  const gender: 'male' | 'female' = Math.random() < 0.5 ? 'male' : 'female'
-  const n = 1 + Math.floor(Math.random() * NPC_PORTRAIT_COUNTS[gender])
-  return `/npc/${gender}/portrait_${n}.png`
+function randomNpcPortrait(gender?: 'male' | 'female'): string {
+  const g = gender ?? (Math.random() < 0.5 ? 'male' : 'female')
+  const n = 1 + Math.floor(Math.random() * NPC_PORTRAIT_COUNTS[g])
+  return `/npc/${g}/portrait_${n}.png`
 }
 
 export function performSearch(character: Character, level: ExpeditionLevel): SearchResult {
@@ -211,10 +212,13 @@ export function performSearch(character: Character, level: ExpeditionLevel): Sea
       const died = fightZombie(character, { ...level, index: Math.max(1, level.index - 1) }, log, images)
       if (died) return { log, images, died: true }
     } else if (type === 'friendly_npc') {
-      images.push(randomNpcPortrait())
-      log.push(`🤝 Зустрів дружнього вцілілого — обмінялись новинами, нічого не сталось.`)
+      const npc = rollFriendlyNpcTemplate()
+      images.push(randomNpcPortrait(npc.gender))
+      character.morale = clampMorale(character.morale + 5)
+      log.push(`🤝 Назустріч трапляється ${npc.name.toLowerCase()} — ${rollFriendlyNpcLine()}. Коротка розмова піднімає настрій (мораль +5).`)
     } else {
-      log.push(`👀 Знайшов цікаве місце — там може бути додатковий лут.`)
+      const spot = rollInterestingLocation()
+      log.push(`👀 На очі трапляється ${spot} — варто перевірити.`)
       const loot = rollLoot(level.index)
       addToInventory(character, loot.itemKey, loot.quantity, log)
     }
