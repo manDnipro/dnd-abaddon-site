@@ -47,6 +47,8 @@ export default function GMPage() {
   const [newStats, setNewStats] = useState<Stats>({ str: 3, agi: 3, end: 3, per: 3, int: 3, cha: 3 })
   const [inbox, setInbox] = useState<GMLetter[]>([])
   const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({})
+  const [playerMessageDraft, setPlayerMessageDraft] = useState('')
+  const [broadcastText, setBroadcastText] = useState('')
 
   async function loadAll() {
     const [pendingRes, playersRes, weatherRes, npcsRes, inboxRes, missionsRes] = await Promise.all([
@@ -255,9 +257,29 @@ export default function GMPage() {
             <div className="card">
               <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>{player.name}</h2>
 
-              <button onClick={() => call('/api/gm/players/revive', { charId: player.id })} disabled={loading} className="btn-primary mb-4">
-                {player.dead ? '✨ Воскресити' : '❤️ Відновити повністю'}
-              </button>
+              <div className="flex gap-2 flex-wrap mb-4">
+                <button onClick={() => call('/api/gm/players/revive', { charId: player.id })} disabled={loading} className="btn-primary">
+                  {player.dead ? '✨ Воскресити' : '❤️ Відновити повністю'}
+                </button>
+                {(player.expedition || player.combat) && (
+                  <button onClick={() => call('/api/gm/players/reset-state', { charId: player.id })} disabled={loading}
+                    style={{ fontSize: 13, color: '#e0a03a', background: 'none', border: '1px solid #3a2f10', borderRadius: 4, padding: '8px 14px', cursor: 'pointer' }}>
+                    🔓 Скинути вилазку/бій (застряг)
+                  </button>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <span style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>Написати гравцю напряму (прийде в КПК)</span>
+                <div className="flex gap-2">
+                  <input value={playerMessageDraft} onChange={e => setPlayerMessageDraft(e.target.value)} placeholder="Текст повідомлення..." style={{ flex: 1 }} />
+                  <button
+                    onClick={async () => { await call('/api/gm/players/message', { charId: player.id, text: playerMessageDraft }); setPlayerMessageDraft('') }}
+                    disabled={loading || !playerMessageDraft.trim()} className="btn-gold">
+                    Надіслати
+                  </button>
+                </div>
+              </div>
 
               <div className="flex items-center gap-2 mb-3">
                 <span style={{ color: '#888', fontSize: 12, width: 90 }}>ОЗ (0–{player.maxHp})</span>
@@ -369,6 +391,21 @@ export default function GMPage() {
           </div>
 
           <div className="card">
+            <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>Розсилка всім у КПК</h2>
+            <div className="flex gap-2">
+              <input value={broadcastText} onChange={e => setBroadcastText(e.target.value)} placeholder="Важливе повідомлення для всіх живих гравців..." style={{ flex: 1 }} />
+              <button
+                onClick={async () => { await call('/api/gm/broadcast', { text: broadcastText }); setBroadcastText('') }}
+                disabled={loading || !broadcastText.trim()} className="btn-primary">
+                📢 Розіслати
+              </button>
+            </div>
+            <p style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
+              На відміну від "Новини гри" — приходить прямо в особисту пошту (КПК) кожного живого гравця, з підсвіченою міткою.
+            </p>
+          </div>
+
+          <div className="card">
             <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>Створити РП-місію</h2>
             <div className="flex flex-col gap-2">
               <input value={missionTitle} onChange={e => setMissionTitle(e.target.value)} placeholder="Назва місії" />
@@ -457,12 +494,18 @@ export default function GMPage() {
                 {missions.map(m => {
                   const completedCount = Object.keys(m.completions).length
                   return (
-                    <div key={m.id} style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '8px 12px' }}>
-                      <div style={{ color: '#e5e5e5', fontSize: 13 }}>{m.title} <span style={{ color: '#666', fontSize: 11 }}>— {m.targetName ?? 'усі гравці'}</span></div>
-                      <div style={{ color: '#666', fontSize: 11, marginTop: 2 }}>
-                        {m.checkStat ? `${STAT_LABELS[m.checkStat]} проти СК ${m.checkDC}` : 'без кидка'} · нагорода: {m.reward.type === 'none' ? 'немає' : m.reward.type === 'item' ? `${getItem(m.reward.itemKey ?? '')?.name ?? m.reward.itemKey} ×${m.reward.itemQty}` : m.reward.type === 'hp' ? `+${m.reward.hpAmount} ОЗ` : `${STAT_LABELS[m.reward.statKey!]} +${m.reward.statAmount}`}
-                        {completedCount > 0 && <> · виконано: {completedCount}</>}
+                    <div key={m.id} className="flex justify-between items-start gap-3" style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '8px 12px' }}>
+                      <div>
+                        <div style={{ color: '#e5e5e5', fontSize: 13 }}>{m.title} <span style={{ color: '#666', fontSize: 11 }}>— {m.targetName ?? 'усі гравці'}</span></div>
+                        <div style={{ color: '#666', fontSize: 11, marginTop: 2 }}>
+                          {m.checkStat ? `${STAT_LABELS[m.checkStat]} проти СК ${m.checkDC}` : 'без кидка'} · нагорода: {m.reward.type === 'none' ? 'немає' : m.reward.type === 'item' ? `${getItem(m.reward.itemKey ?? '')?.name ?? m.reward.itemKey} ×${m.reward.itemQty}` : m.reward.type === 'hp' ? `+${m.reward.hpAmount} ОЗ` : `${STAT_LABELS[m.reward.statKey!]} +${m.reward.statAmount}`}
+                          {completedCount > 0 && <> · виконано: {completedCount}</>}
+                        </div>
                       </div>
+                      <button onClick={() => call('/api/gm/mission/delete', { missionId: m.id })} disabled={loading}
+                        style={{ fontSize: 11, color: '#c0392b', background: 'none', border: '1px solid #2a1a1a', borderRadius: 4, padding: '4px 10px', cursor: 'pointer', flexShrink: 0 }}>
+                        Видалити
+                      </button>
                     </div>
                   )
                 })}
