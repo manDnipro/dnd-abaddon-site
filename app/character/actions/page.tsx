@@ -38,7 +38,7 @@ export default function ActionsPage() {
     setLoading(false)
     if (!res.ok) { setError(d.error || 'Помилка'); return }
     if (d.log) setLog(l => [...d.log, ...l])
-    setCharacter(d.character ?? character)
+    setCharacter(d.character ?? d)
   }
 
   if (character === undefined) return <p style={{ color: '#555' }}>Оглядаю табір...</p>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { addStack, countOf, removeStack } from '@/lib/stacks'
 import { inventoryCapacity, distinctSlotsUsed } from '@/lib/inventory'
+import { getItem } from '@/lib/items'
 
 // POST { action: 'store' | 'take', itemId, qty }
 export async function POST(req: NextRequest) {
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
 
   const { action, itemId, qty } = await req.json() as { action: 'store' | 'take'; itemId: string; qty: number }
   const amount = Math.max(1, Math.floor(qty || 1))
+  const itemName = getItem(itemId)?.name ?? itemId
 
   if (action === 'store') {
     const have = countOf(character.inventory, itemId)
@@ -33,5 +35,8 @@ export async function POST(req: NextRequest) {
   }
 
   await saveCharacter(charId, character)
-  return NextResponse.json(character)
+  const log = [action === 'store'
+    ? `📦 ${itemName} ×${amount} відправлено в ящик.`
+    : `📦 ${itemName} ×${amount} забрано з ящика.`]
+  return NextResponse.json({ character, log })
 }
