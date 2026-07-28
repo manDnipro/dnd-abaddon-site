@@ -8,13 +8,17 @@ export async function GET() {
   if (!await isGM()) return NextResponse.json({ error: 'Немає доступу' }, { status: 403 })
 
   const ids = await getApprovedCharacterIds()
-  const players: Character[] = []
+  const byOwner = new Map<string, Character>()
   for (const id of ids) {
     const raw = await redis.get<string>(`char:${id}`)
     if (!raw) continue
     const c: Character = typeof raw === 'string' ? JSON.parse(raw) : raw
-    if (c.status === 'approved') players.push(c)
+    if (c.status !== 'approved') continue
+    // Old schema migrations can leave stale duplicate records for the same account under
+    // different ids — keep only the highest (most recently created) id per owner.
+    const existing = byOwner.get(c.owner)
+    if (!existing || Number(c.id) > Number(existing.id)) byOwner.set(c.owner, c)
   }
-  players.sort((a, b) => a.name.localeCompare(b.name))
+  const players = [...byOwner.values()].sort((a, b) => a.name.localeCompare(b.name))
   return NextResponse.json(players)
 }
