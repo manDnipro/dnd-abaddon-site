@@ -7,6 +7,7 @@ import { reputationTier, CANTEEN_MAX_USES } from '@/lib/reputation'
 import { getItem } from '@/lib/items'
 import { addStack } from '@/lib/stacks'
 import { appendCharacterLog } from '@/lib/characterLog'
+import { trainStat } from '@/lib/statTraining'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -37,13 +38,14 @@ export async function POST(req: NextRequest) {
     character.canteenUses.push(Date.now())
   }
 
-  const outcome = location.stat === null
-    ? location.success
-    : rollD20(statModifier(character.stats[location.stat])).total >= location.dc
-      ? location.success
-      : location.failure
+  const checkSuccess = location.stat === null || rollD20(statModifier(character.stats[location.stat])).total >= location.dc
+  const outcome = checkSuccess ? location.success : location.failure
 
   if (outcome.text) log.push(`${location.name}: ${outcome.text}`)
+  if (location.stat !== null) {
+    const growth = trainStat(character, location.stat, checkSuccess)
+    if (growth) log.push(growth)
+  }
   if (outcome.moraleDelta) character.morale = clampMorale(character.morale + outcome.moraleDelta)
   if (outcome.reputationDelta) character.reputation = clampReputation(character.reputation + outcome.reputationDelta)
   if (outcome.infectionDelta) character.infection = clampInfection(character.infection + outcome.infectionDelta)

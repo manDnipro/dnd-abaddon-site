@@ -106,7 +106,7 @@ export function resolvePlayerAttack(character: Character, combat: CombatState, s
     wearWeaponOnUse(character, weapon.id)
     if (isBroken(getDurability(character, weapon.id))) log.push(`🔧 ${weaponName} зламалась від зносу!`)
   }
-  const profGain = trainWeaponProficiency(character, weaponItem)
+  const profGain = trainWeaponProficiency(character, weaponItem, attack.hit)
   if (profGain) log.push(profGain)
 
   if (combat.hp <= 0) {

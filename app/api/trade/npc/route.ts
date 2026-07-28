@@ -4,6 +4,7 @@ import { getItem, estimateTradeValue } from '@/lib/items'
 import { countOf, addStack, removeStack } from '@/lib/stacks'
 import { TRADER_ROSTER, getTrader, getOrSeedStock, saveStock, removeFromStock, getTrust, adjustTrust } from '@/lib/npcTraders'
 import { resolveNegotiationRoll } from '@/lib/tradeNegotiation'
+import { trainStat } from '@/lib/statTraining'
 
 export async function GET() {
   const result = await loadOwnCharacter()
@@ -53,15 +54,20 @@ export async function POST(req: NextRequest) {
   const log: string[] = [
     `🎲 Переговори (Харизма): ${negotiation.roll.total} + довіра ${negotiation.trustBonus} + репутація ${negotiation.reputationBonus} = ${negotiation.totalRoll} проти СК ${negotiation.dc}${negotiation.critical ? ' — КРИТ!' : negotiation.fumble ? ' — провал!' : ''}`,
   ]
+  const accepted = negotiation.success && ratio >= negotiation.requiredRatio
+  const growth = trainStat(character, 'cha', accepted)
+  if (growth) log.push(growth)
 
   if (!negotiation.success) {
     await adjustTrust(charId, trader.id, negotiation.fumble ? -3 : -1)
     log.push(`❌ ${trader.name} не погоджується на переговори.`)
+    await saveCharacter(charId, character)
     return NextResponse.json({ character, log })
   }
 
   if (ratio < negotiation.requiredRatio) {
     log.push(`❌ ${trader.name}: "Замало — так не домовимось." (потрібне співвідношення ×${negotiation.requiredRatio.toFixed(2)}, твоя пропозиція ×${ratio.toFixed(2)})`)
+    await saveCharacter(charId, character)
     return NextResponse.json({ character, log })
   }
 

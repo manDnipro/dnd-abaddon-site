@@ -32,18 +32,21 @@ export async function POST() {
     addStack(character.inventory, catchKey, 1)
     character.xp += XP_REWARDS.hunt
     log.push(huntLine(character.name, true, getItem(catchKey)?.name ?? catchKey) + ` (+${XP_REWARDS.hunt} XP)`)
-    character.huntsSinceLevel += 1
-    if (character.huntsSinceLevel >= HUNTS_PER_PROFICIENCY && character.huntingProf < MAX_HUNTING_PROFICIENCY) {
-      character.huntingProf += 1
-      character.huntsSinceLevel = 0
-      log.push(`🏹 Навик полювання загострюється — тепер ${character.name} читає сліди впевненіше (${character.huntingProf}/${MAX_HUNTING_PROFICIENCY}).`)
-    }
   } else {
     log.push(huntLine(character.name, false))
     if (Math.random() < HUNTING_MISHAP_CHANCE) {
       character.hunger = clampHungerThirst(character.hunger - 5)
       log.push(`😮‍💨 Змарновані сили далися взнаки — додатково -5 голоду.`)
     }
+  }
+
+  // Every genuine attempt sharpens the skill, win or lose — mirrors the bot's practice counter
+  // (which increments regardless of outcome), just without a persisted per-attempt table here.
+  character.huntsSinceLevel += 1
+  if (character.huntsSinceLevel >= HUNTS_PER_PROFICIENCY && character.huntingProf < MAX_HUNTING_PROFICIENCY) {
+    character.huntingProf += 1
+    character.huntsSinceLevel = 0
+    log.push(`🏹 Навик полювання загострюється — тепер ${character.name} читає сліди впевненіше (${character.huntingProf}/${MAX_HUNTING_PROFICIENCY}).`)
   }
 
   await saveCharacter(charId, character)

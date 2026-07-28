@@ -29,13 +29,18 @@ export function weaponProficiencyPenalty(character: Character, item: ItemDefinit
   return shortfall > 0 ? -shortfall * PENALTY_PER_LEVEL : 0
 }
 
-/** Every genuine attack (win or lose) nudges the matching proficiency up — grows by 1 every 5 uses, capped at 10. */
-export function trainWeaponProficiency(character: Character, item: ItemDefinition | undefined): string | null {
+// Bot ties growth to persisted practice/win-streak counters (practice_count>=5 OR a 3-win streak).
+// No such per-attempt DB table here, so this approximates it with a flat per-attack roll — but the
+// roll's odds must still track whether THIS attack actually hit, or the dice stop mattering at all.
+const PROFICIENCY_GROWTH_CHANCE_ON_HIT = 0.3
+const PROFICIENCY_GROWTH_CHANCE_ON_MISS = 0.08
+
+/** Every genuine attack nudges the matching proficiency up, but landing the hit matters — success
+ *  trains the skill roughly 4x faster than whiffing, same spirit as the bot's win-streak bonus. */
+export function trainWeaponProficiency(character: Character, item: ItemDefinition | undefined, hit: boolean): string | null {
   const key = item ? weaponProficiencyKey(item) : null
   if (!key || character[key] >= MAX_WEAPON_PROFICIENCY) return null
-  // Simple deterministic growth (bot uses a practice/streak counter in a DB table we don't have here):
-  // 1-in-5 chance per attack keeps the average growth rate comparable without extra persisted counters.
-  if (Math.random() > 0.2) return null
+  if (Math.random() > (hit ? PROFICIENCY_GROWTH_CHANCE_ON_HIT : PROFICIENCY_GROWTH_CHANCE_ON_MISS)) return null
   character[key] += 1
   const label = key === 'meleeProf' ? '🗡️ Володіння холодною зброєю' : '🔫 Володіння вогнепальною зброєю'
   return `${label} зростає до ${character[key]}!`
