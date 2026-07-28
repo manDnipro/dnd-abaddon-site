@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
+import { loadOwnCharacter, saveCharacter, blockIfInCombat } from '@/lib/loadCharacter'
 import { getItem } from '@/lib/items'
 import { getDurability, MAX_DURABILITY, repairScrapCost } from '@/lib/durability'
 import { countOf, removeStack } from '@/lib/stacks'
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
-  const guard = blockIfOnExpedition(character)
+  const guard = blockIfInCombat(character)
   if (guard) return guard
 
   if (character.status !== 'approved') return NextResponse.json({ error: 'Персонаж ще не затверджений ГМ' }, { status: 403 })

@@ -6,11 +6,19 @@ import { migrateLegacyCharacter } from './migrateCharacter'
 import { getOrRollWeather } from './worldState'
 import { runDueDailyTicks } from './dailyTick'
 
-/** Camp locations (crafting, resting, trading, socializing, storage, stat checks...) are only
- *  reachable while the character is actually at camp — not out on an expedition. */
+/** Some things (hunting, visiting a camp location, the personal storage box, trading, socializing)
+ *  only make sense while physically at camp — not out on an expedition. Personal actions like
+ *  resting, crafting, repairing, or using an item are NOT gated this way (you have your gear and
+ *  yourself with you in the field too) — see blockIfInCombat for what actually stops those. */
 export function blockIfOnExpedition(character: Character): NextResponse | null {
   if (!character.expedition) return null
   return NextResponse.json({ error: '🚶 Ти зараз на вилазці — це недоступно, поки не повернешся в табір.' }, { status: 409 })
+}
+
+/** Mid-fight, you can't stop to eat a sandwich or lash together a repair — resolve the combat first. */
+export function blockIfInCombat(character: Character): NextResponse | null {
+  if (!character.combat) return null
+  return NextResponse.json({ error: '⚔️ Ти зараз у бою — спершу розберись з ворогом.' }, { status: 409 })
 }
 
 export async function loadOwnCharacter(): Promise<{ owner: string; charId: string; character: Character; dailyTickLog: string[] } | { error: string; status: number }> {

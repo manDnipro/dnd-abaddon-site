@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
+import { loadOwnCharacter, saveCharacter, blockIfInCombat } from '@/lib/loadCharacter'
 import { clampHungerThirst, statModifier } from '@/lib/types'
 import { rollDice } from '@/lib/dice'
 import { reputationTier, REST_HEAL_DICE, REST_HUNGER_COST, REST_THIRST_COST } from '@/lib/reputation'
@@ -10,12 +10,11 @@ export async function POST() {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
-  const guard = blockIfOnExpedition(character)
+  const guard = blockIfInCombat(character)
   if (guard) return guard
 
   if (character.status !== 'approved') return NextResponse.json({ error: 'Персонаж ще не затверджений ГМ' }, { status: 403 })
   if (character.dead) return NextResponse.json({ error: 'Персонаж мертвий' }, { status: 403 })
-  if (character.expedition) return NextResponse.json({ error: 'Не можна відпочивати під час вилазки' }, { status: 400 })
 
   const tier = reputationTier(character.reputation)
   const healRoll = rollDice(REST_HEAL_DICE[tier.key])

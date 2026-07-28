@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Character } from '@/lib/types'
 import { EXPEDITION_LEVELS } from '@/lib/expedition'
+import { getItem, isConsumable } from '@/lib/items'
 import DiceLogLine from '@/components/DiceLogLine'
 import DiceRulesInfo from '@/components/DiceRulesInfo'
 
@@ -24,6 +25,7 @@ export default function ExpeditionPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [now, setNow] = useState(Date.now())
+  const [useItemChoice, setUseItemChoice] = useState('')
 
   const load = useCallback(async () => {
     const res = await fetch('/api/character/mine')
@@ -38,10 +40,14 @@ export default function ExpeditionPage() {
     return () => clearInterval(t)
   }, [])
 
-  async function call(url: string) {
+  async function call(url: string, body?: object) {
     setLoading(true)
     setError('')
-    const res = await fetch(url, { method: 'POST' })
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    })
     const d = await res.json()
     setLoading(false)
     if (!res.ok) { setError(d.error || 'Помилка'); return }
@@ -161,7 +167,7 @@ export default function ExpeditionPage() {
                 <div style={{ color: '#999', fontSize: 11, marginTop: 4 }}>ОЗ ворога: {c.hp}/{c.maxHp}</div>
               </div>
             </div>
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-3 flex-wrap mb-3">
               <button onClick={() => call('/api/expedition/combat/attack')} disabled={loading} className="btn-primary">⚔️ Атакувати</button>
               {canSneak && (
                 <button onClick={() => call('/api/expedition/combat/stealth')} disabled={loading} className="btn-gold">🗡️ Атакувати скритно</button>
@@ -171,6 +177,26 @@ export default function ExpeditionPage() {
                 🏃 Втекти
               </button>
             </div>
+            {(() => {
+              const consumables = character.inventory.filter(s => { const it = getItem(s.itemId); return it && isConsumable(it) })
+              if (consumables.length === 0) return null
+              return (
+                <div className="flex gap-2 flex-wrap items-center" style={{ borderTop: '1px solid #2a241c', paddingTop: 10 }}>
+                  <select value={useItemChoice} onChange={e => setUseItemChoice(e.target.value)}
+                    style={{ background: '#0a0a0a', border: '1px solid #2a241c', color: '#c9c4ba', borderRadius: 4, padding: '8px 10px', fontSize: 13 }}>
+                    <option value="">🩹 Використати предмет...</option>
+                    {consumables.map(s => (
+                      <option key={s.itemId} value={s.itemId}>{getItem(s.itemId)?.name ?? s.itemId} ×{s.qty}</option>
+                    ))}
+                  </select>
+                  <button disabled={loading || !useItemChoice}
+                    onClick={() => { const id = useItemChoice; setUseItemChoice(''); call('/api/character/use-item', { itemId: id }) }}
+                    style={{ background: 'none', border: '1px solid #3a1010', color: '#c9a94f', borderRadius: 4, padding: '8px 14px', cursor: loading || !useItemChoice ? 'default' : 'pointer', fontSize: 13 }}>
+                    Застосувати (коштує ходу)
+                  </button>
+                </div>
+              )
+            })()}
           </div>
         )
       })()}

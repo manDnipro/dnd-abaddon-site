@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
+import { loadOwnCharacter, saveCharacter } from '@/lib/loadCharacter'
 import { clampHungerThirst, clampInfection, clampMorale } from '@/lib/types'
 import { getItem, isConsumable } from '@/lib/items'
 import { removeStack } from '@/lib/stacks'
 import { useItemLine, poisonLine } from '@/lib/flavor'
 import { appendCharacterLog } from '@/lib/characterLog'
+import { resolveEnemyAttack } from '@/lib/combatEngine'
 
 export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { charId, character } = result
-  const guard = blockIfOnExpedition(character)
-  if (guard) return guard
 
   if (character.status !== 'approved') return NextResponse.json({ error: 'Персонаж ще не затверджений ГМ' }, { status: 403 })
   if (character.dead) return NextResponse.json({ error: 'Персонаж мертвий' }, { status: 403 })
@@ -37,6 +36,20 @@ export async function POST(req: NextRequest) {
     if (item.healAmount) { character.hp = Math.min(character.maxHp, character.hp + item.healAmount); log.push(useItemLine(character.name, item.name, 'medical')) }
     if (item.infectionReduce) { character.infection = clampInfection(character.infection - item.infectionReduce); log.push(`☣️ ${character.name} відчуває, як гарячка трохи відступає (-${item.infectionReduce} інфекції).`) }
     if (item.moraleRestore) { character.morale = clampMorale(character.morale + item.moraleRestore); log.push(useItemLine(character.name, item.name, 'other')) }
+  }
+
+  // Patching yourself up mid-fight still costs the round — the enemy gets its attack (a real roll),
+  // same as any other combat action. Poison that already killed you skips this (nothing left to fight).
+  if (character.combat && !character.dead) {
+    const enemyRound = resolveEnemyAttack(character, character.combat, { cause: 'ти зупиняєшся підлікуватись' })
+    log.push(...enemyRound.log)
+    if (enemyRound.playerDied) {
+      character.combat = null
+      character.expedition = null
+    }
+  } else if (character.dead) {
+    character.combat = null
+    character.expedition = null
   }
 
   await saveCharacter(charId, character)

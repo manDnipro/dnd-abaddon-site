@@ -7,7 +7,6 @@ import { CRAFT_RECIPES } from '@/lib/crafting'
 import { countOf } from '@/lib/stacks'
 import { CAMP_LOCATIONS } from '@/lib/campLocations'
 import { getDurability, durabilityLabel, repairScrapCost, MAX_DURABILITY } from '@/lib/durability'
-import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
 import DiceLogLine from '@/components/DiceLogLine'
 import DiceRulesInfo from '@/components/DiceRulesInfo'
 
@@ -46,16 +45,19 @@ export default function ActionsPage() {
   if (character === null) return <p style={{ color: '#888' }}>Немає кому тут поратись — спершу створи персонажа.</p>
   if (character.status !== 'approved') return <p style={{ color: '#888' }}>Табір ще не визнав тебе своїм — чекай на слово ГМ.</p>
   if (character.dead) return <p style={{ color: '#c0392b' }}>☠️ {character.name} назавжди лишився(-лась) серед руїн.</p>
-  if (character.expedition) return <ExpeditionLockBanner expedition={character.expedition} />
 
+  // Hunting, camp locations, and the storage box only make sense physically at camp — everything
+  // else (resting, using items, crafting, repairing) works just as well out in the field.
+  const campOnly = Boolean(character.expedition)
   const tabs: { key: Tab; label: string }[] = [
     { key: 'quick', label: 'Побут' },
-    { key: 'locations', label: 'По табору' },
+    ...(campOnly ? [] : [{ key: 'locations' as Tab, label: 'По табору' }]),
     { key: 'items', label: 'Припаси' },
     { key: 'craft', label: 'Верстак' },
-    { key: 'storage', label: 'Ящик' },
+    ...(campOnly ? [] : [{ key: 'storage' as Tab, label: 'Ящик' }]),
     { key: 'repair', label: 'Ремонт' },
   ]
+  const activeTab: Tab = campOnly && (tab === 'locations' || tab === 'storage') ? 'quick' : tab
 
   return (
     <div>
@@ -74,22 +76,30 @@ export default function ActionsPage() {
           <button key={t.key} onClick={() => setTab(t.key)}
             style={{
               fontSize: 13, padding: '6px 14px', borderRadius: 4, cursor: 'pointer',
-              background: tab === t.key ? 'rgba(166,138,74,0.15)' : 'transparent',
-              border: `1px solid ${tab === t.key ? '#a68a4a' : '#2a241c'}`,
-              color: tab === t.key ? '#c9a94f' : '#888',
+              background: activeTab === t.key ? 'rgba(166,138,74,0.15)' : 'transparent',
+              border: `1px solid ${activeTab === t.key ? '#a68a4a' : '#2a241c'}`,
+              color: activeTab === t.key ? '#c9a94f' : '#888',
             }}>
             {t.label}
           </button>
         ))}
       </div>
 
+      {campOnly && (
+        <p style={{ color: '#e0a03a', fontSize: 12, marginBottom: 16, fontFamily: "'Special Elite', monospace" }}>
+          🚶 Ти на вилазці — полювання, локації табору й ящик зачинені, поки не повернешся. Все інше при тобі.
+        </p>
+      )}
+
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}
 
-      {tab === 'quick' && (
+      {activeTab === 'quick' && (
         <div className="card mb-6">
           <div className="flex gap-3 flex-wrap mb-6">
-            <button onClick={() => call('/api/character/rest')} disabled={loading} className="btn-primary">🛌 Перепочити біля вогнища</button>
-            <button onClick={() => call('/api/character/hunt')} disabled={loading} className="btn-gold">🏹 Пошукати здобич поруч</button>
+            <button onClick={() => call('/api/character/rest')} disabled={loading} className="btn-primary">🛌 Перепочити</button>
+            {!campOnly && (
+              <button onClick={() => call('/api/character/hunt')} disabled={loading} className="btn-gold">🏹 Пошукати здобич поруч</button>
+            )}
           </div>
           <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Випробувати себе</h2>
           <div className="flex gap-2 flex-wrap">
@@ -103,7 +113,7 @@ export default function ActionsPage() {
         </div>
       )}
 
-      {tab === 'locations' && (
+      {activeTab === 'locations' && (
         <div className="card mb-6">
           <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Куди піти в таборі</h2>
           <div className="flex flex-col gap-2">
@@ -126,7 +136,7 @@ export default function ActionsPage() {
         </div>
       )}
 
-      {tab === 'items' && (
+      {activeTab === 'items' && (
         <div className="card mb-6">
           <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Порпаєшся в припасах</h2>
           <div className="flex flex-col gap-2">
@@ -149,7 +159,7 @@ export default function ActionsPage() {
         </div>
       )}
 
-      {tab === 'craft' && (
+      {activeTab === 'craft' && (
         <div className="card mb-6">
           <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Змайструвати щось із мотлоху</h2>
           <div className="flex flex-col gap-2">
@@ -177,7 +187,7 @@ export default function ActionsPage() {
         </div>
       )}
 
-      {tab === 'storage' && (
+      {activeTab === 'storage' && (
         <div className="card mb-6">
           <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Закопаний ящик — місця скільки завгодно</h2>
           <div className="flex flex-col gap-4">
@@ -215,7 +225,7 @@ export default function ActionsPage() {
         </div>
       )}
 
-      {tab === 'repair' && (
+      {activeTab === 'repair' && (
         <div className="card mb-6">
           <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Спорядження нищиться швидше, ніж хочеться</h2>
           {(() => {
