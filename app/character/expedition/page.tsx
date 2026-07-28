@@ -78,6 +78,7 @@ export default function ExpeditionPage() {
                   if (!res.ok) { setError(d.error || 'Помилка'); return }
                   setCharacter(d)
                 }}
+                className="expedition-card"
                 style={{
                   position: 'relative', padding: 0, border: '1px solid #2a241c', borderRadius: 6,
                   overflow: 'hidden', cursor: loading ? 'default' : 'pointer', background: '#0a0a0a',
