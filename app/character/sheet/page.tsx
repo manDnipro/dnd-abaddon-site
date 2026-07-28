@@ -46,6 +46,9 @@ export default function CharacterSheetPage() {
             <p style={{ color: '#a68a4a', fontSize: 13, fontFamily: "'Special Elite', monospace", marginTop: 2 }}>
               {levelTitle(xp.level)} {xp.xpForNext !== null && <span style={{ color: '#666' }}>({xp.xpIntoLevel}/{xp.xpForNext} XP)</span>}
             </p>
+            <p style={{ color: '#555', fontSize: 11, fontFamily: "'Special Elite', monospace", marginTop: 4 }}>
+              ID персонажа: <span style={{ color: '#888' }}>#{character.id}</span> — назви цей номер, якщо звертаєшся до ГМ із проблемою
+            </p>
           </div>
         </div>
       </div>

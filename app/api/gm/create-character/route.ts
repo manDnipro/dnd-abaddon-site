@@ -17,6 +17,18 @@ export async function POST(req: NextRequest) {
   const statError = validateStatSpread(stats)
   if (statError) return NextResponse.json({ error: statError }, { status: 400 })
 
+  // A real registered account gets exactly one character, ever — this is the invariant the whole
+  // site relies on (barter targets, mission targeting, GM roster...). Silently creating a second
+  // one here used to leave an orphaned duplicate that nothing pointed at, causing missions/messages/
+  // etc. aimed at "that player" to resolve to the wrong record. If they need a fresh start, revive
+  // the existing one instead of minting a new id for the same account. Doesn't apply to GM-only
+  // NPC-style cards (no matching login) — those are intentionally many-per-name.
+  const userExists = await redis.get(`user:${ownerName.toLowerCase()}`)
+  const alreadyHasChar = userExists ? await redis.get<string>(`char:owner:${ownerName}`) : null
+  if (alreadyHasChar) {
+    return NextResponse.json({ error: `У акаунта "${ownerName}" вже є персонаж (#${alreadyHasChar}) — онови чи воскреси його замість створення нового.` }, { status: 409 })
+  }
+
   const id = await redis.incr('char:id')
   const maxHp = maxHpForEndurance(stats.end)
 
@@ -64,11 +76,10 @@ export async function POST(req: NextRequest) {
   await redis.set(`char:${id}`, JSON.stringify(character))
   await redis.sadd('char:approved', String(id))
 
-  // If this name matches a real registered account with no character yet, link it so that
-  // player can actually see and use the card. Otherwise it's just an NPC-style entry GM controls.
-  const userExists = await redis.get(`user:${ownerName.toLowerCase()}`)
-  const alreadyHasChar = await redis.get(`char:owner:${ownerName}`)
-  if (userExists && !alreadyHasChar) {
+  // If this name matches a real registered account, link it so that player can actually see and
+  // use the card (already confirmed above they don't have one yet). Otherwise it's just an
+  // NPC-style entry GM controls, not tied to any login.
+  if (userExists) {
     await redis.set(`char:owner:${ownerName}`, String(id))
   }
 
