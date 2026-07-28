@@ -13,16 +13,22 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   const patched: Character = { ...c }
 
   const rawStats = patched.stats as unknown as Record<string, number>
-  if (rawStats && typeof rawStats.end !== 'number') {
-    const converted = { ...patched.stats }
-    let any = false
-    for (const [oldKey, newKey] of Object.entries(LEGACY_STAT_MAP)) {
-      if (typeof rawStats[oldKey] === 'number') {
-        (converted as unknown as Record<string, number>)[newKey] = rawStats[oldKey]
-        any = true
+  if (rawStats) {
+    const hasLegacyKeys = Object.keys(LEGACY_STAT_MAP).some(k => typeof rawStats[k] === 'number')
+    if (hasLegacyKeys || typeof rawStats.end !== 'number') {
+      // Rebuild from scratch with only the 6 short keys — a previous version of this migration
+      // copied the old full-name keys into the new object instead of replacing them, leaving both
+      // sets present (12 entries instead of 6) and rendering as unlabeled extra stat boxes.
+      const clean: Record<string, number> = {}
+      for (const [oldKey, newKey] of Object.entries(LEGACY_STAT_MAP)) {
+        if (typeof rawStats[oldKey] === 'number') clean[newKey] = rawStats[oldKey]
+        else if (typeof rawStats[newKey] === 'number') clean[newKey] = rawStats[newKey]
+      }
+      if (Object.keys(clean).length === 6) {
+        patched.stats = clean as unknown as Character['stats']
+        changed = true
       }
     }
-    if (any) { patched.stats = converted; changed = true }
   }
 
   if (patched.maxHp === undefined || Number.isNaN(patched.maxHp)) {
