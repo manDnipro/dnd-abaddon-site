@@ -128,9 +128,17 @@ export default function ExpeditionPage() {
         <div className="card" style={{ borderColor: '#3a1010' }}>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 14 }}>ЩОДЕННИК ВИЖИВШОГО</p>
           {lastImage && (
-            <div style={{ position: 'relative', width: '100%', height: 220, borderRadius: 4, overflow: 'hidden', marginBottom: 16, border: '1px solid #2a241c' }}>
-              <Image src={lastImage} alt="Зустріч" fill style={{ objectFit: 'cover' }} />
-            </div>
+            lastImage.startsWith('/npc/') ? (
+              // NPC portraits are small (~214px) stock thumbnails — stretching them into a full-width
+              // banner blows them up and crops off faces. Show them as a modest centered square instead.
+              <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto 16px', borderRadius: '50%', overflow: 'hidden', border: '2px solid #2a241c' }}>
+                <Image src={lastImage} alt="Зустріч" fill style={{ objectFit: 'cover' }} sizes="160px" />
+              </div>
+            ) : (
+              <div style={{ position: 'relative', width: '100%', height: 220, borderRadius: 4, overflow: 'hidden', marginBottom: 16, border: '1px solid #2a241c' }}>
+                <Image src={lastImage} alt="Зустріч" fill style={{ objectFit: 'cover' }} />
+              </div>
+            )
           )}
           <div className="flex flex-col gap-3">
             {log.map((line, i) => (
