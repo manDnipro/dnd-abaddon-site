@@ -18,7 +18,7 @@ export default function Home() {
   const [charLog, setCharLog] = useState<LogLine[]>([])
   const [missions, setMissions] = useState<RPMission[]>([])
   const [missionLoading, setMissionLoading] = useState<string | null>(null)
-  const [missionResult, setMissionResult] = useState<{ id: string; log: string[] } | null>(null)
+  const [missionResult, setMissionResult] = useState<{ title: string; log: string[] } | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setNickname(d.nickname))
@@ -40,9 +40,8 @@ export default function Home() {
     loadMissions()
   }, [nickname])
 
-  async function attemptMission(missionId: string) {
+  async function attemptMission(missionId: string, title: string) {
     setMissionLoading(missionId)
-    setMissionResult(null)
     const res = await fetch('/api/character/missions/attempt', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ missionId }),
     })
@@ -50,8 +49,9 @@ export default function Home() {
     setMissionLoading(null)
     if (!res.ok) return
     setCharacter(d.character)
-    setMissionResult({ id: missionId, log: d.log })
+    setMissionResult({ title, log: d.log })
     loadMissions()
+    fetch('/api/character/log').then(r => r.json()).then(d => { if (Array.isArray(d)) setCharLog(d) })
   }
 
   async function logout() {
@@ -213,6 +213,19 @@ export default function Home() {
         {nickname && character && character.status === 'approved' && !character.dead && (
           <div>
             <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 11, color: '#a68a4a', letterSpacing: '0.2em', marginBottom: 10 }}>МІСІЇ РП ВІД ГМ</p>
+            {missionResult && (
+              <div className="card mb-3" style={{ borderColor: '#a68a4a' }}>
+                <div className="flex justify-between items-start mb-2">
+                  <p style={{ color: '#c9a94f', fontSize: 13, fontWeight: 700 }}>📜 Результат: «{missionResult.title}»</p>
+                  <button onClick={() => setMissionResult(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 14 }}>✕</button>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {missionResult.log.map((line, i) => (
+                    <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.7, fontFamily: "'Special Elite', monospace" }}>{line}</p>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="card">
               {missions.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Наразі для тебе немає місій.</p>}
               <div className="flex flex-col gap-4">
@@ -228,16 +241,9 @@ export default function Home() {
                       <p style={{ color: '#666', fontSize: 11, marginBottom: 8 }}>
                         {checkLabel ?? 'без кидка'}{rewardLabel && <> · нагорода: {rewardLabel}</>}
                       </p>
-                      <button onClick={() => attemptMission(m.id)} disabled={missionLoading === m.id} className="btn-gold">
+                      <button onClick={() => attemptMission(m.id, m.title)} disabled={missionLoading === m.id} className="btn-gold">
                         {missionLoading === m.id ? 'Виконую...' : '📜 Виконати'}
                       </button>
-                      {missionResult?.id === m.id && (
-                        <div className="flex flex-col gap-1" style={{ marginTop: 10 }}>
-                          {missionResult.log.map((line, i) => (
-                            <p key={i} style={{ color: '#a99c8a', fontSize: 12, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{line}</p>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   )
                 })}

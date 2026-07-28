@@ -13,7 +13,7 @@ export default function PlayerPDA() {
   const [missions, setMissions] = useState<RPMission[]>([])
   const [messages, setMessages] = useState<PlayerMessage[]>([])
   const [missionLoading, setMissionLoading] = useState<string | null>(null)
-  const [missionResult, setMissionResult] = useState<{ id: string; log: string[] } | null>(null)
+  const [missionResult, setMissionResult] = useState<{ title: string; log: string[] } | null>(null)
 
   const refresh = useCallback(async () => {
     const meRes = await fetch('/api/character/mine')
@@ -41,16 +41,15 @@ export default function PlayerPDA() {
     }
   }
 
-  async function attemptMission(missionId: string) {
+  async function attemptMission(missionId: string, title: string) {
     setMissionLoading(missionId)
-    setMissionResult(null)
     const res = await fetch('/api/character/missions/attempt', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ missionId }),
     })
     const d = await res.json()
     setMissionLoading(null)
     if (!res.ok) return
-    setMissionResult({ id: missionId, log: d.log })
+    setMissionResult({ title, log: d.log })
     refresh()
   }
 
@@ -93,37 +92,45 @@ export default function PlayerPDA() {
 
           <div style={{ padding: 14 }}>
             {tab === 'missions' && (
-              missions.length === 0 ? (
-                <p style={{ color: '#555', fontSize: 12 }}>Наразі для тебе немає місій.</p>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {missions.map(m => {
-                    const rewardLabel = missionRewardSummary(m.reward)
-                    const checkLabel = m.checkStat
-                      ? `🎲 ${STAT_LABELS[m.checkStat]} ${formatModifier(statModifier(character.stats[m.checkStat]))} проти СК ${m.checkDC}`
-                      : null
-                    return (
-                      <div key={m.id} style={{ borderBottom: '1px solid #1e2230', paddingBottom: 12 }}>
-                        <p style={{ color: '#c9a94f', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{m.title}</p>
-                        <p style={{ color: '#bbb', fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>{m.text}</p>
-                        <p style={{ color: '#666', fontSize: 11, marginBottom: 8 }}>
-                          {checkLabel ?? 'без кидка'}{rewardLabel && <> · {rewardLabel}</>}
-                        </p>
-                        <button onClick={() => attemptMission(m.id)} disabled={missionLoading === m.id} className="btn-gold" style={{ fontSize: 12, padding: '5px 12px' }}>
-                          {missionLoading === m.id ? 'Виконую...' : 'Виконати'}
-                        </button>
-                        {missionResult?.id === m.id && (
-                          <div className="flex flex-col gap-1" style={{ marginTop: 8 }}>
-                            {missionResult.log.map((line, i) => (
-                              <p key={i} style={{ color: '#a99c8a', fontSize: 11, lineHeight: 1.5 }}>{line}</p>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )
+              <>
+                {missionResult && (
+                  <div className="mb-4" style={{ background: '#0a0a0a', border: '1px solid #a68a4a', borderRadius: 4, padding: '8px 10px' }}>
+                    <div className="flex justify-between items-start mb-1">
+                      <span style={{ color: '#c9a94f', fontSize: 12, fontWeight: 700 }}>«{missionResult.title}»</span>
+                      <button onClick={() => setMissionResult(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 13 }}>✕</button>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {missionResult.log.map((line, i) => (
+                        <p key={i} style={{ color: '#a99c8a', fontSize: 11, lineHeight: 1.5 }}>{line}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {missions.length === 0 ? (
+                  <p style={{ color: '#555', fontSize: 12 }}>Наразі для тебе немає місій.</p>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {missions.map(m => {
+                      const rewardLabel = missionRewardSummary(m.reward)
+                      const checkLabel = m.checkStat
+                        ? `🎲 ${STAT_LABELS[m.checkStat]} ${formatModifier(statModifier(character.stats[m.checkStat]))} проти СК ${m.checkDC}`
+                        : null
+                      return (
+                        <div key={m.id} style={{ borderBottom: '1px solid #1e2230', paddingBottom: 12 }}>
+                          <p style={{ color: '#c9a94f', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{m.title}</p>
+                          <p style={{ color: '#bbb', fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>{m.text}</p>
+                          <p style={{ color: '#666', fontSize: 11, marginBottom: 8 }}>
+                            {checkLabel ?? 'без кидка'}{rewardLabel && <> · {rewardLabel}</>}
+                          </p>
+                          <button onClick={() => attemptMission(m.id, m.title)} disabled={missionLoading === m.id} className="btn-gold" style={{ fontSize: 12, padding: '5px 12px' }}>
+                            {missionLoading === m.id ? 'Виконую...' : 'Виконати'}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </>
             )}
 
             {tab === 'messages' && (
