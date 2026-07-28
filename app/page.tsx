@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Character, STAT_LABELS, Stats } from '@/lib/types'
-import { xpProgress, levelTitle } from '@/lib/levels'
+import { Character } from '@/lib/types'
+import { characterTitle } from '@/lib/characterTitle'
 
 type Weather = { seasonLabel: string; label: string; temperature: number }
 type LogLine = { text: string; at: number }
@@ -105,55 +105,39 @@ export default function Home() {
 
           {character && (
             <div className="card mb-6" style={{ borderColor: character.dead ? '#3a1010' : '#a68a4a30' }}>
-              <div className="flex justify-between items-start flex-wrap gap-3 mb-4">
-                <div className="flex items-center gap-3">
-                  {character.avatar ? (
-                    <div style={{ position: 'relative', width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', border: '2px solid #a68a4a', flexShrink: 0 }}>
-                      <Image src={character.avatar} alt={character.name} fill style={{ objectFit: 'cover' }} />
-                    </div>
-                  ) : (
-                    <Link href="/character/avatar" style={{
-                      width: 52, height: 52, borderRadius: '50%', border: '2px dashed #2a241c', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, color: '#555',
-                    }}>➕</Link>
-                  )}
-                  <h2 style={{ color: '#e5e5e5', fontSize: 24 }}>{character.name}</h2>
+              <div className="flex items-start gap-4 flex-wrap">
+                {character.avatar ? (
+                  <div style={{ position: 'relative', width: 88, height: 88, borderRadius: 8, overflow: 'hidden', border: '2px solid #a68a4a', flexShrink: 0 }}>
+                    <Image src={character.avatar} alt={character.name} fill style={{ objectFit: 'cover' }} />
+                  </div>
+                ) : (
+                  <Link href="/character/avatar" style={{
+                    width: 88, height: 88, borderRadius: 8, border: '2px dashed #2a241c', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, color: '#555',
+                  }}>➕</Link>
+                )}
+
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div className="flex items-center gap-3 flex-wrap mb-1">
+                    <h2 style={{ color: '#e5e5e5', fontSize: 22 }}>{character.name}</h2>
+                    <span style={{ color: '#75705f', fontSize: 13, fontFamily: "'Special Elite', monospace" }}>— {characterTitle(character.stats)}</span>
+                  </div>
+                  <div className="mb-2">
+                    {character.status === 'pending' && <span className="tag">⏳ Очікує підтвердження ГМ</span>}
+                    {character.status === 'approved' && !character.dead && <span className="tag" style={{ borderColor: '#27ae60', color: '#5cb87a' }}>✅ Затверджено</span>}
+                    {character.status === 'rejected' && <span className="tag">❌ Відхилено {character.reviewNote ? `— ${character.reviewNote}` : ''}</span>}
+                    {character.status === 'approved' && character.dead && <span className="tag">☠️ Загинув(-ла)</span>}
+                  </div>
+                  <p style={{ color: '#a99c8a', fontSize: 13, lineHeight: 1.7, fontFamily: "'Special Elite', monospace", fontStyle: character.bio ? 'normal' : 'italic' }}>
+                    {character.bio || 'Хто цей вцілілий і що привело його сюди — поки що ніхто не знає.'}
+                  </p>
                 </div>
-                {character.status === 'pending' && <span className="tag">⏳ Очікує підтвердження ГМ</span>}
-                {character.status === 'approved' && !character.dead && <span className="tag" style={{ borderColor: '#27ae60', color: '#5cb87a' }}>✅ Затверджено</span>}
-                {character.status === 'rejected' && <span className="tag">❌ Відхилено {character.reviewNote ? `— ${character.reviewNote}` : ''}</span>}
-                {character.status === 'approved' && character.dead && <span className="tag">☠️ Загинув(-ла)</span>}
               </div>
 
               {character.status === 'approved' && !character.dead && (
-                <div className="flex flex-col gap-2 mb-5">
-                  <div className="flex justify-between items-center mb-1">
-                    <span style={{ color: '#c9a94f', fontSize: 13, fontFamily: "'Special Elite', monospace" }}>{levelTitle(xpProgress(character.xp).level)}</span>
-                    <span style={{ color: '#75705f', fontSize: 11, fontFamily: "'Special Elite', monospace" }}>
-                      🗡️ {character.meleeProf}/10 · 🔫 {character.firearmProf}/10 · 🏹 {character.huntingProf}/10
-                    </span>
-                  </div>
-                  <VitalBar label="ОЗ" value={character.hp} max={character.maxHp} color="#b04a3a" />
-                  <VitalBar label="Голод" value={character.hunger} max={100} color="#a68a4a" />
-                  <VitalBar label="Спрага" value={character.thirst} max={100} color="#3a7ab0" />
-                  <VitalBar label="Мораль" value={character.morale} max={100} color="#7a9c4a" />
-                  {character.infection > 0 && <VitalBar label="Інфекція" value={character.infection} max={100} color="#8e44ad" />}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-5">
-                {(Object.entries(character.stats) as [keyof Stats, number][]).map(([k, v]) => (
-                  <div key={k} style={{ background: '#0a0908', border: '1px solid #201b15', borderRadius: 3, padding: '8px 12px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#75705f', fontSize: 12, fontFamily: "'Special Elite', monospace" }}>{STAT_LABELS[k]}</span>
-                    <span style={{ color: '#c9a94f', fontWeight: 700 }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-
-              {character.status === 'approved' && !character.dead && (
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-3 flex-wrap mt-4">
                   <Link href="/character/expedition" className="btn-primary">🔍 Вилазка</Link>
-                  <Link href="/character/inventory" className="btn-gold">🎒 Спорядження</Link>
+                  <Link href="/character/sheet" className="btn-gold">📋 Картка</Link>
                   <Link href="/character/actions" className="btn-gold">🛌 Дії</Link>
                   <Link href="/character/avatar" style={{ color: '#8a8378', fontSize: 13, alignSelf: 'center', textDecoration: 'underline' }}>Змінити обличчя</Link>
                 </div>
@@ -206,24 +190,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-    </div>
-  )
-}
-
-function VitalBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
-  const pct = Math.max(0, Math.min(100, (value / max) * 100))
-  return (
-    <div className="flex items-center gap-3">
-      <span style={{ color: '#8a8378', fontSize: 12, fontFamily: "'Special Elite', monospace", width: 60, flexShrink: 0 }}>{label}</span>
-      <div style={{ position: 'relative', flex: 1, height: 22, background: '#0a0908', border: '1px solid #201b15', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, width: `${pct}%`, background: color, opacity: 0.35, transition: 'width 0.3s' }} />
-        <div style={{
-          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#e5e5e5', fontSize: 12, fontFamily: "'Special Elite', monospace", fontWeight: 700,
-        }}>
-          {value}/{max}
-        </div>
-      </div>
     </div>
   )
 }
