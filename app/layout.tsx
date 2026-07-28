@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ApocalypseBackground from "@/components/ApocalypseBackground";
 import ButtonFlash from "@/components/ButtonFlash";
+import PlayerPDA from "@/components/PlayerPDA";
 
 export const metadata: Metadata = {
   title: "ABADDON — Гра виживання",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="max-w-5xl mx-auto w-full px-4 py-10">
           {children}
         </main>
+        <PlayerPDA />
       </body>
     </html>
   );

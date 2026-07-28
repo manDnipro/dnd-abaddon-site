@@ -46,6 +46,7 @@ export default function GMPage() {
   const [newOwner, setNewOwner] = useState('')
   const [newStats, setNewStats] = useState<Stats>({ str: 3, agi: 3, end: 3, per: 3, int: 3, cha: 3 })
   const [inbox, setInbox] = useState<GMLetter[]>([])
+  const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({})
 
   async function loadAll() {
     const [pendingRes, playersRes, weatherRes, npcsRes, inboxRes, missionsRes] = await Promise.all([
@@ -483,7 +484,19 @@ export default function GMPage() {
                 <span style={{ color: '#555', fontSize: 11 }}>{new Date(l.at).toLocaleString('uk-UA')}</span>
               </div>
               <p style={{ color: '#666', fontSize: 12, marginBottom: 6 }}>Від: {l.from}</p>
-              <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6 }}>{l.text}</p>
+              <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>{l.text}</p>
+              <div className="flex gap-2">
+                <input value={replyDrafts[i] ?? ''} onChange={e => setReplyDrafts(d => ({ ...d, [i]: e.target.value }))}
+                  placeholder={`Відповісти ${l.from}...`} style={{ flex: 1 }} />
+                <button
+                  onClick={async () => {
+                    await call('/api/gm/inbox/reply', { toNickname: l.from, text: replyDrafts[i] ?? '' })
+                    setReplyDrafts(d => ({ ...d, [i]: '' }))
+                  }}
+                  disabled={loading || !(replyDrafts[i] ?? '').trim()} className="btn-gold">
+                  Надіслати
+                </button>
+              </div>
             </div>
           ))}
         </div>
