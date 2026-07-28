@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Character } from '@/lib/types'
 import { EXPEDITION_LEVELS } from '@/lib/expedition'
 import { MeetRequest, DuoInvite } from '@/lib/socialStore'
+import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
 
 export default function SocialPage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -50,6 +51,7 @@ export default function SocialPage() {
   if (character === undefined) return <p style={{ color: '#555' }}>Прислухаюсь до голосів у таборі...</p>
   if (character === null) return <p style={{ color: '#888' }}>Спершу тобі потрібне ім'я тут.</p>
   if (character.status !== 'approved') return <p style={{ color: '#888' }}>Ти ще чужий(-а) для табору.</p>
+  if (character.expedition) return <ExpeditionLockBanner expedition={character.expedition} />
 
   return (
     <div>

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Character } from '@/lib/types'
 import { getItem, estimateTradeValue } from '@/lib/items'
+import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
 
 type Trader = { id: string; name: string; tradeLevel: number; stock: { itemKey: string; quantity: number }[]; trust: number }
 
@@ -47,6 +48,7 @@ export default function TradePage() {
   if (character === undefined) return <p style={{ color: '#555' }}>Шукаю, хто ще торгує...</p>
   if (character === null) return <p style={{ color: '#888' }}>Нема кому міняти — спершу створи персонажа.</p>
   if (character.status !== 'approved') return <p style={{ color: '#888' }}>Тобі ще не довіряють настільки, щоб торгувати.</p>
+  if (character.expedition) return <ExpeditionLockBanner expedition={character.expedition} />
 
   return (
     <div>

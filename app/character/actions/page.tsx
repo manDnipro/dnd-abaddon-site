@@ -7,6 +7,7 @@ import { CRAFT_RECIPES } from '@/lib/crafting'
 import { countOf } from '@/lib/stacks'
 import { CAMP_LOCATIONS } from '@/lib/campLocations'
 import { getDurability, durabilityLabel, repairScrapCost, MAX_DURABILITY } from '@/lib/durability'
+import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
 
 type Tab = 'quick' | 'locations' | 'items' | 'craft' | 'storage' | 'repair'
 
@@ -43,6 +44,7 @@ export default function ActionsPage() {
   if (character === null) return <p style={{ color: '#888' }}>Немає кому тут поратись — спершу створи персонажа.</p>
   if (character.status !== 'approved') return <p style={{ color: '#888' }}>Табір ще не визнав тебе своїм — чекай на слово ГМ.</p>
   if (character.dead) return <p style={{ color: '#c0392b' }}>☠️ {character.name} назавжди лишився(-лась) серед руїн.</p>
+  if (character.expedition) return <ExpeditionLockBanner expedition={character.expedition} />
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'quick', label: 'Побут' },

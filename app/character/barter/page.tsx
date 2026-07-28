@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Character } from '@/lib/types'
 import { getItem } from '@/lib/items'
 import { BarterSession } from '@/lib/barterStore'
+import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
 
 export default function BarterPage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -48,6 +49,7 @@ export default function BarterPage() {
   if (character === undefined) return <p style={{ color: '#555' }}>Дивлюсь, хто ще не спить у таборі...</p>
   if (character === null) return <p style={{ color: '#888' }}>Нема кому обмінюватись — спершу створи персонажа.</p>
   if (character.status !== 'approved') return <p style={{ color: '#888' }}>Тобі ще не довіряють настільки.</p>
+  if (character.expedition) return <ExpeditionLockBanner expedition={character.expedition} />
 
   const myItems = mySide === 'a' ? session?.itemsA : session?.itemsB
   const theirItems = mySide === 'a' ? session?.itemsB : session?.itemsA
