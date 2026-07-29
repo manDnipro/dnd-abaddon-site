@@ -59,10 +59,10 @@ function EquipSlot({
         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
         transform: 'translate(-50%, -50%)', borderRadius: shape === 'circle' ? '50%' : '12%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '55%', cursor: itemName && !disabled ? 'pointer' : 'default',
-        background: locked ? 'transparent' : itemName ? 'rgba(10,10,10,0.55)' : 'transparent',
-        border: locked ? 'none' : `2px solid ${itemName ? (broken ? '#c0392b' : color) : 'transparent'}`,
-        boxShadow: itemName ? `0 0 8px ${color}80, inset 0 0 6px ${color}40` : 'none',
+        fontSize: '52%', cursor: itemName && !disabled ? 'pointer' : 'default',
+        background: locked ? 'transparent' : itemName ? 'rgba(4,4,4,0.92)' : 'transparent',
+        border: locked ? 'none' : `1.5px solid ${itemName ? (broken ? '#c0392b' : color) : 'transparent'}`,
+        boxShadow: itemName ? '0 2px 5px rgba(0,0,0,0.7)' : 'none',
         opacity: locked ? 0 : itemName ? 1 : 0,
       }}>
       {locked ? '' : emoji}
@@ -110,9 +110,9 @@ export default function EquipmentSilhouette({
         return (
           <div key={i} title={item?.name} style={{
             position: 'absolute', top: HOTBAR_Y, left, width: '13%', aspectRatio: '1', transform: 'translate(-50%, -50%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '45%',
-            background: item ? 'rgba(10,10,10,0.55)' : 'transparent', borderRadius: '12%',
-            border: item ? `2px solid ${color}` : 'none', boxShadow: item ? `0 0 6px ${color}70` : 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '42%',
+            background: item ? 'rgba(4,4,4,0.92)' : 'transparent', borderRadius: '12%',
+            border: item ? `1.5px solid ${color}` : 'none', boxShadow: item ? '0 2px 5px rgba(0,0,0,0.7)' : 'none',
           }}>
             {item && TYPE_EMOJI[item.type]}
             {stack && stack.qty > 1 && (
