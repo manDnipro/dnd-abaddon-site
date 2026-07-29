@@ -14,35 +14,36 @@ const TYPE_EMOJI: Record<ItemType, string> = {
   weapon_melee: '🗡️', weapon_ranged: '🔫', food: '🍫', water: '💧', medical: '💊', material: '🔩', clothing: '👕', misc: '📦',
 }
 
-// Positions measured pixel-for-pixel off the player-supplied template (public/equipment/silhouette.png,
-// 620×1174 after cropping the panel chrome out) — % of the image's own width/height, so they stay
-// aligned to the drawn squares/circles at any render size. Only 6 of the 12 body slots correspond to
-// gear the game actually tracks; the rest render as dim, permanently-disabled 🔒 placeholders so the
-// panel matches the template exactly without pretending to have working slots for categories the game
-// doesn't have yet.
+// Positions measured pixel-for-pixel off the player's second (transparent-PNG) template —
+// public/equipment/silhouette.png, cropped to just the drawn panel and upscaled 3x, 579×888 — as %
+// of the image's own width/height so they stay aligned at any render size. This version has 13 body
+// slots (an extra chest square the first drawing didn't have) + a waist square; only 6 map to gear
+// the game actually tracks, the rest render as dim, permanently-disabled 🔒 placeholders.
 type SlotShape = 'square' | 'circle'
 interface LayoutSlot { top: string; left: string; shape: SlotShape; clothingSlot: ClothingSlot | null }
 const LAYOUT: LayoutSlot[] = [
-  { top: '16.4%', left: '24.4%', shape: 'square', clothingSlot: null },
-  { top: '13.9%', left: '49.4%', shape: 'square', clothingSlot: 'head' },
-  { top: '16.4%', left: '72.4%', shape: 'square', clothingSlot: 'backpack' },
+  { top: '14.7%', left: '54.1%', shape: 'square', clothingSlot: 'head' },
+  { top: '17.2%', left: '35.9%', shape: 'square', clothingSlot: null },
+  { top: '17.2%', left: '71.8%', shape: 'square', clothingSlot: 'backpack' },
 
-  { top: '28.6%', left: '21.8%', shape: 'square', clothingSlot: null },
-  { top: '28.6%', left: '75.8%', shape: 'square', clothingSlot: null },
+  { top: '25.5%', left: '54.1%', shape: 'square', clothingSlot: 'torso' },
+  { top: '28.7%', left: '34.0%', shape: 'square', clothingSlot: null },
+  { top: '28.7%', left: '73.8%', shape: 'square', clothingSlot: null },
 
-  { top: '43.0%', left: '22.6%', shape: 'circle', clothingSlot: 'accessory' },
-  { top: '40.5%', left: '49.4%', shape: 'square', clothingSlot: 'torso' },
-  { top: '43.0%', left: '75.0%', shape: 'circle', clothingSlot: null },
+  { top: '40.0%', left: '54.1%', shape: 'square', clothingSlot: 'accessory' },
+  { top: '44.0%', left: '35.9%', shape: 'circle', clothingSlot: null },
+  { top: '44.0%', left: '71.8%', shape: 'circle', clothingSlot: null },
 
-  { top: '56.6%', left: '25.3%', shape: 'square', clothingSlot: null },
-  { top: '56.0%', left: '49.4%', shape: 'square', clothingSlot: 'legs' },
-  { top: '56.6%', left: '72.4%', shape: 'square', clothingSlot: null },
+  { top: '55.3%', left: '54.1%', shape: 'square', clothingSlot: 'legs' },
+  { top: '56.2%', left: '35.8%', shape: 'square', clothingSlot: null },
+  { top: '56.2%', left: '71.8%', shape: 'square', clothingSlot: null },
 
-  { top: '70.8%', left: '49.4%', shape: 'square', clothingSlot: 'feet' },
+  { top: '69.3%', left: '54.1%', shape: 'square', clothingSlot: 'feet' },
 ]
-const HOTBAR_X = ['11.0%', '29.4%', '48.2%', '67.1%', '86.0%']
-const HOTBAR_Y = '90.4%'
-const SLOT_SIZE = '14.5%'
+const HOTBAR_X = ['28.7%', '41.8%', '55.1%', '67.9%', '81.0%']
+const HOTBAR_Y = '88.3%'
+const SLOT_SIZE = '12.5%'
+const HOTBAR_SIZE = '12.5%'
 
 function EquipSlot({
   itemName, color, broken, emoji, shape, disabled, onClick,
@@ -83,7 +84,7 @@ export default function EquipmentSilhouette({
   }).slice(0, 5)
 
   return (
-    <div style={{ position: 'relative', width: '100%', maxWidth: 300, margin: '0 auto', aspectRatio: '620 / 1174' }}>
+    <div style={{ position: 'relative', width: '100%', maxWidth: 300, margin: '0 auto', aspectRatio: '579 / 888' }}>
       <Image src="/equipment/silhouette.png" alt="Спорядження" fill style={{ objectFit: 'contain' }} sizes="300px" />
 
       {LAYOUT.map((pos, i) => {
@@ -109,7 +110,7 @@ export default function EquipmentSilhouette({
         const color = item ? RARITY_COLORS[getItemRarity(item)] : '#3a3a3a'
         return (
           <div key={i} title={item?.name} style={{
-            position: 'absolute', top: HOTBAR_Y, left, width: '13%', aspectRatio: '1', transform: 'translate(-50%, -50%)',
+            position: 'absolute', top: HOTBAR_Y, left, width: HOTBAR_SIZE, aspectRatio: '1', transform: 'translate(-50%, -50%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '42%',
             background: item ? 'rgba(4,4,4,0.92)' : 'transparent', borderRadius: '12%',
             border: item ? `1.5px solid ${color}` : 'none', boxShadow: item ? '0 2px 5px rgba(0,0,0,0.7)' : 'none',
