@@ -12,35 +12,55 @@ const SLOT_EMOJI: Record<ClothingSlot, string> = {
 const TYPE_EMOJI: Record<ItemType, string> = {
   weapon_melee: '🗡️', weapon_ranged: '🔫', food: '🍫', water: '💧', medical: '💊', material: '🔩', clothing: '👕', misc: '📦',
 }
-// Positions as % of the panel — tuned to sit on/near the matching body part of the wireframe figure.
-const SLOT_POSITION: Record<ClothingSlot, { top: string; left: string }> = {
-  head: { top: '4%', left: '50%' },
-  backpack: { top: '8%', left: '86%' },
-  torso: { top: '30%', left: '50%' },
-  accessory: { top: '46%', left: '14%' },
-  legs: { top: '62%', left: '50%' },
-  feet: { top: '92%', left: '50%' },
-}
+
+// The 12-position paper-doll layout the player drew: 3 rows of side squares flanking the torso, a
+// head square, a chest square, a waist square (between the two hand circles), a pelvis square, and
+// a feet square. Only 6 of these map to gear the game actually tracks — the rest are drawn dim/
+// locked ("🔒 заплановано") rather than hidden, so the panel matches the reference 1:1 but doesn't
+// pretend to have interactive slots for categories the game doesn't have yet.
+type SlotShape = 'square' | 'circle'
+interface LayoutSlot { top: string; left: string; shape: SlotShape; clothingSlot: ClothingSlot | null }
+const LAYOUT: LayoutSlot[] = [
+  { top: '4%', left: '18%', shape: 'square', clothingSlot: null },
+  { top: '4%', left: '50%', shape: 'square', clothingSlot: 'head' },
+  { top: '4%', left: '82%', shape: 'square', clothingSlot: 'backpack' },
+
+  { top: '25%', left: '18%', shape: 'square', clothingSlot: null },
+  { top: '25%', left: '50%', shape: 'square', clothingSlot: 'torso' },
+  { top: '25%', left: '82%', shape: 'square', clothingSlot: null },
+
+  { top: '46%', left: '15%', shape: 'circle', clothingSlot: null },
+  { top: '46%', left: '50%', shape: 'square', clothingSlot: 'accessory' },
+  { top: '46%', left: '85%', shape: 'circle', clothingSlot: null },
+
+  { top: '66%', left: '18%', shape: 'square', clothingSlot: null },
+  { top: '66%', left: '50%', shape: 'square', clothingSlot: 'legs' },
+  { top: '66%', left: '82%', shape: 'square', clothingSlot: null },
+
+  { top: '90%', left: '50%', shape: 'square', clothingSlot: 'feet' },
+]
 
 function EquipSlot({
-  itemName, color, broken, emoji, disabled, onClick, label,
+  itemName, color, broken, emoji, shape, disabled, onClick,
 }: {
-  itemName: string | null; color: string; broken: boolean; emoji: string; disabled?: boolean; onClick?: () => void; label: string
+  itemName: string | null; color: string; broken: boolean; emoji: string | null; shape: SlotShape; disabled?: boolean; onClick?: () => void
 }) {
+  const locked = emoji === null
   return (
     <button
-      disabled={disabled || !itemName}
+      disabled={disabled || !itemName || locked}
       onClick={onClick}
-      title={itemName ? `${itemName} — зняти` : `${label}: порожньо`}
+      title={locked ? 'Заплановано на майбутнє' : itemName ? `${itemName} — зняти` : 'порожньо'}
       style={{
-        width: 36, height: 36, borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 16, cursor: itemName && !disabled ? 'pointer' : 'default',
+        width: 34, height: 34, borderRadius: shape === 'circle' ? '50%' : 3,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 15, cursor: itemName && !disabled ? 'pointer' : 'default',
         background: '#0a0a0a',
-        border: `1px solid ${itemName ? (broken ? '#c0392b' : color) : '#3a3a3a'}`,
+        border: `1px solid ${locked ? '#221f1a' : itemName ? (broken ? '#c0392b' : color) : '#3a3a3a'}`,
         boxShadow: itemName ? `0 0 8px ${color}40, inset 0 0 6px ${color}20` : 'none',
-        opacity: itemName ? 1 : 0.5,
+        opacity: locked ? 0.35 : itemName ? 1 : 0.55,
       }}>
-      {emoji}
+      {locked ? '🔒' : emoji}
     </button>
   )
 }
@@ -55,39 +75,40 @@ export default function EquipmentSilhouette({
   const carried = character.inventory.filter(s => {
     const it = getItem(s.itemId)
     return it && it.type !== 'clothing'
-  }).slice(0, 4)
+  }).slice(0, 5)
 
   return (
-    <div style={{ background: '#050505', border: '1px solid #2a2a2a', borderRadius: 4, padding: '10px 12px 14px', maxWidth: 260, margin: '0 auto' }}>
+    <div style={{ background: '#050505', border: '1px solid #2a2a2a', borderRadius: 4, padding: '10px 12px 14px', maxWidth: 300, margin: '0 auto' }}>
       <p style={{
         textAlign: 'center', color: '#888', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
-        borderBottom: '1px solid #222', paddingBottom: 8, marginBottom: 8,
+        borderBottom: '1px solid #222', paddingBottom: 8, marginBottom: 10,
       }}>
         Спорядження
       </p>
 
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '220 / 340' }}>
-        <svg viewBox="0 0 220 340" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.4 }}>
-          <circle cx="110" cy="34" r="22" fill="none" stroke="#555" strokeWidth="1.5" />
-          <line x1="110" y1="56" x2="110" y2="120" stroke="#555" strokeWidth="1.5" />
-          <line x1="110" y1="70" x2="60" y2="150" stroke="#555" strokeWidth="1.5" />
-          <line x1="110" y1="70" x2="160" y2="150" stroke="#555" strokeWidth="1.5" />
-          <path d="M75,70 Q110,58 145,70 L155,175 Q110,190 65,175 Z" fill="none" stroke="#555" strokeWidth="1.5" />
-          <line x1="90" y1="188" x2="80" y2="300" stroke="#555" strokeWidth="1.5" />
-          <line x1="130" y1="188" x2="140" y2="300" stroke="#555" strokeWidth="1.5" />
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '260 / 340' }}>
+        <svg viewBox="0 0 260 340" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.35 }}>
+          <circle cx="130" cy="26" r="18" fill="none" stroke="#666" strokeWidth="1.5" />
+          <path d="M130,44 L130,58" stroke="#666" strokeWidth="1.5" fill="none" />
+          <path d="M95,66 Q130,52 165,66 L172,150 Q130,168 88,150 Z" fill="none" stroke="#666" strokeWidth="1.5" />
+          <path d="M95,66 L60,110 Q52,145 62,160" fill="none" stroke="#666" strokeWidth="1.5" />
+          <path d="M165,66 L200,110 Q208,145 198,160" fill="none" stroke="#666" strokeWidth="1.5" />
+          <path d="M105,168 L98,300 L112,300 L118,220" fill="none" stroke="#666" strokeWidth="1.5" />
+          <path d="M155,168 L162,300 L148,300 L142,220" fill="none" stroke="#666" strokeWidth="1.5" />
         </svg>
 
-        {(Object.keys(SLOT_POSITION) as ClothingSlot[]).map(slot => {
-          const itemId = character.equipped[slot]
+        {LAYOUT.map((pos, i) => {
+          const slot = pos.clothingSlot
+          const itemId = slot ? character.equipped[slot] : null
           const item = itemId ? getItem(itemId) : undefined
           const color = item ? RARITY_COLORS[getItemRarity(item)] : '#3a3a3a'
           const broken = Boolean(itemId && isBroken(getDurability(character, itemId)))
-          const pos = SLOT_POSITION[slot]
           return (
-            <div key={slot} style={{ position: 'absolute', top: pos.top, left: pos.left, transform: 'translate(-50%, -50%)' }}>
+            <div key={i} style={{ position: 'absolute', top: pos.top, left: pos.left, transform: 'translate(-50%, -50%)' }}>
               <EquipSlot
-                itemName={item?.name ?? null} color={color} broken={broken} emoji={SLOT_EMOJI[slot]}
-                disabled={disabled} onClick={() => item && onUnequip(slot)} label={slot}
+                itemName={item?.name ?? null} color={color} broken={broken}
+                emoji={slot ? SLOT_EMOJI[slot] : null} shape={pos.shape}
+                disabled={disabled} onClick={() => slot && item && onUnequip(slot)}
               />
             </div>
           )
@@ -101,18 +122,18 @@ export default function EquipmentSilhouette({
         Hotbar
       </p>
       <div className="flex justify-center gap-2">
-        {Array.from({ length: 4 }).map((_, i) => {
+        {Array.from({ length: 5 }).map((_, i) => {
           const stack = carried[i]
           const item = stack ? getItem(stack.itemId) : undefined
           const color = item ? RARITY_COLORS[getItemRarity(item)] : '#3a3a3a'
           return (
             <div key={i} title={item?.name} style={{
-              position: 'relative', width: 32, height: 32, borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, background: '#0a0a0a', border: `1px solid ${item ? color : '#2a2a2a'}`, opacity: item ? 1 : 0.4,
+              position: 'relative', width: 30, height: 30, borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, background: '#0a0a0a', border: `1px solid ${item ? color : '#2a2a2a'}`, opacity: item ? 1 : 0.4,
             }}>
               {item && TYPE_EMOJI[item.type]}
               {stack && stack.qty > 1 && (
-                <span style={{ position: 'absolute', bottom: -1, right: 1, fontSize: 9, color: '#ccc' }}>{stack.qty}</span>
+                <span style={{ position: 'absolute', bottom: -1, right: 1, fontSize: 8, color: '#ccc' }}>{stack.qty}</span>
               )}
             </div>
           )
