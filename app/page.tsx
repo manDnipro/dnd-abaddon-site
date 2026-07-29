@@ -56,8 +56,10 @@ export default function Home() {
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' })
-    setNickname(null)
-    setCharacter(null)
+    // Navbar fetches its own auth state independently (keyed on pathname, not shared context) —
+    // a plain state reset here leaves it showing the profile menu/nav links as if still logged in
+    // when already on "/". A hard reload guarantees every component re-reads the cleared session.
+    window.location.href = '/'
   }
 
   return (

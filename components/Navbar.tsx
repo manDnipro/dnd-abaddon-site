@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 const BASE_LINKS = [
@@ -21,7 +21,6 @@ type Panel = null | 'menu' | 'message' | 'report'
 
 export default function Navbar() {
   const pathname = usePathname()
-  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [hasLivingCharacter, setHasLivingCharacter] = useState(false)
   const [avatar, setAvatar] = useState<string | null>(null)
@@ -55,8 +54,10 @@ export default function Navbar() {
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     setPanel(null)
-    router.push('/')
-    router.refresh()
+    // router.push('/') is a no-op when already on "/", and router.refresh() only revalidates
+    // server-rendered data — neither resets this component's own client-side auth state (or the
+    // homepage's). A hard reload guarantees every component re-reads the now-cleared session.
+    window.location.href = '/'
   }
 
   async function sendMessage() {
