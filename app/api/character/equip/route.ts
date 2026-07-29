@@ -3,6 +3,8 @@ import { redis } from '@/lib/redis'
 import { getSession } from '@/lib/auth'
 import { Character, Equipped, ClothingSlot } from '@/lib/types'
 import { getItem } from '@/lib/items'
+import { inventoryCapacity } from '@/lib/inventory'
+import { blockIfInCombat } from '@/lib/loadCharacter'
 
 export async function POST(req: NextRequest) {
   const owner = await getSession()
@@ -18,6 +20,10 @@ export async function POST(req: NextRequest) {
   if (character.status !== 'approved') {
     return NextResponse.json({ error: 'Персонаж ще не затверджений ГМ' }, { status: 403 })
   }
+  // Swapping gear mid-fight (e.g. broken armor for fresh armor between rounds) is a bigger exploit
+  // than the "can't eat mid-combat" rule this guard exists for elsewhere — same restriction applies.
+  const guard = blockIfInCombat(character)
+  if (guard) return guard
 
   const body = await req.json() as { action: 'equip' | 'unequip'; itemId?: string; slot?: ClothingSlot }
 
@@ -51,10 +57,21 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(character)
 }
 
+// Matches the overflow behavior every other item-acquisition path in the game uses
+// (expeditionEngine.ts, barter/confirm) — loot never vanishes, a full inventory spills into the
+// personal storage box instead. Un-equipping something used to just push it onto inventory
+// unconditionally, letting a player carry unlimited distinct stacks by cycling equip/unequip.
 function addToInventory(character: Character, itemId: string, qty: number) {
-  const stack = character.inventory.find(s => s.itemId === itemId)
-  if (stack) stack.qty += qty
-  else character.inventory.push({ itemId, qty })
+  const alreadyCarried = character.inventory.some(s => s.itemId === itemId)
+  if (alreadyCarried || character.inventory.length < inventoryCapacity(character)) {
+    const stack = character.inventory.find(s => s.itemId === itemId)
+    if (stack) stack.qty += qty
+    else character.inventory.push({ itemId, qty })
+  } else {
+    const boxStack = character.storageBox.find(s => s.itemId === itemId)
+    if (boxStack) boxStack.qty += qty
+    else character.storageBox.push({ itemId, qty })
+  }
 }
 
 function removeFromInventory(character: Character, itemId: string, qty: number) {
