@@ -197,12 +197,18 @@ function FillBar({ pos, value, max, color, label }: { pos: { top: string }; valu
   const pct = Math.max(0, Math.min(100, (value / max) * 100))
   return (
     <div style={{ position: 'absolute', top: pos.top, left: POS.barCommon.left, width: POS.barCommon.width, height: POS.barCommon.height, display: 'flex', alignItems: 'center' }}>
-      <div style={{ width: '100%', height: '55%', borderRadius: 8, overflow: 'hidden' }}>
+      {/* A faint track background + border so a near-empty bar (low hunger/thirst, 0 infection) still
+          reads as "a bar that's mostly empty" rather than looking like nothing rendered at all. */}
+      <div style={{
+        width: '100%', height: '55%', borderRadius: 8, overflow: 'hidden',
+        background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.15)', boxSizing: 'border-box',
+      }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color, transition: 'width 0.4s ease' }} />
       </div>
       <span style={{
-        position: 'absolute', right: '2%', color: '#e5d9c3', fontSize: 'clamp(7px, 1.7vw, 11px)',
-        fontFamily: "'Special Elite', monospace", textShadow: '0 0 3px #000, 0 0 3px #000',
+        position: 'absolute', right: '2%', color: '#fff', fontSize: 'clamp(8px, 1.9vw, 12px)', fontWeight: 700,
+        fontFamily: "'Special Elite', monospace",
+        textShadow: '0 0 2px #000, 0 0 2px #000, 0 0 4px #000, 1px 1px 1px #000, -1px -1px 1px #000',
       }}>
         {value}/{max}{label ? ` · ${label}` : ''}
       </span>
