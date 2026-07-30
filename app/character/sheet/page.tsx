@@ -131,6 +131,13 @@ export default function CharacterSheetPage() {
           {character.bio || '—'}
         </p>
       </Box>
+
+      {/* The "pockets" in the artwork are truly transparent (alpha 0), not a black fill — so the
+          same image laid down again on top of every field lets the paper's torn edges, tape, and
+          grime naturally overlap the content instead of the content sitting flatly over a clean
+          rectangle. Everything else on the sheet is interactive-free, but this one specifically
+          must not eat clicks/scroll meant for the bio textarea underneath it. */}
+      <Image src="/sheet/Anketa1.png" alt="" aria-hidden fill style={{ objectFit: 'contain', pointerEvents: 'none' }} sizes="620px" />
     </div>
   )
 }
