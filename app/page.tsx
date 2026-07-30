@@ -38,6 +38,11 @@ export default function Home() {
     })
     fetch('/api/character/log').then(r => r.json()).then(d => { if (Array.isArray(d)) setCharLog(d) })
     loadMissions()
+    // GM-assigned missions land in Redis instantly but this page only fetched them once on
+    // mount — a player already sitting on the homepage never saw a mission created after their
+    // page load without a manual reload. Poll like PlayerPDA does.
+    const t = setInterval(loadMissions, 30_000)
+    return () => clearInterval(t)
   }, [nickname])
 
   async function attemptMission(missionId: string, title: string) {
