@@ -5,7 +5,8 @@ import { Character } from './types'
  *  can always see everything that happened on their current/most recent trip in one place. */
 export function pushExpeditionLog(character: Character, lines: string[]) {
   if (lines.length === 0) return
-  character.currentExpeditionLog = [...character.currentExpeditionLog, ...lines]
+  const at = Date.now()
+  character.currentExpeditionLog = [...character.currentExpeditionLog, ...lines.map(text => ({ text, at }))]
 }
 
 /** Call when an expedition ends (returned to camp, or died) — snapshots the accumulated log as

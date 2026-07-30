@@ -1,4 +1,12 @@
-import { Character, EMPTY_EQUIPPED, maxHpForEndurance } from './types'
+import { Character, EMPTY_EQUIPPED, ExpeditionLogEntry, maxHpForEndurance } from './types'
+
+// Every entry used to be a bare string with no timestamp — wrap old ones as best-effort at the
+// character's creation time (better than crashing on `.text`/`.at` of a string, or silently
+// dropping the whole trip's log) so old records survive the switch to timestamped entries.
+function toLogEntries(raw: unknown, fallbackAt: number): ExpeditionLogEntry[] {
+  if (!Array.isArray(raw)) return []
+  return raw.map(item => (typeof item === 'string' ? { text: item, at: fallbackAt } : item as ExpeditionLogEntry))
+}
 
 // Very first version of the site stored stats under full Ukrainian-transliterated English names
 // (strength/agility/endurance/perception/intellect/charisma) instead of the bot's short keys — old
@@ -59,7 +67,15 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.bio === undefined) { patched.bio = ''; changed = true }
   if (patched.combat === undefined) { patched.combat = null; changed = true }
   if (patched.currentExpeditionLog === undefined) { patched.currentExpeditionLog = []; changed = true }
+  else if (patched.currentExpeditionLog.some(e => typeof e === 'string')) {
+    patched.currentExpeditionLog = toLogEntries(patched.currentExpeditionLog, patched.createdAt)
+    changed = true
+  }
   if (patched.lastExpeditionLog === undefined) { patched.lastExpeditionLog = []; changed = true }
+  else if (patched.lastExpeditionLog.some(e => typeof e === 'string')) {
+    patched.lastExpeditionLog = toLogEntries(patched.lastExpeditionLog, patched.createdAt)
+    changed = true
+  }
 
   return changed ? patched : null
 }

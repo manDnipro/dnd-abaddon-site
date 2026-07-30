@@ -9,6 +9,10 @@ import { RPMission, missionRewardSummary } from '@/lib/rpMissions'
 type Weather = { seasonLabel: string; label: string; temperature: number }
 type LogLine = { text: string; at: number }
 
+function formatLogTime(at: number): string {
+  return new Date(at).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
 export default function Home() {
   const [nickname, setNickname] = useState<string | null | undefined>(undefined)
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
@@ -195,8 +199,10 @@ export default function Home() {
             </p>
             <div className="card" style={{ borderColor: '#3a1010' }}>
               <div className="flex flex-col gap-2">
-                {character.lastExpeditionLog.map((line, i) => (
-                  <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>{line}</p>
+                {character.lastExpeditionLog.map((e, i) => (
+                  <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace" }}>
+                    <span style={{ color: '#6b6156', fontSize: 11, marginRight: 6 }}>[{formatLogTime(e.at)}]</span>{e.text}
+                  </p>
                 ))}
               </div>
             </div>
@@ -210,7 +216,9 @@ export default function Home() {
               {charLog.length === 0 && <p style={{ color: '#555', fontSize: 13 }}>Ще нічого не сталось — поки що.</p>}
               <div className="flex flex-col gap-2">
                 {charLog.map((e, i) => (
-                  <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace", opacity: i === 0 ? 1 : 0.55 }}>{e.text}</p>
+                  <p key={i} style={{ color: '#c9c4ba', fontSize: 13, lineHeight: 1.6, fontFamily: "'Special Elite', monospace", opacity: i === 0 ? 1 : 0.55 }}>
+                    <span style={{ color: '#6b6156', fontSize: 11, marginRight: 6 }}>[{formatLogTime(e.at)}]</span>{e.text}
+                  </p>
                 ))}
               </div>
             </div>

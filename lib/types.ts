@@ -78,6 +78,8 @@ export interface CombatState {
   hordeCalled: boolean
 }
 
+export interface ExpeditionLogEntry { text: string; at: number }
+
 export type Character = {
   id: string
   owner: string
@@ -103,8 +105,8 @@ export type Character = {
 
   expedition: ExpeditionState
   combat: CombatState | null
-  currentExpeditionLog: string[]
-  lastExpeditionLog: string[]
+  currentExpeditionLog: ExpeditionLogEntry[]
+  lastExpeditionLog: ExpeditionLogEntry[]
 
   recentExpeditionTimestamps: number[]
   huntingProf: number
