@@ -43,6 +43,7 @@ export async function POST() {
   } else if (character.expedition.phase === 'traveling_back') {
     log.push(`🏕️ ${character.name} повернувся(-лась) в табір.`)
     character.expedition = null
+    character.expeditionsCompleted += 1
     const job = tryCampJob(character)
     log = log.concat(job.log)
     if (job.image) images.push(job.image)

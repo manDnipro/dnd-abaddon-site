@@ -76,6 +76,9 @@ export function migrateLegacyCharacter(c: Character): Character | null {
     patched.lastExpeditionLog = toLogEntries(patched.lastExpeditionLog, patched.createdAt)
     changed = true
   }
+  if (patched.expeditionsCompleted === undefined) { patched.expeditionsCompleted = 0; changed = true }
+  if (patched.zombiesKilled === undefined) { patched.zombiesKilled = 0; changed = true }
+  if (patched.playersSaved === undefined) { patched.playersSaved = 0; changed = true }
 
   return changed ? patched : null
 }

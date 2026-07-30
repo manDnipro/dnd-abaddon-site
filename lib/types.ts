@@ -120,4 +120,11 @@ export type Character = {
   lastDailyTickAt: number
   durability: Record<string, number>
   bio: string
+
+  // Lifetime counters for the character sheet's summary boxes (🎯 / 💀 / 🩹) — expeditionsCompleted
+  // and zombiesKilled increment automatically from game logic; playersSaved has no mechanic yet and
+  // is GM-adjustable only, same as HP/stats.
+  expeditionsCompleted: number
+  zombiesKilled: number
+  playersSaved: number
 }

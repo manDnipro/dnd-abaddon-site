@@ -70,6 +70,9 @@ export async function POST(req: NextRequest) {
     lastDailyTickAt: Date.now(),
     durability: {},
     bio: '',
+    expeditionsCompleted: 0,
+    zombiesKilled: 0,
+    playersSaved: 0,
   }
 
   await redis.set(`char:${id}`, JSON.stringify(character))

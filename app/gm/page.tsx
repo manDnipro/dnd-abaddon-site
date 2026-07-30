@@ -43,6 +43,9 @@ export default function GMPage() {
   const [statKey, setStatKey] = useState<StatKey>('str')
   const [statValue, setStatValue] = useState(3)
   const [hpValue, setHpValue] = useState(0)
+  const [expeditionsValue, setExpeditionsValue] = useState(0)
+  const [killsValue, setKillsValue] = useState(0)
+  const [savedValue, setSavedValue] = useState(0)
   const [bioText, setBioText] = useState('')
   const [npcs, setNpcs] = useState<NpcInfo[]>([])
   const [newName, setNewName] = useState('')
@@ -251,7 +254,10 @@ export default function GMPage() {
             <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Огляд групи ({players.length})</h2>
             <div className="flex flex-col gap-2">
               {players.map(p => (
-                <button key={p.id} onClick={() => { setSelectedPlayer(p.id); setHpValue(p.hp); setStatValue(p.stats.str); setBioText(p.bio || '') }}
+                <button key={p.id} onClick={() => {
+                  setSelectedPlayer(p.id); setHpValue(p.hp); setStatValue(p.stats.str); setBioText(p.bio || '')
+                  setExpeditionsValue(p.expeditionsCompleted); setKillsValue(p.zombiesKilled); setSavedValue(p.playersSaved)
+                }}
                   className="flex items-center justify-between" style={{
                     background: selectedPlayer === p.id ? 'rgba(166,138,74,0.1)' : '#0a0a0a',
                     border: `1px solid ${selectedPlayer === p.id ? '#a68a4a' : '#1e2230'}`, borderRadius: 6, padding: '8px 12px', cursor: 'pointer', textAlign: 'left',
@@ -307,6 +313,27 @@ export default function GMPage() {
                 </select>
                 <input type="number" min={1} value={statValue} onChange={e => setStatValue(parseInt(e.target.value) || 1)} style={{ width: 70 }} />
                 <button onClick={() => call('/api/gm/players/stat', { charId: player.id, stat: statKey, value: statValue })} disabled={loading}
+                  style={{ fontSize: 12, color: '#c9a227', background: 'none', border: '1px solid #2a2410', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
+                  Встановити
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <span style={{ color: '#888', fontSize: 12, width: 90 }}>🎯 Вилазок</span>
+                <input type="number" min={0} value={expeditionsValue} onChange={e => setExpeditionsValue(parseInt(e.target.value) || 0)} style={{ width: 70 }} />
+                <button onClick={() => call('/api/gm/players/counters', { charId: player.id, counter: 'expeditionsCompleted', value: expeditionsValue })} disabled={loading}
+                  style={{ fontSize: 12, color: '#c9a227', background: 'none', border: '1px solid #2a2410', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
+                  Встановити
+                </button>
+                <span style={{ color: '#888', fontSize: 12, width: 90, marginLeft: 8 }}>💀 Вбито</span>
+                <input type="number" min={0} value={killsValue} onChange={e => setKillsValue(parseInt(e.target.value) || 0)} style={{ width: 70 }} />
+                <button onClick={() => call('/api/gm/players/counters', { charId: player.id, counter: 'zombiesKilled', value: killsValue })} disabled={loading}
+                  style={{ fontSize: 12, color: '#c9a227', background: 'none', border: '1px solid #2a2410', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
+                  Встановити
+                </button>
+                <span style={{ color: '#888', fontSize: 12, width: 90, marginLeft: 8 }}>🩹 Врятовано</span>
+                <input type="number" min={0} value={savedValue} onChange={e => setSavedValue(parseInt(e.target.value) || 0)} style={{ width: 70 }} />
+                <button onClick={() => call('/api/gm/players/counters', { charId: player.id, counter: 'playersSaved', value: savedValue })} disabled={loading}
                   style={{ fontSize: 12, color: '#c9a227', background: 'none', border: '1px solid #2a2410', borderRadius: 4, padding: '5px 12px', cursor: 'pointer' }}>
                   Встановити
                 </button>

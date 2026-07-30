@@ -111,6 +111,7 @@ export function resolvePlayerAttack(character: Character, combat: CombatState, s
 
   if (combat.hp <= 0) {
     character.xp += XP_REWARDS.combatWin
+    character.zombiesKilled += 1
     log.push(`✅ ${combat.enemyLabel} знищено! (+${XP_REWARDS.combatWin} XP)`)
     return { log, enemyDied: true, hit: attack.hit }
   }
