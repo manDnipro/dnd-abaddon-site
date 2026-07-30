@@ -43,6 +43,37 @@ const STAT_COLS: Record<StatKey, string> = { str: '37.42%', agi: '49.78%', end: 
 const STAT_CIRCLE = { top: '21.91%', width: '7.14%', height: '6.57%' }
 const STAT_RECT = { top: '29.58%', width: '7.14%', height: '3.65%' }
 
+const pct = (s: string) => parseFloat(s)
+
+// The overlay copy of the sheet (laid on top so torn edges/tape/grime overlap the frame naturally
+// — see the <Image> at the bottom of the component) must NOT cover any of the pockets above, or it
+// hides the icons/numbers sitting in them. Punch a hole in it at every pocket via an SVG luminance
+// mask (white = visible, black = hidden) built straight from the same POS numbers so it can't drift
+// out of sync with where the content actually is. A small pad extends each hole past its measured
+// edge — better to expose a sliver of otherwise-hidden decoration than clip a digit.
+const MASK_HOLES: { top: number; left: number; width: number; height: number }[] = [
+  { ...POS.avatar, top: pct(POS.avatar.top), left: pct(POS.avatar.left), width: pct(POS.avatar.width), height: pct(POS.avatar.height) },
+  { top: pct(POS.nameBar.top), left: pct(POS.nameBar.left), width: pct(POS.nameBar.width), height: pct(POS.nameBar.height) },
+  { top: pct(POS.chaBar.top), left: pct(POS.chaBar.left), width: pct(POS.chaBar.width), height: pct(POS.chaBar.height) },
+  ...Object.values(POS.bars).map(b => ({ top: pct(b.top), left: pct(POS.barCommon.left), width: pct(POS.barCommon.width), height: pct(POS.barCommon.height) })),
+  ...Object.values(POS.slots).map(s => ({ top: pct(s.top), left: pct(s.left), width: pct(POS.slotSize.width), height: pct(POS.slotSize.height) })),
+  ...Object.values(POS.box).map(left => ({ top: pct(POS.boxCommon.top), left: pct(left), width: pct(POS.boxCommon.width), height: pct(POS.boxCommon.height) })),
+  { top: pct(POS.bio.top), left: pct(POS.bio.left), width: pct(POS.bio.width), height: pct(POS.bio.height) },
+  ...STAT_ORDER.map(k => ({ top: pct(STAT_CIRCLE.top), left: pct(STAT_COLS[k]), width: pct(STAT_CIRCLE.width), height: pct(STAT_CIRCLE.height) })),
+  ...STAT_ORDER.map(k => ({ top: pct(STAT_RECT.top), left: pct(STAT_COLS[k]), width: pct(STAT_RECT.width), height: pct(STAT_RECT.height) })),
+]
+
+function overlayMaskDataUri(): string {
+  const pad = 1.2
+  const rects = MASK_HOLES.map(h =>
+    `<rect x="${h.left - pad}" y="${h.top - pad}" width="${h.width + pad * 2}" height="${h.height + pad * 2}" fill="black" />`
+  ).join('')
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">`
+    + `<rect x="0" y="0" width="100" height="100" fill="white" />${rects}</svg>`
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`
+}
+const OVERLAY_MASK = overlayMaskDataUri()
+
 export default function CharacterSheetPage() {
   const [character, setCharacter] = useState<Character | null | undefined>(undefined)
 
@@ -137,7 +168,15 @@ export default function CharacterSheetPage() {
           grime naturally overlap the content instead of the content sitting flatly over a clean
           rectangle. Everything else on the sheet is interactive-free, but this one specifically
           must not eat clicks/scroll meant for the bio textarea underneath it. */}
-      <Image src="/sheet/Anketa1.png" alt="" aria-hidden fill style={{ objectFit: 'contain', pointerEvents: 'none' }} sizes="620px" />
+      <Image
+        src="/sheet/Anketa1.png" alt="" aria-hidden fill sizes="620px"
+        style={{
+          objectFit: 'contain', pointerEvents: 'none',
+          maskImage: OVERLAY_MASK, WebkitMaskImage: OVERLAY_MASK,
+          maskSize: '100% 100%', WebkitMaskSize: '100% 100%',
+          maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+        }}
+      />
     </div>
   )
 }
