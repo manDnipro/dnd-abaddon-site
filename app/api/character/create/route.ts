@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { redis } from '@/lib/redis'
 import { getSession } from '@/lib/auth'
 import { Character, EMPTY_EQUIPPED, Stats, maxHpForEndurance, validateStatSpread } from '@/lib/types'
+import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function POST(req: NextRequest) {
   const owner = await getSession()
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
   const statError = validateStatSpread(stats)
   if (statError) return NextResponse.json({ error: statError }, { status: 400 })
 
-  const existingId = await redis.get<string>(`char:owner:${owner}`)
+  const existingId = await getOwnerCharId(owner)
   if (existingId) {
     const existingRaw = await redis.get<string>(`char:${existingId}`)
     const existing: Character | null = existingRaw ? (typeof existingRaw === 'string' ? JSON.parse(existingRaw) : existingRaw) : null

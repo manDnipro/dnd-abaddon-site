@@ -5,6 +5,7 @@ import { Character } from './types'
 import { migrateLegacyCharacter } from './migrateCharacter'
 import { getOrRollWeather } from './worldState'
 import { runDueDailyTicks } from './dailyTick'
+import { getOwnerCharId } from './ownerChar'
 
 /** Some things (hunting, visiting a camp location, the personal storage box, trading, socializing)
  *  only make sense while physically at camp — not out on an expedition. Personal actions like
@@ -25,7 +26,7 @@ export async function loadOwnCharacter(): Promise<{ owner: string; charId: strin
   const owner = await getSession()
   if (!owner) return { error: 'Потрібно увійти', status: 401 }
 
-  const charId = await redis.get<string>(`char:owner:${owner}`)
+  const charId = await getOwnerCharId(owner)
   if (!charId) return { error: 'Персонажа не знайдено', status: 404 }
 
   const raw = await redis.get<string>(`char:${charId}`)

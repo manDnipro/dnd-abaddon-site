@@ -3,6 +3,7 @@ import { redis } from '@/lib/redis'
 import { isGM } from '@/lib/auth'
 import { Character } from '@/lib/types'
 import { getApprovedCharacterIds } from '@/lib/approvedCharacters'
+import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function GET() {
   if (!await isGM()) return NextResponse.json({ error: 'Немає доступу' }, { status: 403 })
@@ -32,7 +33,7 @@ export async function GET() {
     // RP missions never showing up for the player they were created for). Prefer whichever record
     // that mapping actually points at; only fall back to highest-id for unlinked owner names
     // (GM-only NPC-style entries with no real registered account).
-    const linkedId = await redis.get<string>(`char:owner:${owner}`)
+    const linkedId = await getOwnerCharId(owner)
     const linked = list.find(c => c.id === linkedId)
     players.push(linked ?? list.reduce((a, b) => (Number(b.id) > Number(a.id) ? b : a)))
   }

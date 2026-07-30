@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { redis } from '@/lib/redis'
 import { isGM } from '@/lib/auth'
 import { Character } from '@/lib/types'
+import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function POST(req: NextRequest) {
   if (!await isGM()) return NextResponse.json({ error: 'Немає доступу' }, { status: 403 })
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     // one too would leave the account with two "living" characters at once (one of them orphaned,
     // since char:owner can only point at one), the exact duplicate-record bug this whole invariant
     // exists to prevent. Block it if the account has moved on.
-    const currentCharId = await redis.get<string>(`char:owner:${character.owner}`)
+    const currentCharId = await getOwnerCharId(character.owner)
     if (currentCharId && currentCharId !== charId) {
       return NextResponse.json({
         error: `Гравець ${character.owner} уже створив нового персонажа (#${currentCharId}) — цього старого (#${charId}) воскресити не можна, буде два живих одразу.`,

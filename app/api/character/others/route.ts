@@ -3,6 +3,7 @@ import { redis } from '@/lib/redis'
 import { loadOwnCharacter } from '@/lib/loadCharacter'
 import { Character } from '@/lib/types'
 import { getApprovedCharacterIds } from '@/lib/approvedCharacters'
+import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function GET() {
   const result = await loadOwnCharacter()
@@ -31,7 +32,7 @@ export async function GET() {
     }
     // Same stale-duplicate issue as the GM roster — pick whichever record the account's char:owner
     // mapping actually resolves to, so barter/social target the character that owner can actually use.
-    const linkedId = await redis.get<string>(`char:owner:${owner}`)
+    const linkedId = await getOwnerCharId(owner)
     const linked = list.find(c => c.id === linkedId) ?? list.reduce((a, b) => (Number(b.id) > Number(a.id) ? b : a))
     others.push({ id: linked.id, name: linked.name })
   }

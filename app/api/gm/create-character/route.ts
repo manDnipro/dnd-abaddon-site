@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { redis } from '@/lib/redis'
 import { isGM } from '@/lib/auth'
 import { Character, EMPTY_EQUIPPED, Stats, maxHpForEndurance, validateStatSpread } from '@/lib/types'
+import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function POST(req: NextRequest) {
   if (!await isGM()) return NextResponse.json({ error: 'Немає доступу' }, { status: 403 })
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
   // the existing one instead of minting a new id for the same account. Doesn't apply to GM-only
   // NPC-style cards (no matching login) — those are intentionally many-per-name.
   const userExists = await redis.get(`user:${ownerName.toLowerCase()}`)
-  const alreadyHasChar = userExists ? await redis.get<string>(`char:owner:${ownerName}`) : null
+  const alreadyHasChar = userExists ? await getOwnerCharId(ownerName) : null
   if (alreadyHasChar) {
     return NextResponse.json({ error: `У акаунта "${ownerName}" вже є персонаж (#${alreadyHasChar}) — онови чи воскреси його замість створення нового.` }, { status: 409 })
   }

@@ -4,12 +4,13 @@ import { getSession } from '@/lib/auth'
 import { Character } from '@/lib/types'
 import { getExpeditionLevel, travelMinutesForLevel } from '@/lib/expedition'
 import { pushExpeditionLog } from '@/lib/expeditionLog'
+import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function POST(req: NextRequest) {
   const owner = await getSession()
   if (!owner) return NextResponse.json({ error: 'Потрібно увійти' }, { status: 401 })
 
-  const charId = await redis.get<string>(`char:owner:${owner}`)
+  const charId = await getOwnerCharId(owner)
   if (!charId) return NextResponse.json({ error: 'Персонажа не знайдено' }, { status: 404 })
   const raw = await redis.get<string>(`char:${charId}`)
   if (!raw) return NextResponse.json({ error: 'Персонажа не знайдено' }, { status: 404 })

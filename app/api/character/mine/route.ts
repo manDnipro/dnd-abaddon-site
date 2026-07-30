@@ -5,12 +5,13 @@ import { Character } from '@/lib/types'
 import { migrateLegacyCharacter } from '@/lib/migrateCharacter'
 import { getOrRollWeather } from '@/lib/worldState'
 import { runDueDailyTicks } from '@/lib/dailyTick'
+import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function GET() {
   const owner = await getSession()
   if (!owner) return NextResponse.json({ error: 'Потрібно увійти' }, { status: 401 })
 
-  const id = await redis.get<string>(`char:owner:${owner}`)
+  const id = await getOwnerCharId(owner)
   if (!id) return NextResponse.json({ character: null })
 
   const raw = await redis.get<string>(`char:${id}`)

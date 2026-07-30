@@ -5,12 +5,13 @@ import { Character, Equipped, ClothingSlot } from '@/lib/types'
 import { getItem } from '@/lib/items'
 import { inventoryCapacity } from '@/lib/inventory'
 import { blockIfInCombat } from '@/lib/loadCharacter'
+import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function POST(req: NextRequest) {
   const owner = await getSession()
   if (!owner) return NextResponse.json({ error: 'Потрібно увійти' }, { status: 401 })
 
-  const charId = await redis.get<string>(`char:owner:${owner}`)
+  const charId = await getOwnerCharId(owner)
   if (!charId) return NextResponse.json({ error: 'Персонажа не знайдено' }, { status: 404 })
 
   const raw = await redis.get<string>(`char:${charId}`)
