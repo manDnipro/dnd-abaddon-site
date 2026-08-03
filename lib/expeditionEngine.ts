@@ -20,6 +20,13 @@ export type SearchResult = {
   died: boolean
 }
 
+// Players reported near-100% loot on a successful search feeling "imba" — every clean roll always
+// handed over an item, which stacked up fast especially when two people ran solo searches side by
+// side (misread as a "duo bug", but the per-search odds were just too generous for everyone).
+// Passing the search roll no longer guarantees a find; it just means the location was safe/worth
+// searching. This applies equally whether you're out there alone or with a friend.
+const LOOT_DROP_CHANCE = 0.5
+
 // Loot never vanishes — a full inventory overflows into the personal camp storage box instead,
 // matching the bot's addItemWithOverflow behavior.
 function addToInventory(character: Character, itemId: string, qty: number, log: string[]) {
@@ -160,8 +167,12 @@ export function performSearch(character: Character, level: ExpeditionLevel, opts
     const xpGain = XP_REWARDS.expeditionByTier[level.index] ?? 5
     character.xp += xpGain
     log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — успіх! (+${xpGain} XP)`)
-    const loot = rollLoot(level.index)
-    addToInventory(character, loot.itemKey, loot.quantity, log)
+    if (Math.random() < LOOT_DROP_CHANCE) {
+      const loot = rollLoot(level.index)
+      addToInventory(character, loot.itemKey, loot.quantity, log)
+    } else {
+      log.push(`🕳️ Локація вже розграбована — путнього нічого не залишилось.`)
+    }
 
     // Danger dial: even a clean success on a high-risk location carries a small chance that
     // something still goes wrong nearby — scaled off the same per-level riskChance used for
