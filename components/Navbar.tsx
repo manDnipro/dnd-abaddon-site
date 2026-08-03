@@ -12,6 +12,7 @@ const BASE_LINKS = [
   { href: '/character/trade', label: 'Торгівля' },
   { href: '/character/barter', label: 'Обмін' },
   { href: '/character/social', label: 'Табір' },
+  { href: '/character/chat', label: 'Чат' },
   { href: '/character/expedition', label: 'Вилазка' },
   { href: '/gm', label: 'ГМ' },
 ]
