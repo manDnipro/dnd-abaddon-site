@@ -53,6 +53,7 @@ export default function GMPage() {
   const [newStats, setNewStats] = useState<Stats>({ str: 3, agi: 3, end: 3, per: 3, int: 3, cha: 3 })
   const [inbox, setInbox] = useState<GMLetter[]>([])
   const [logs, setLogs] = useState<{ at: number; text: string }[]>([])
+  const [worldEvents, setWorldEvents] = useState<{ id: string; at: number; text: string }[]>([])
   const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({})
   const [playerMessageDraft, setPlayerMessageDraft] = useState('')
   const [broadcastText, setBroadcastText] = useState('')
@@ -94,6 +95,11 @@ export default function GMPage() {
   async function fetchLogs() {
     const res = await fetch('/api/gm/logs')
     if (res.ok) setLogs(await res.json())
+  }
+
+  async function fetchWorldEvents() {
+    const res = await fetch('/api/world/events')
+    if (res.ok) setWorldEvents(await res.json())
   }
 
   async function review(id: string, action: 'approve' | 'reject') {
@@ -170,7 +176,7 @@ export default function GMPage() {
 
       <div className="flex gap-2 mb-4 flex-wrap">
         {tabs.map(t => (
-          <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'logs') fetchLogs() }}
+          <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'logs') fetchLogs(); if (t.key === 'world') fetchWorldEvents() }}
             style={{
               fontSize: 13, padding: '6px 14px', borderRadius: 4, cursor: 'pointer',
               background: tab === t.key ? 'rgba(166,138,74,0.15)' : 'transparent',
@@ -421,11 +427,32 @@ export default function GMPage() {
             <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 12 }}>Оголосити подію табору</h2>
             <div className="flex gap-2">
               <input value={eventText} onChange={e => setEventText(e.target.value)} placeholder="Наприклад: здалеку чути виття..." style={{ flex: 1 }} />
-              <button onClick={async () => { if (await call('/api/gm/event', { text: eventText })) setEventText('') }} disabled={loading || !eventText.trim()} className="btn-primary">
+              <button onClick={async () => { if (await call('/api/gm/event', { text: eventText })) { setEventText(''); fetchWorldEvents() } }} disabled={loading || !eventText.trim()} className="btn-primary">
                 Оголосити
               </button>
             </div>
-            <p style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Побачать усі на головній сторінці, розділ "Новини гри".</p>
+            <p style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
+              Побачать усі на головній сторінці, розділ "Новини гри". Кожна новина сама зникає через 48 годин.
+            </p>
+
+            {worldEvents.length > 0 && (
+              <div className="flex flex-col gap-2 mt-4" style={{ borderTop: '1px solid #2a241c', paddingTop: 12 }}>
+                {worldEvents.map(e => (
+                  <div key={e.id} className="flex justify-between items-start gap-3" style={{ fontSize: 13 }}>
+                    <div>
+                      <p style={{ color: '#ccc' }}>{e.text}</p>
+                      <p style={{ color: '#555', fontSize: 11 }}>{new Date(e.at).toLocaleString('uk-UA')}</p>
+                    </div>
+                    <button
+                      onClick={async () => { if (await call('/api/gm/event/delete', { id: e.id })) fetchWorldEvents() }}
+                      disabled={loading}
+                      style={{ fontSize: 12, color: '#c0392b', background: 'none', border: '1px solid #2a1a1a', borderRadius: 4, padding: '4px 10px', cursor: 'pointer', flexShrink: 0 }}>
+                      Видалити
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="card">

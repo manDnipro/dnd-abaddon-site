@@ -57,7 +57,7 @@ export async function forceAdvanceDay(): Promise<WorldWeather> {
   return getOrRollWeather()
 }
 
-export interface WorldEvent { text: string; at: number }
+export interface WorldEvent { id: string; text: string; at: number }
 
 const WORLD_EVENTS_KEY = 'world:events'
 const WORLD_EVENTS_RETENTION_MS = 48 * 60 * 60 * 1000
@@ -101,7 +101,19 @@ export async function listWorldEvents(): Promise<WorldEvent[]> {
   const raw = await redis.zrange<string[]>(WORLD_EVENTS_KEY, 0, -1, { rev: true })
   return raw.map(r => {
     const o = typeof r === 'string' ? JSON.parse(r) : r
-    return { text: o.text, at: o.at }
+    return { id: o.r, text: o.text, at: o.at }
   })
+}
+
+/** GM tool: manually clear a news item that's no longer relevant, without waiting for the 48h
+ *  window. Members are addressed by the random `r` id stashed alongside text/at, since Redis sorted
+ *  sets remove by exact member value, not by index or partial match. */
+export async function removeWorldEvent(id: string) {
+  const raw = await redis.zrange<string[]>(WORLD_EVENTS_KEY, 0, -1)
+  const match = raw.find(r => {
+    const o = typeof r === 'string' ? JSON.parse(r) : r
+    return o.r === id
+  })
+  if (match) await redis.zrem(WORLD_EVENTS_KEY, match)
 }
 
