@@ -31,10 +31,11 @@ export const CAMP_LOCATIONS: CampLocation[] = [
     failure: { text: 'Фельдшер зайнятий іншими — сьогодні черга не дійшла.', moraleDelta: 0 },
   },
   {
-    key: 'water_pump', name: '💧 Колонка з водою', flavor: 'Набрати чистої води просто в таборі — швидко і без зусиль.',
-    stat: null, dc: 0,
-    success: { text: 'Прохолодна вода з колонки — спрага як не бувало.', thirstDelta: 40 },
-    failure: { text: '', thirstDelta: 40 },
+    key: 'water_pump', name: '💧 Колонка з водою', flavor: 'Стара ручна колонка — щоб накачати води, треба попрацювати важелем.',
+    stat: 'str', dc: 8,
+    success: { text: 'Кілька впевнених качків — і прохолодна вода тече повним струменем. Спрага як не бувало.', thirstDelta: 40 },
+    failure: { text: 'Заіржавілий важіль піддається важко — вдається накачати лише трохи води.', thirstDelta: 15 },
+    cooldownMinutes: 5,
   },
   {
     key: 'canteen', name: '🍲 Їдальня', flavor: 'Гаряча страва в таборовій їдальні — щоб не ходити голодним.',
