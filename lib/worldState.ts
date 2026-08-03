@@ -59,14 +59,49 @@ export async function forceAdvanceDay(): Promise<WorldWeather> {
 
 export interface WorldEvent { text: string; at: number }
 
+const WORLD_EVENTS_KEY = 'world:events'
+const WORLD_EVENTS_RETENTION_MS = 48 * 60 * 60 * 1000
+
+// world:events used to be a plain Redis LIST (rpush/ltrim) — running ZADD/ZRANGE against that old
+// key shape throws WRONGTYPE (same issue hit with char:log:* in lib/characterLog.ts). Drain it into
+// the new sorted-set shape on first touch after this change, best-effort re-dated at "now" since the
+// list format never stored a timestamp.
+async function migrateIfLegacyList(key: string): Promise<void> {
+  let old: string[]
+  try {
+    old = await redis.lrange<string>(key, 0, -1)
+  } catch {
+    return
+  }
+  if (old.length === 0) return
+  await redis.del(key)
+  const now = Date.now()
+  const scoreMembers = old.map(entry => {
+    const text = (() => { try { const o = typeof entry === 'string' ? JSON.parse(entry) : entry; return o?.text ?? String(entry) } catch { return String(entry) } })()
+    return { score: now, member: JSON.stringify({ text, at: now, r: Math.random().toString(36).slice(2, 8) }) }
+  }) as [{ score: number; member: string }, ...{ score: number; member: string }[]]
+  await redis.zadd(key, ...scoreMembers)
+}
+
+// Same rolling-window pattern as lib/serverLog.ts / lib/chat.ts — a sorted set scored by timestamp,
+// so each news item expires 48h after it was posted instead of just falling off a capped list of 10
+// (which could hide a still-relevant event within minutes during a busy GM session).
 export async function addWorldEvent(text: string) {
-  await redis.rpush('world:events', JSON.stringify({ text, at: Date.now() }))
-  await redis.ltrim('world:events', -10, -1)
+  await migrateIfLegacyList(WORLD_EVENTS_KEY)
+  const now = Date.now()
+  const member = JSON.stringify({ text, at: now, r: Math.random().toString(36).slice(2, 8) })
+  await redis.zadd(WORLD_EVENTS_KEY, { score: now, member })
+  await redis.zremrangebyscore(WORLD_EVENTS_KEY, 0, now - WORLD_EVENTS_RETENTION_MS)
   await logServerActivity(`[world event] ${text}`)
 }
 
 export async function listWorldEvents(): Promise<WorldEvent[]> {
-  const raw = await redis.lrange<string>('world:events', -10, -1)
-  return raw.map(r => typeof r === 'string' ? JSON.parse(r) : r).reverse()
+  await migrateIfLegacyList(WORLD_EVENTS_KEY)
+  await redis.zremrangebyscore(WORLD_EVENTS_KEY, 0, Date.now() - WORLD_EVENTS_RETENTION_MS)
+  const raw = await redis.zrange<string[]>(WORLD_EVENTS_KEY, 0, -1, { rev: true })
+  return raw.map(r => {
+    const o = typeof r === 'string' ? JSON.parse(r) : r
+    return { text: o.text, at: o.at }
+  })
 }
 
