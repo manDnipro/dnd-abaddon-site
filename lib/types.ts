@@ -113,6 +113,10 @@ export type Character = {
   huntsSinceLevel: number
   avatar: string | null
   canteenUses: number[]
+  // Per-camp-location-key timestamp of last use, for locations with a CampLocation.cooldownMinutes
+  // set (e.g. watchtower) — a generic map instead of one-off fields so any future location can opt
+  // into a cooldown without another character-schema change.
+  locationCooldowns: Record<string, number>
 
   xp: number
   meleeProf: number

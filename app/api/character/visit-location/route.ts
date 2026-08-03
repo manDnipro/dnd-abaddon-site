@@ -38,6 +38,16 @@ export async function POST(req: NextRequest) {
     character.canteenUses.push(Date.now())
   }
 
+  if (location.cooldownMinutes) {
+    const lastUsed = character.locationCooldowns[location.key]
+    const cooldownMs = location.cooldownMinutes * 60_000
+    if (lastUsed && Date.now() - lastUsed < cooldownMs) {
+      const minsLeft = Math.ceil((cooldownMs - (Date.now() - lastUsed)) / 60_000)
+      return NextResponse.json({ error: `${location.name} — ще зарано повертатися сюди, спробуй через ${minsLeft} хв.` }, { status: 400 })
+    }
+    character.locationCooldowns = { ...character.locationCooldowns, [location.key]: Date.now() }
+  }
+
   const checkSuccess = location.stat === null || rollD20(statModifier(character.stats[location.stat])).total >= location.dc
   const outcome = checkSuccess ? location.success : location.failure
 

@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
     huntsSinceLevel: 0,
     avatar: null,
     canteenUses: [],
+    locationCooldowns: {},
     xp: 0,
     meleeProf: 0,
     firearmProf: 0,

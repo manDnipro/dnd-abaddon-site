@@ -18,6 +18,9 @@ export interface CampLocation {
   dc: number
   success: CampLocationOutcome
   failure: CampLocationOutcome
+  /** Minutes before this location can be visited again — undefined/0 means no cooldown. Separate
+   *  from canteen's daily-uses-by-reputation-tier gate, which is its own special case below. */
+  cooldownMinutes?: number
 }
 
 export const CAMP_LOCATIONS: CampLocation[] = [
@@ -62,6 +65,7 @@ export const CAMP_LOCATIONS: CampLocation[] = [
     stat: 'per', dc: 13,
     success: { text: 'Уважне чергування — табір цінує тих, хто пильнує.', reputationDelta: 2 },
     failure: { text: 'Довга нудна зміна на вежі, і нічого цікавого не видно.', moraleDelta: -3 },
+    cooldownMinutes: 120,
   },
 ]
 

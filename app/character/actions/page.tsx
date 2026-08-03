@@ -18,6 +18,12 @@ export default function ActionsPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [tab, setTab] = useState<Tab>('quick')
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(t)
+  }, [])
 
   async function load() {
     const res = await fetch('/api/character/mine')
@@ -117,21 +123,28 @@ export default function ActionsPage() {
         <div className="card mb-6">
           <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 10 }}>Куди піти в таборі</h2>
           <div className="flex flex-col gap-2">
-            {CAMP_LOCATIONS.map(loc => (
-              <div key={loc.key} style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '10px 14px' }}>
-                <div className="flex justify-between items-start gap-3">
-                  <div>
-                    <div style={{ color: '#e5e5e5', fontSize: 14 }}>{loc.name}</div>
-                    <div style={{ color: '#75705f', fontSize: 12, marginTop: 2, fontFamily: "'Special Elite', monospace" }}>{loc.flavor}</div>
-                    {loc.stat && <div style={{ color: '#555', fontSize: 11, marginTop: 4 }}>Перевірка: {STAT_LABELS[loc.stat]} проти СК {loc.dc}</div>}
+            {CAMP_LOCATIONS.map(loc => {
+              const lastUsed = character?.locationCooldowns?.[loc.key]
+              const cooldownMs = (loc.cooldownMinutes ?? 0) * 60_000
+              const msLeft = lastUsed ? cooldownMs - (now - lastUsed) : 0
+              const onCooldown = msLeft > 0
+              return (
+                <div key={loc.key} style={{ background: '#0a0a0a', border: '1px solid #1e2230', borderRadius: 6, padding: '10px 14px' }}>
+                  <div className="flex justify-between items-start gap-3">
+                    <div>
+                      <div style={{ color: '#e5e5e5', fontSize: 14 }}>{loc.name}</div>
+                      <div style={{ color: '#75705f', fontSize: 12, marginTop: 2, fontFamily: "'Special Elite', monospace" }}>{loc.flavor}</div>
+                      {loc.stat && <div style={{ color: '#555', fontSize: 11, marginTop: 4 }}>Перевірка: {STAT_LABELS[loc.stat]} проти СК {loc.dc}</div>}
+                      {onCooldown && <div style={{ color: '#a68a4a', fontSize: 11, marginTop: 4 }}>⏳ Доступно через {Math.ceil(msLeft / 60_000)} хв</div>}
+                    </div>
+                    <button onClick={() => call('/api/character/visit-location', { key: loc.key })} disabled={loading || onCooldown}
+                      style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: loading || onCooldown ? 'default' : 'pointer', flexShrink: 0, opacity: onCooldown ? 0.5 : 1 }}>
+                      Піти туди
+                    </button>
                   </div>
-                  <button onClick={() => call('/api/character/visit-location', { key: loc.key })} disabled={loading}
-                    style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: 'pointer', flexShrink: 0 }}>
-                    Піти туди
-                  </button>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
