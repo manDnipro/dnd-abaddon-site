@@ -1,6 +1,6 @@
 import { Character, clampHungerThirst, clampInfection, clampMorale, statModifier } from './types'
 import { getItem, ITEM_CATALOG } from './items'
-import { rollD20, rollDice } from './dice'
+import { CRIT_FAIL, rollD20, rollDice } from './dice'
 import {
   ExpeditionLevel, rollLoot, rollSearchLocation, SPECIAL_ENCOUNTER_CHANCE, rollSpecialEncounterType,
   rollRiskType, injuryDiceForLevel, traumaDiceForLevel, traumaMoraleLossForLevel, infectionAmountForLevel,
@@ -111,7 +111,7 @@ export function runPostSearchChecks(character: Character, level: ExpeditionLevel
   return { died: false }
 }
 
-export function performSearch(character: Character, level: ExpeditionLevel): SearchResult {
+export function performSearch(character: Character, level: ExpeditionLevel, opts?: { useLuck?: boolean }): SearchResult {
   const log: string[] = []
   const images: string[] = []
 
@@ -142,8 +142,19 @@ export function performSearch(character: Character, level: ExpeditionLevel): Sea
     }
   }
 
-  const searchRoll = rollD20(statModifier(character.stats.per))
-  const success = searchRoll.total >= level.dc
+  let searchRoll = rollD20(statModifier(character.stats.per))
+  let success = searchRoll.total >= level.dc
+  // A natural 1 on the un-rerolled roll is a critical fumble regardless of the reroll below — the
+  // danger dial always bites on the worst possible outcome, luck or no luck.
+  const criticalFumble = searchRoll.rolls[0] === CRIT_FAIL
+
+  if (!success && opts?.useLuck && character.luck > 0) {
+    character.luck -= 1
+    const rerolled = rollD20(statModifier(character.stats.per))
+    log.push(`🍀 Не пощастило: ${searchRoll.total} проти СК ${level.dc} — витрачено очко удачі (${character.luck}/${character.maxLuck}), перекидаємо!`)
+    searchRoll = rerolled
+    success = searchRoll.total >= level.dc
+  }
 
   if (success) {
     const xpGain = XP_REWARDS.expeditionByTier[level.index] ?? 5
@@ -151,9 +162,19 @@ export function performSearch(character: Character, level: ExpeditionLevel): Sea
     log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — успіх! (+${xpGain} XP)`)
     const loot = rollLoot(level.index)
     addToInventory(character, loot.itemKey, loot.quantity, log)
+
+    // Danger dial: even a clean success on a high-risk location carries a small chance that
+    // something still goes wrong nearby — scaled off the same per-level riskChance used for
+    // failures, just much rarer, and never an ambush (that would undercut the success itself).
+    if (Math.random() < level.riskChance * 0.2) {
+      const risk = Math.random() < 0.5 ? 'infection' : 'illness'
+      log.push(`⚠️ Втім, щось тут не так...`)
+      applyNonCombatRisk(character, level, log, risk)
+    }
   } else {
     log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — невдача.`)
-    if (Math.random() < level.riskChance) {
+    if (criticalFumble || Math.random() < level.riskChance) {
+      if (criticalFumble) log.push(`💢 Критичний провал (натуральна 1) — гірше нікуди.`)
       const risk = rollRiskType()
       if (risk === 'ambush') {
         const enemyType = rollAmbushEnemyType(level.index)

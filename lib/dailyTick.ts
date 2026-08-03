@@ -93,6 +93,10 @@ export function runDueDailyTicks(character: Character, ambientTemp: number): Dai
       return { log, died: true }
     }
   }
+  if (character.luck < character.maxLuck) {
+    character.luck = character.maxLuck
+    log.push(`🍀 Новий день — удача відновлена (${character.luck}/${character.maxLuck}).`)
+  }
   character.lastDailyTickAt = now
   return { log, died: false }
 }

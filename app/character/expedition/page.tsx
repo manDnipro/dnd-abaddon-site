@@ -26,6 +26,7 @@ export default function ExpeditionPage() {
   const [loading, setLoading] = useState(false)
   const [now, setNow] = useState(Date.now())
   const [useItemChoice, setUseItemChoice] = useState('')
+  const [useLuck, setUseLuck] = useState(false)
 
   const load = useCallback(async () => {
     const res = await fetch('/api/character/mine')
@@ -76,9 +77,17 @@ export default function ExpeditionPage() {
         ОЗ: <span style={{ color: character.hp <= character.maxHp * 0.3 ? '#c0392b' : '#e5e5e5' }}>{character.hp}/{character.maxHp}</span>
         {' · '}Голод: {character.hunger} · Спрага: {character.thirst} · Мораль: {character.morale}
         {character.infection > 0 && <> · <span style={{ color: '#8e44ad' }}>Інфекція: {character.infection}</span></>}
+        {' · '}<span style={{ color: '#c9a227' }}>🍀 Удача: {character.luck}/{character.maxLuck}</span>
       </p>
 
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}
+
+      {character.luck > 0 && (
+        <label className="flex items-center gap-2 mb-4" style={{ fontSize: 13, color: '#c9a94f', cursor: 'pointer' }}>
+          <input type="checkbox" checked={useLuck} onChange={e => setUseLuck(e.target.checked)} />
+          🍀 Витратити очко удачі на перекид, якщо кидок пошуку провалиться ({character.luck}/{character.maxLuck})
+        </label>
+      )}
 
       {!exp && (
         <div className="mb-6">
@@ -133,7 +142,7 @@ export default function ExpeditionPage() {
           <button
             onClick={async () => {
               const returning = exp.phase === 'traveling_back'
-              await call('/api/expedition/resolve')
+              await call('/api/expedition/resolve', { useLuck })
               if (returning) router.push('/')
             }}
             disabled={loading} className="btn-primary">
@@ -203,7 +212,7 @@ export default function ExpeditionPage() {
 
       {exp && exp.phase === 'on_site' && !character.combat && (
         <div className="card mb-6 flex gap-3">
-          <button onClick={() => call('/api/expedition/continue')} disabled={loading} className="btn-primary">🔍 Продовжити вилазку</button>
+          <button onClick={() => call('/api/expedition/continue', { useLuck })} disabled={loading} className="btn-primary">🔍 Продовжити вилазку</button>
           <button onClick={() => call('/api/expedition/return')} disabled={loading} className="btn-gold">🏕️ Повернутися в табір</button>
         </div>
       )}

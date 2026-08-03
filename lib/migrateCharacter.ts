@@ -1,4 +1,4 @@
-import { Character, EMPTY_EQUIPPED, ExpeditionLogEntry, maxHpForEndurance } from './types'
+import { Character, EMPTY_EQUIPPED, ExpeditionLogEntry, LUCK_MAX, maxHpForEndurance } from './types'
 
 // Every entry used to be a bare string with no timestamp — wrap old ones as best-effort at the
 // character's creation time (better than crashing on `.text`/`.at` of a string, or silently
@@ -79,6 +79,8 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.expeditionsCompleted === undefined) { patched.expeditionsCompleted = 0; changed = true }
   if (patched.zombiesKilled === undefined) { patched.zombiesKilled = 0; changed = true }
   if (patched.playersSaved === undefined) { patched.playersSaved = 0; changed = true }
+  if (patched.maxLuck === undefined) { patched.maxLuck = LUCK_MAX; changed = true }
+  if (patched.luck === undefined) { patched.luck = LUCK_MAX; changed = true }
 
   return changed ? patched : null
 }

@@ -85,6 +85,7 @@ export default function CharacterSheetPage() {
           <Stat label="☣️ Інфекція" value={character.infection} max={100} color="#8e44ad" />
           <Stat label="🧠 Мораль" value={character.morale} max={100} color="#7a9c4a" />
           <Stat label="🏅 Репутація в таборі" value={character.reputation} max={100} color="#c9a227" suffix={` (${repTier.label})`} />
+          <Stat label="🍀 Удача" value={character.luck} max={character.maxLuck} color="#c9a227" />
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { redis } from '@/lib/redis'
 import { getSession } from '@/lib/auth'
-import { Character, EMPTY_EQUIPPED, Stats, maxHpForEndurance, validateStatSpread } from '@/lib/types'
+import { Character, EMPTY_EQUIPPED, LUCK_MAX, Stats, maxHpForEndurance, validateStatSpread } from '@/lib/types'
 import { getOwnerCharId } from '@/lib/ownerChar'
 
 export async function POST(req: NextRequest) {
@@ -73,6 +73,8 @@ export async function POST(req: NextRequest) {
     expeditionsCompleted: 0,
     zombiesKilled: 0,
     playersSaved: 0,
+    luck: LUCK_MAX,
+    maxLuck: LUCK_MAX,
   }
 
   await redis.set(`char:${id}`, JSON.stringify(character))

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { redis } from '@/lib/redis'
 import { getSession } from '@/lib/auth'
 import { Character } from '@/lib/types'
@@ -9,7 +9,8 @@ import { appendCharacterLog } from '@/lib/characterLog'
 import { pushExpeditionLog, finalizeExpeditionLog } from '@/lib/expeditionLog'
 import { getOwnerCharId } from '@/lib/ownerChar'
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const { useLuck } = await req.json().catch(() => ({ useLuck: false })) as { useLuck?: boolean }
   const owner = await getSession()
   if (!owner) return NextResponse.json({ error: 'Потрібно увійти' }, { status: 401 })
 
@@ -30,7 +31,7 @@ export async function POST() {
 
   if (character.expedition.phase === 'traveling_out') {
     log.push(`🚶 ${character.name} прибув(-ла) на локацію: ${level.label}`)
-    const result = performSearch(character, level)
+    const result = performSearch(character, level, { useLuck })
     log = log.concat(result.log)
     images = result.images
     pushExpeditionLog(character, log)

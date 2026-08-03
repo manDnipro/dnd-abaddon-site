@@ -127,4 +127,13 @@ export type Character = {
   expeditionsCompleted: number
   zombiesKilled: number
   playersSaved: number
+
+  // "Удача" — a resource separate from HP, spent to reroll a single failed search roll on an
+  // expedition instead of just eating the bad result. Refills to LUCK_MAX on the character's first
+  // daily tick of a new day (see lib/dailyTick.ts), not per-expedition, so it's a scarce daily
+  // resource rather than something to spend on every attempt.
+  luck: number
+  maxLuck: number
 }
+
+export const LUCK_MAX = 3
