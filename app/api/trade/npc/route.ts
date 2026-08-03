@@ -50,12 +50,16 @@ export async function POST(req: NextRequest) {
 
   const giveValue = estimateTradeValue(giveItem) * giveQty
   const wantValue = estimateTradeValue(wantItem) * wantQty
-  const ratio = giveValue / wantValue
+  // Rounded to the same precision shown to the player (×0.00) BEFORE comparing — otherwise a
+  // sub-cent shortfall (e.g. required 1.004 vs offered 0.998) fails the deal while both numbers
+  // render identically as "×1.00", which reads as a bug ("it says 1 to 1 but still refuses").
+  const ratio = Math.round((giveValue / wantValue) * 100) / 100
+  const requiredRatioRounded = Math.round(negotiation.requiredRatio * 100) / 100
 
   const log: string[] = [
     `🎲 Переговори (Харизма): ${negotiation.roll.total} + довіра ${negotiation.trustBonus} + репутація ${negotiation.reputationBonus} = ${negotiation.totalRoll} проти СК ${negotiation.dc}${negotiation.critical ? ' — КРИТ!' : negotiation.fumble ? ' — провал!' : ''}`,
   ]
-  const accepted = negotiation.success && ratio >= negotiation.requiredRatio
+  const accepted = negotiation.success && ratio >= requiredRatioRounded
   const growth = trainStat(character, 'cha', accepted)
   if (growth) log.push(growth)
 
@@ -66,8 +70,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ character, log })
   }
 
-  if (ratio < negotiation.requiredRatio) {
-    log.push(`❌ ${trader.name}: "Замало — так не домовимось." (потрібне співвідношення ×${negotiation.requiredRatio.toFixed(2)}, твоя пропозиція ×${ratio.toFixed(2)})`)
+  if (ratio < requiredRatioRounded) {
+    log.push(`❌ ${trader.name}: "Замало — так не домовимось." (потрібне співвідношення ×${requiredRatioRounded.toFixed(2)}, твоя пропозиція ×${ratio.toFixed(2)})`)
     await saveCharacter(charId, character)
     return NextResponse.json({ character, log })
   }

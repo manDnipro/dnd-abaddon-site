@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Character } from '@/lib/types'
 import { getItem, estimateTradeValue } from '@/lib/items'
+import { baseRequiredRatio } from '@/lib/tradeNegotiation'
 import ExpeditionLockBanner from '@/components/ExpeditionLockBanner'
 import DiceLogLine from '@/components/DiceLogLine'
 
@@ -121,6 +122,24 @@ export default function TradePage() {
                   </div>
                 )}
 
+                {wantItem && giveItem && (() => {
+                  const giveVal = estimateTradeValue(getItem(giveItem)!) * giveQty
+                  const wantVal = estimateTradeValue(getItem(wantItem)!) * wantQty
+                  const currentRatio = wantVal > 0 ? giveVal / wantVal : 0
+                  // Torgivlya ніколи не 1:1 — навіть найкращий переговорник платить трохи більше "за
+                  // домовленість". Найкращий можливий поріг (критичний успіх) і типовий (звичайний
+                  // успіх) — щоб гравець бачив, чи його пропозиція взагалі має шанс, ще до кидка.
+                  const base = baseRequiredRatio(trader.tradeLevel)
+                  const bestCase = Math.max(0.5, base - 0.3)
+                  const typical = Math.max(0.5, base - 0.15)
+                  const enough = currentRatio >= typical
+                  return (
+                    <p style={{ color: enough ? '#5cb87a' : '#a68a4a', fontSize: 12, marginBottom: 10 }}>
+                      Твоя пропозиція: ×{currentRatio.toFixed(2)} цінності товару. Торговець вимагає щонайменше ×{typical.toFixed(2)}
+                      {' '}(або ×{bestCase.toFixed(2)} при кращому кидку на переговори) — тут ніколи не буває рівно 1:1.
+                    </p>
+                  )
+                })()}
                 <button onClick={() => submitTrade(trader.id)} disabled={loading} className="btn-primary">Спробувати домовитись</button>
               </div>
             )}
