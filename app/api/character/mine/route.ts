@@ -6,6 +6,7 @@ import { migrateLegacyCharacter } from '@/lib/migrateCharacter'
 import { getOrRollWeather } from '@/lib/worldState'
 import { runDueDailyTicks } from '@/lib/dailyTick'
 import { getOwnerCharId } from '@/lib/ownerChar'
+import { appendCharacterLog } from '@/lib/characterLog'
 
 export async function GET() {
   const owner = await getSession()
@@ -31,6 +32,7 @@ export async function GET() {
   if (migrated || dailyTickLog.length > 0) {
     await redis.set(`char:${id}`, JSON.stringify(character))
   }
+  if (dailyTickLog.length > 0) await appendCharacterLog(id, dailyTickLog)
 
   return NextResponse.json({ character, dailyTickLog })
 }

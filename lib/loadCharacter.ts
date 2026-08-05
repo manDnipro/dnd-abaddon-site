@@ -6,6 +6,7 @@ import { migrateLegacyCharacter } from './migrateCharacter'
 import { getOrRollWeather } from './worldState'
 import { runDueDailyTicks } from './dailyTick'
 import { getOwnerCharId } from './ownerChar'
+import { appendCharacterLog } from './characterLog'
 
 /** Some things (hunting, visiting a camp location, the personal storage box, trading, socializing)
  *  only make sense while physically at camp — not out on an expedition. Personal actions like
@@ -46,6 +47,12 @@ export async function loadOwnCharacter(): Promise<{ owner: string; charId: strin
   if (migrated || dailyTickLog.length > 0) {
     await redis.set(`char:${charId}`, JSON.stringify(character))
   }
+  // A catch-up daily tick (hunger/thirst/infection/cold, even death) can fire from ANY page that
+  // loads the character, not just the homepage — every other caller of loadOwnCharacter() ignores
+  // the returned dailyTickLog entirely, so without this it never reaches the persistent character
+  // log. That left deaths from starvation/exposure completely untraceable if they happened to
+  // trigger while the player was on, say, the expedition page instead of the homepage.
+  if (dailyTickLog.length > 0) await appendCharacterLog(charId, dailyTickLog)
 
   return { owner, charId, character, dailyTickLog }
 }
