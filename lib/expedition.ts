@@ -206,6 +206,15 @@ export const LOOT_TIERS: Record<number, LootEntry[]> = {
     { itemKey: 'katana', minQuantity: 1, maxQuantity: 1, weight: 2 },
     { itemKey: 'sniper_rifle', minQuantity: 1, maxQuantity: 1, weight: 2 },
   ],
+  // Дungeon-only table for "Підземелля Епіцентру" (lib/dungeons.ts, key 'epicenter') — a former
+  // hardware hypermarket, so the loot is exclusively building materials for lib/hut.ts's
+  // construction costs, nothing else. Reused via rollLoot(5).
+  5: [
+    { itemKey: 'cement_bag', minQuantity: 1, maxQuantity: 2, weight: 10 },
+    { itemKey: 'sand_bag', minQuantity: 1, maxQuantity: 2, weight: 10 },
+    { itemKey: 'boards', minQuantity: 2, maxQuantity: 5, weight: 9 },
+    { itemKey: 'nails', minQuantity: 3, maxQuantity: 8, weight: 9 },
+  ],
 }
 
 export interface RolledLoot { itemKey: string; quantity: number }
@@ -220,6 +229,11 @@ export function rollLoot(tier: number): RolledLoot {
 
 export interface ExpeditionLevel {
   key: string; index: number; label: string; dc: number; hungerCost: number; thirstCost: number; riskChance: number
+  /** Gates /api/expedition/start — undefined means no level requirement. */
+  minCharacterLevel?: number
+  /** Search rolls here never go below this die size, even for a low-tier character stat (see
+   *  lib/statLevels.ts's dieSizeForStat, which normally decides it purely from the stat value). */
+  minDieSides?: number
 }
 
 export const EXPEDITION_LEVELS: ExpeditionLevel[] = [
@@ -227,6 +241,10 @@ export const EXPEDITION_LEVELS: ExpeditionLevel[] = [
   { key: 'medium', index: 2, label: '🟡 Середня — покинуті будівлі', dc: 12, hungerCost: 9, thirstCost: 9, riskChance: 0.3 },
   { key: 'hard', index: 3, label: '🟠 Важка — промзона', dc: 15, hungerCost: 12, thirstCost: 12, riskChance: 0.45 },
   { key: 'extreme', index: 4, label: '🔴 Екстремальна — епіцентр', dc: 18, hungerCost: 15, thirstCost: 15, riskChance: 0.6 },
+  {
+    key: 'epicenter', index: 5, label: '🏗️ Підземелля Епіцентру', dc: 22, hungerCost: 15, thirstCost: 15, riskChance: 0.6,
+    minCharacterLevel: 20, minDieSides: 30,
+  },
 ]
 export function getExpeditionLevel(key: string): ExpeditionLevel | undefined {
   return EXPEDITION_LEVELS.find(l => l.key === key)

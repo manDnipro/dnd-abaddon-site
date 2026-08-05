@@ -77,6 +77,10 @@ export const ITEM_CATALOG: Record<string, ItemDefinition> = {
   bedsheet: { key: 'bedsheet', name: 'Простирадло', type: 'material', description: 'Можна розірвати на тканину.' },
   rope: { key: 'rope', name: 'Мотузка', type: 'material', description: 'Придатна для багатьох виробів.' },
   fuel: { key: 'fuel', name: 'Паливо', type: 'material', description: 'Каністра пального.' },
+  cement_bag: { key: 'cement_bag', name: 'Мішок цементу', type: 'material', description: 'Важкий, злежався, але ще придатний для будівництва.' },
+  sand_bag: { key: 'sand_bag', name: 'Мішок піску', type: 'material', description: 'Будівельний пісок — для розчину чи мішків з піском.' },
+  boards: { key: 'boards', name: 'Дошки', type: 'material', description: 'Обрізна деревина, придатна для каркасу чи обшивки.' },
+  nails: { key: 'nails', name: 'Цвяхи', type: 'material', description: 'Жменя цвяхів — нічого не збудуєш без них.' },
 
   belt: { key: 'belt', name: 'Пояс', type: 'clothing', description: 'Міцний пояс.', slot: 'accessory', warmth: 0, armor: 1 },
   cap: { key: 'cap', name: 'Кепка', type: 'clothing', description: 'Легкий головний убір.', slot: 'head', warmth: 2, armor: 0 },

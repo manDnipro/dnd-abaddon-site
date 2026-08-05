@@ -14,21 +14,23 @@ export interface HutStage {
 
 // Cumulative progress jumps (0 -> 25 -> 75 -> 100) match the milestone %s baked into the artwork
 // itself (public/hut/hut_stage1..4.jpg) — the "Стіни" stage costs the most since it's the biggest
-// jump (25% -> 75%). Quantities are a first pass; easy to retune later, nothing else depends on the
-// exact numbers.
+// jump (25% -> 75%). Costs are exclusively cement/sand/boards/nails — the loot table of the
+// "Підземелля Епіцентру" dungeon (lib/expedition.ts LOOT_TIERS[5], a former hardware hypermarket) —
+// so that dungeon is the actual point of building a hut, not just flavor. Quantities are a first
+// pass; easy to retune later, nothing else depends on the exact numbers.
 export const HUT_STAGES: HutStage[] = [
   { key: 'foundation', label: 'Фундамент', image: 'hut_stage1.jpg', progressAt: 0, cost: [] },
   {
     key: 'frame', label: 'Каркас', image: 'hut_stage2.jpg', progressAt: 25,
-    cost: [{ itemKey: 'scrap', quantity: 20 }, { itemKey: 'rope', quantity: 5 }],
+    cost: [{ itemKey: 'boards', quantity: 15 }, { itemKey: 'nails', quantity: 20 }],
   },
   {
     key: 'walls', label: 'Стіни (бетон)', image: 'hut_stage3.jpg', progressAt: 75,
-    cost: [{ itemKey: 'scrap', quantity: 40 }, { itemKey: 'cloth', quantity: 20 }, { itemKey: 'fuel', quantity: 5 }],
+    cost: [{ itemKey: 'cement_bag', quantity: 15 }, { itemKey: 'sand_bag', quantity: 15 }, { itemKey: 'boards', quantity: 10 }],
   },
   {
     key: 'roof', label: 'Дах та вікна', image: 'hut_stage4.jpg', progressAt: 100,
-    cost: [{ itemKey: 'scrap', quantity: 25 }, { itemKey: 'cloth', quantity: 10 }, { itemKey: 'rope', quantity: 5 }],
+    cost: [{ itemKey: 'boards', quantity: 15 }, { itemKey: 'nails', quantity: 15 }, { itemKey: 'cement_bag', quantity: 5 }],
   },
 ]
 

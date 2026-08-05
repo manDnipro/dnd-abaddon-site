@@ -5,6 +5,7 @@ import { Character } from '@/lib/types'
 import { getExpeditionLevel, travelMinutesForLevel } from '@/lib/expedition'
 import { pushExpeditionLog } from '@/lib/expeditionLog'
 import { getOwnerCharId } from '@/lib/ownerChar'
+import { levelFromXp } from '@/lib/levels'
 
 export async function POST(req: NextRequest) {
   const owner = await getSession()
@@ -23,6 +24,9 @@ export async function POST(req: NextRequest) {
   const { levelKey } = await req.json() as { levelKey: string }
   const level = getExpeditionLevel(levelKey)
   if (!level) return NextResponse.json({ error: 'Невідомий рівень складності' }, { status: 400 })
+  if (level.minCharacterLevel && levelFromXp(character.xp) < level.minCharacterLevel) {
+    return NextResponse.json({ error: `${level.label} — доступно з ${level.minCharacterLevel} рівня персонажа.` }, { status: 403 })
+  }
 
   const travelMs = travelMinutesForLevel(level.index) * 60_000
   character.expedition = { levelKey, phase: 'traveling_out', arrivesAt: Date.now() + travelMs }

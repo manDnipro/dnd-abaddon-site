@@ -160,7 +160,7 @@ export function performSearch(character: Character, level: ExpeditionLevel, opts
     }
   }
 
-  const searchSides = dieSizeForStat(character.stats.per)
+  const searchSides = Math.max(dieSizeForStat(character.stats.per), level.minDieSides ?? 0)
   const searchDC = scaleDcForSides(level.dc, searchSides)
   let searchRoll = rollCheck(searchSides, statModifier(character.stats.per))
   let success = searchRoll.total >= searchDC

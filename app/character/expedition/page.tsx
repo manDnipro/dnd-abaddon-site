@@ -6,6 +6,7 @@ import { Character } from '@/lib/types'
 import { EXPEDITION_LEVELS } from '@/lib/expedition'
 import { DUNGEONS } from '@/lib/dungeons'
 import { getItem, isConsumable } from '@/lib/items'
+import { levelFromXp } from '@/lib/levels'
 import DiceLogLine from '@/components/DiceLogLine'
 import DiceRulesInfo from '@/components/DiceRulesInfo'
 
@@ -66,6 +67,9 @@ export default function ExpeditionPage() {
   const exp = character.expedition
   const secondsLeft = exp ? Math.max(0, Math.ceil((exp.arrivesAt - now) / 1000)) : 0
   const arrived = exp && exp.phase !== 'on_site' && secondsLeft === 0
+  const charLevel = levelFromXp(character.xp)
+  const epicenter = EXPEDITION_LEVELS.find(l => l.key === 'epicenter')
+  const epicenterLocked = Boolean(epicenter?.minCharacterLevel && charLevel < epicenter.minCharacterLevel)
 
   return (
     <div>
@@ -94,7 +98,7 @@ export default function ExpeditionPage() {
         <div className="mb-6">
           <h2 style={{ color: '#c9a227', fontSize: 16, marginBottom: 12 }}>Куди цього разу?</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-            {EXPEDITION_LEVELS.map(lvl => (
+            {EXPEDITION_LEVELS.filter(lvl => lvl.key !== 'epicenter').map(lvl => (
               <button key={lvl.key} disabled={loading}
                 onClick={async () => {
                   setLoading(true); setError('')
@@ -128,6 +132,44 @@ export default function ExpeditionPage() {
 
           <h2 style={{ color: '#c9a227', fontSize: 16, margin: '20px 0 12px' }}>Данжі</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+            {epicenter && (
+              <button disabled={loading || epicenterLocked}
+                onClick={async () => {
+                  setLoading(true); setError('')
+                  const res = await fetch('/api/expedition/start', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ levelKey: 'epicenter' }),
+                  })
+                  const d = await res.json()
+                  setLoading(false)
+                  if (!res.ok) { setError(d.error || 'Помилка'); return }
+                  setCharacter(d)
+                }}
+                style={{
+                  position: 'relative', padding: 0, borderRadius: 6, overflow: 'hidden', border: '1px solid #2a241c',
+                  background: '#0a0a0a', aspectRatio: '768 / 512', cursor: loading || epicenterLocked ? 'default' : 'pointer',
+                  opacity: loading ? 0.6 : 1, textAlign: 'left',
+                }}>
+                <Image src="/dungeons/dungeon1_epicenter.jpg" alt={epicenter.label} fill
+                  style={{ objectFit: 'cover', filter: epicenterLocked ? 'grayscale(0.7) brightness(0.4)' : 'none' }} />
+                <div style={{
+                  position: 'absolute', left: 0, right: 0, bottom: 0, padding: '10px 12px',
+                  background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.9))',
+                }}>
+                  <div style={{ color: '#e5e5e5', fontSize: 13, fontWeight: 700 }}>{epicenter.label}</div>
+                  <div style={{ color: '#aaa', fontSize: 11 }}>СК {epicenter.dc} · д{epicenter.minDieSides}+ · будматеріали</div>
+                </div>
+                {epicenterLocked && (
+                  <div style={{
+                    position: 'absolute', top: 8, right: 8, background: 'rgba(10,9,8,0.9)', border: '1px solid #c0392b',
+                    color: '#e0a03a', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 3,
+                    fontFamily: "'Special Elite', monospace", letterSpacing: '0.05em',
+                  }}>
+                    🔒 Потрібен {epicenter.minCharacterLevel} рівень (зараз {charLevel})
+                  </div>
+                )}
+              </button>
+            )}
             {DUNGEONS.map(d => (
               <div key={d.key} style={{
                 position: 'relative', borderRadius: 6, overflow: 'hidden', border: '1px solid #2a241c',
