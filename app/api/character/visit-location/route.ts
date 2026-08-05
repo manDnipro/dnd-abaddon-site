@@ -9,7 +9,7 @@ import { getItem } from '@/lib/items'
 import { addStack } from '@/lib/stacks'
 import { appendCharacterLog } from '@/lib/characterLog'
 import { trainStat } from '@/lib/statTraining'
-import { applyLocationYield } from '@/lib/locationYield'
+import { locationDcEscalation } from '@/lib/locationYield'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -52,35 +52,24 @@ export async function POST(req: NextRequest) {
 
   let checkSuccess = true
   if (location.stat !== null) {
+    // Locations that pay out reputation/materials on success get progressively harder to pass the
+    // more they're farmed inside a rolling 4h window — same dice check, rising DC, so the payoff
+    // still comes down to the roll instead of a flat count-based cooldown or reward table.
+    const farmable = Boolean(location.success.reputationDelta || location.success.materialReward)
+    const dcBonus = farmable ? locationDcEscalation(character, location.key) : 0
     const sides = dieSizeForStat(character.stats[location.stat])
-    const dc = scaleDcForSides(location.dc, sides)
+    const dc = scaleDcForSides(location.dc + dcBonus, sides)
     const roll = rollCheck(sides, statModifier(character.stats[location.stat]))
     checkSuccess = roll.total >= dc
+    if (dcBonus > 0) log.push(`🔺 Тебе тут уже занадто добре знають — складність вища.`)
     log.push(`🎲 ${STAT_LABELS[location.stat]}: ${roll.total} проти СК ${dc}${checkSuccess ? ' — успіх!' : ' — невдача.'}`)
   }
-  const rawOutcome = checkSuccess ? location.success : location.failure
+  const outcome = checkSuccess ? location.success : location.failure
 
-  if (rawOutcome.text) log.push(`${location.name}: ${rawOutcome.text}`)
+  if (outcome.text) log.push(`${location.name}: ${outcome.text}`)
   if (location.stat !== null) {
     const growth = trainStat(character, location.stat, checkSuccess)
     if (growth) log.push(growth)
-  }
-
-  // Diminishing returns instead of a hard cooldown for locations that hand out reputation/materials
-  // on success — copy the outcome first, CAMP_LOCATIONS entries are shared module-level objects and
-  // must not be mutated in place (every future visit from any character reuses the same object).
-  let outcome = rawOutcome
-  if (checkSuccess && (rawOutcome.reputationDelta || rawOutcome.materialReward)) {
-    const yieldResult = applyLocationYield(character, location.key)
-    outcome = { ...rawOutcome }
-    if (yieldResult.backfire) {
-      if (outcome.reputationDelta) outcome.reputationDelta = -1
-      outcome.materialReward = undefined
-    } else if (yieldResult.multiplier < 1) {
-      if (outcome.reputationDelta) outcome.reputationDelta = Math.max(1, Math.round(outcome.reputationDelta * yieldResult.multiplier))
-      if (outcome.materialReward) outcome.materialReward = { ...outcome.materialReward, quantity: Math.max(1, Math.round(outcome.materialReward.quantity * yieldResult.multiplier)) }
-    }
-    if (yieldResult.note) log.push(`📉 ${yieldResult.note}`)
   }
 
   if (outcome.moraleDelta) character.morale = clampMorale(character.morale + outcome.moraleDelta)
