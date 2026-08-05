@@ -9,6 +9,7 @@ import { getItem } from '@/lib/items'
 import { addStack } from '@/lib/stacks'
 import { appendCharacterLog } from '@/lib/characterLog'
 import { trainStat } from '@/lib/statTraining'
+import { applyLocationYield } from '@/lib/locationYield'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -57,13 +58,31 @@ export async function POST(req: NextRequest) {
     checkSuccess = roll.total >= dc
     log.push(`🎲 ${STAT_LABELS[location.stat]}: ${roll.total} проти СК ${dc}${checkSuccess ? ' — успіх!' : ' — невдача.'}`)
   }
-  const outcome = checkSuccess ? location.success : location.failure
+  const rawOutcome = checkSuccess ? location.success : location.failure
 
-  if (outcome.text) log.push(`${location.name}: ${outcome.text}`)
+  if (rawOutcome.text) log.push(`${location.name}: ${rawOutcome.text}`)
   if (location.stat !== null) {
     const growth = trainStat(character, location.stat, checkSuccess)
     if (growth) log.push(growth)
   }
+
+  // Diminishing returns instead of a hard cooldown for locations that hand out reputation/materials
+  // on success — copy the outcome first, CAMP_LOCATIONS entries are shared module-level objects and
+  // must not be mutated in place (every future visit from any character reuses the same object).
+  let outcome = rawOutcome
+  if (checkSuccess && (rawOutcome.reputationDelta || rawOutcome.materialReward)) {
+    const yieldResult = applyLocationYield(character, location.key)
+    outcome = { ...rawOutcome }
+    if (yieldResult.backfire) {
+      if (outcome.reputationDelta) outcome.reputationDelta = -1
+      outcome.materialReward = undefined
+    } else if (yieldResult.multiplier < 1) {
+      if (outcome.reputationDelta) outcome.reputationDelta = Math.max(1, Math.round(outcome.reputationDelta * yieldResult.multiplier))
+      if (outcome.materialReward) outcome.materialReward = { ...outcome.materialReward, quantity: Math.max(1, Math.round(outcome.materialReward.quantity * yieldResult.multiplier)) }
+    }
+    if (yieldResult.note) log.push(`📉 ${yieldResult.note}`)
+  }
+
   if (outcome.moraleDelta) character.morale = clampMorale(character.morale + outcome.moraleDelta)
   if (outcome.reputationDelta) character.reputation = clampReputation(character.reputation + outcome.reputationDelta)
   if (outcome.infectionDelta) character.infection = clampInfection(character.infection + outcome.infectionDelta)

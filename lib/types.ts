@@ -117,6 +117,10 @@ export type Character = {
   // set (e.g. watchtower) — a generic map instead of one-off fields so any future location can opt
   // into a cooldown without another character-schema change.
   locationCooldowns: Record<string, number>
+  // Per-camp-location-key rolling-window use timestamps, for lib/locationYield.ts's diminishing-
+  // returns mechanic — separate from locationCooldowns (a hard lock) since this location stays
+  // usable, it just pays out less the more it's farmed inside the window.
+  locationYieldUses: Record<string, number[]>
 
   xp: number
   meleeProf: number

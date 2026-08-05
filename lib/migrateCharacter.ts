@@ -60,6 +60,7 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.avatar === undefined) { patched.avatar = null; changed = true }
   if (patched.canteenUses === undefined) { patched.canteenUses = []; changed = true }
   if (patched.locationCooldowns === undefined) { patched.locationCooldowns = {}; changed = true }
+  if (patched.locationYieldUses === undefined) { patched.locationYieldUses = {}; changed = true }
   if (patched.xp === undefined) { patched.xp = 0; changed = true }
   if (patched.meleeProf === undefined) { patched.meleeProf = 0; changed = true }
   if (patched.firearmProf === undefined) { patched.firearmProf = 0; changed = true }
