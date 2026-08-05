@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Character } from '@/lib/types'
 import { EXPEDITION_LEVELS } from '@/lib/expedition'
+import { DUNGEONS } from '@/lib/dungeons'
 import { getItem, isConsumable } from '@/lib/items'
 import DiceLogLine from '@/components/DiceLogLine'
 import DiceRulesInfo from '@/components/DiceRulesInfo'
@@ -122,6 +123,25 @@ export default function ExpeditionPage() {
                   <div style={{ color: '#aaa', fontSize: 10 }}>СК {lvl.dc} · ризик {Math.round(lvl.riskChance * 100)}%</div>
                 </div>
               </button>
+            ))}
+          </div>
+
+          <h2 style={{ color: '#c9a227', fontSize: 16, margin: '20px 0 12px' }}>Данжі</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+            {DUNGEONS.map(d => (
+              <div key={d.key} style={{
+                position: 'relative', borderRadius: 6, overflow: 'hidden', border: '1px solid #2a241c',
+                background: '#0a0a0a', aspectRatio: '768 / 512',
+              }}>
+                <Image src={`/dungeons/${d.image}`} alt={d.label} fill style={{ objectFit: 'cover', filter: 'grayscale(0.4) brightness(0.6)' }} />
+                <div style={{
+                  position: 'absolute', top: 8, right: 8, background: 'rgba(10,9,8,0.9)', border: '1px solid #a68a4a',
+                  color: '#c9a94f', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 3,
+                  fontFamily: "'Special Elite', monospace", letterSpacing: '0.1em',
+                }}>
+                  ⏳ СКОРО
+                </div>
+              </div>
             ))}
           </div>
         </div>
