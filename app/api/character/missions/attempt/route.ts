@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { loadOwnCharacter, saveCharacter, blockIfInCombat } from '@/lib/loadCharacter'
 import { getMission, saveMission, applyMissionReward } from '@/lib/rpMissions'
 import { STAT_LABELS, formatModifier, statModifier } from '@/lib/types'
-import { rollD20 } from '@/lib/dice'
+import { rollCheck } from '@/lib/dice'
+import { dieSizeForStat, scaleDcForSides } from '@/lib/statLevels'
 import { trainStat } from '@/lib/statTraining'
 import { appendCharacterLog } from '@/lib/characterLog'
 
@@ -30,9 +31,11 @@ export async function POST(req: NextRequest) {
   if (mission.checkStat) {
     const stat = mission.checkStat
     const mod = statModifier(character.stats[stat])
-    const roll = rollD20(mod)
-    success = roll.total >= mission.checkDC
-    log.push(`🎲 Перевірка (${STAT_LABELS[stat]} ${formatModifier(mod)}): кинуто ${roll.rolls[0]} ${formatModifier(mod)} = ${roll.total} проти СК ${mission.checkDC}${success ? ' — вдалось!' : ' — не вдалось.'}`)
+    const sides = dieSizeForStat(character.stats[stat])
+    const dc = scaleDcForSides(mission.checkDC, sides)
+    const roll = rollCheck(sides, mod)
+    success = roll.total >= dc
+    log.push(`🎲 Перевірка (${STAT_LABELS[stat]} ${formatModifier(mod)}): кинуто д${sides} ${roll.rolls[0]} ${formatModifier(mod)} = ${roll.total} проти СК ${dc}${success ? ' — вдалось!' : ' — не вдалось.'}`)
     const growth = trainStat(character, stat, success)
     if (growth) log.push(growth)
   }

@@ -5,7 +5,8 @@ import { Character, statModifier } from '@/lib/types'
 import { getExpeditionLevel } from '@/lib/expedition'
 import { resolveEnemyAttack } from '@/lib/combatEngine'
 import { runPostSearchChecks } from '@/lib/expeditionEngine'
-import { rollD20 } from '@/lib/dice'
+import { rollCheck } from '@/lib/dice'
+import { dieSizeForStat, scaleDcForSides } from '@/lib/statLevels'
 import { appendCharacterLog } from '@/lib/characterLog'
 import { pushExpeditionLog, finalizeExpeditionLog } from '@/lib/expeditionLog'
 import { getOwnerCharId } from '@/lib/ownerChar'
@@ -24,8 +25,9 @@ export async function POST() {
   const combat = character.combat
   let log: string[] = []
 
-  const fleeDC = 10 + combat.attackBonus
-  const roll = rollD20(statModifier(character.stats.agi))
+  const sides = dieSizeForStat(character.stats.agi)
+  const fleeDC = scaleDcForSides(10 + combat.attackBonus, sides)
+  const roll = rollCheck(sides, statModifier(character.stats.agi))
   const escaped = roll.total >= fleeDC
 
   if (escaped) {

@@ -1,6 +1,7 @@
 import { Character, statModifier } from './types'
-import { CRIT_FAIL, CRIT_SUCCESS, rollD20, RollResult } from './dice'
+import { isCritFail, isCritSuccess, rollCheck, RollResult } from './dice'
 import { rollLoot } from './expedition'
+import { dieSizeForStat, scaleDcForSides } from './statLevels'
 
 export function tradeNegotiationDC(tradeLevel: number): number {
   return 10 + (tradeLevel - 1) * 2
@@ -36,13 +37,14 @@ export interface NegotiationResult {
 }
 
 export function resolveNegotiationRoll(character: Character, tradeLevel: number, trust: number): NegotiationResult {
-  const roll = rollD20(statModifier(character.stats.cha))
+  const sides = dieSizeForStat(character.stats.cha)
+  const roll = rollCheck(sides, statModifier(character.stats.cha))
   const trustBonus = Math.floor(trust / 5)
   const reputationBonus = Math.floor((character.reputation - 50) / 20)
   const totalRoll = roll.total + trustBonus + reputationBonus
-  const dc = tradeNegotiationDC(tradeLevel)
-  const critical = roll.rolls[0] === CRIT_SUCCESS
-  const fumble = roll.rolls[0] === CRIT_FAIL
+  const dc = scaleDcForSides(tradeNegotiationDC(tradeLevel), sides)
+  const critical = isCritSuccess(roll)
+  const fumble = isCritFail(roll)
   const success = critical || (!fumble && totalRoll >= dc)
 
   let requiredRatio = baseRequiredRatio(tradeLevel)

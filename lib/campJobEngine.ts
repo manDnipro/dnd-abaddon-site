@@ -1,5 +1,6 @@
 import { Character, clampReputation, statModifier } from './types'
-import { rollD20 } from './dice'
+import { rollCheck } from './dice'
+import { dieSizeForStat, scaleDcForSides } from './statLevels'
 import { rollLoot } from './expedition'
 import { getItem } from './items'
 import { addStack } from './stacks'
@@ -15,10 +16,12 @@ export function tryCampJob(character: Character): CampJobOutcome {
 
   const flavor = rollJobFlavor()
   const stat = rollJobStat()
-  const roll = rollD20(statModifier(character.stats[stat]))
-  const log = [`👴 Голова табору просить ${flavor}. Перевірка ${STAT_LABELS[stat]}: ${roll.total} проти СК ${CAMP_JOB_DC}.`]
+  const sides = dieSizeForStat(character.stats[stat])
+  const dc = scaleDcForSides(CAMP_JOB_DC, sides)
+  const roll = rollCheck(sides, statModifier(character.stats[stat]))
+  const log = [`👴 Голова табору просить ${flavor}. Перевірка ${STAT_LABELS[stat]}: ${roll.total} проти СК ${dc}.`]
 
-  if (roll.total >= CAMP_JOB_DC) {
+  if (roll.total >= dc) {
     character.reputation = clampReputation(character.reputation + CAMP_JOB_REPUTATION_GAIN)
     character.xp += XP_REWARDS.campJob
     if (Math.random() < 0.5) {

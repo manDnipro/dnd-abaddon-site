@@ -1,6 +1,7 @@
 import { Character, clampHungerThirst, clampInfection, clampMorale, statModifier } from './types'
 import { getItem, ITEM_CATALOG } from './items'
-import { CRIT_FAIL, rollD20, rollDice } from './dice'
+import { isCritFail, rollCheck, rollDice } from './dice'
+import { dieSizeForStat, scaleDcForSides } from './statLevels'
 import {
   ExpeditionLevel, rollLoot, rollSearchLocation, SPECIAL_ENCOUNTER_CHANCE, rollSpecialEncounterType,
   rollRiskType, injuryDiceForLevel, traumaDiceForLevel, traumaMoraleLossForLevel, infectionAmountForLevel,
@@ -99,8 +100,9 @@ export function runPostSearchChecks(character: Character, level: ExpeditionLevel
   const priorCount = Math.max(0, character.recentExpeditionTimestamps.filter(t => Date.now() - t < FATIGUE_WINDOW_MINUTES * 60_000).length - 1)
   if (priorCount >= fatigueThreshold(charLevel)) {
     const excessCount = fatigueExcessCount(priorCount, charLevel)
-    const saveDC = fatigueSaveDC(excessCount)
-    const saveRoll = rollD20(statModifier(character.stats.end))
+    const saveSides = dieSizeForStat(character.stats.end)
+    const saveDC = scaleDcForSides(fatigueSaveDC(excessCount), saveSides)
+    const saveRoll = rollCheck(saveSides, statModifier(character.stats.end))
     const resisted = saveRoll.total >= saveDC
     if (resisted) {
       log.push(`💪 Втома накопичується (${priorCount + 1}-ма вилазка за ${FATIGUE_WINDOW_MINUTES} хв), але організм встояв: ${saveRoll.total} проти СК ${saveDC}.`)
@@ -158,26 +160,28 @@ export function performSearch(character: Character, level: ExpeditionLevel, opts
     }
   }
 
-  let searchRoll = rollD20(statModifier(character.stats.per))
-  let success = searchRoll.total >= level.dc
+  const searchSides = dieSizeForStat(character.stats.per)
+  const searchDC = scaleDcForSides(level.dc, searchSides)
+  let searchRoll = rollCheck(searchSides, statModifier(character.stats.per))
+  let success = searchRoll.total >= searchDC
   // A natural 1 on the un-rerolled roll is a critical fumble regardless of the reroll below — the
   // danger dial always bites on the worst possible outcome, luck or no luck.
-  const criticalFumble = searchRoll.rolls[0] === CRIT_FAIL
+  const criticalFumble = isCritFail(searchRoll)
 
   if (!success && opts?.useLuck && character.luck > 0) {
     character.luck -= 1
-    const rerolled = rollD20(statModifier(character.stats.per))
-    log.push(`🍀 Не пощастило: ${searchRoll.total} проти СК ${level.dc} — витрачено очко удачі (${character.luck}/${character.maxLuck}), перекидаємо!`)
+    const rerolled = rollCheck(searchSides, statModifier(character.stats.per))
+    log.push(`🍀 Не пощастило: ${searchRoll.total} проти СК ${searchDC} — витрачено очко удачі (${character.luck}/${character.maxLuck}), перекидаємо!`)
     searchRoll = rerolled
-    success = searchRoll.total >= level.dc
+    success = searchRoll.total >= searchDC
   }
 
   if (success) {
     const xpGain = XP_REWARDS.expeditionByTier[level.index] ?? 5
     character.xp += xpGain
-    const margin = searchRoll.total - level.dc
+    const margin = searchRoll.total - searchDC
     const lootChance = lootChanceForMargin(margin)
-    log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — успіх! (+${xpGain} XP)`)
+    log.push(`🎲 Пошук (д${searchSides}): ${searchRoll.total} проти СК ${searchDC} — успіх! (+${xpGain} XP)`)
     if (Math.random() < lootChance) {
       const loot = rollLoot(level.index)
       addToInventory(character, loot.itemKey, loot.quantity, log)
@@ -194,7 +198,7 @@ export function performSearch(character: Character, level: ExpeditionLevel, opts
       applyNonCombatRisk(character, level, log, risk)
     }
   } else {
-    log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — невдача.`)
+    log.push(`🎲 Пошук (д${searchSides}): ${searchRoll.total} проти СК ${searchDC} — невдача.`)
     if (criticalFumble || Math.random() < level.riskChance) {
       if (criticalFumble) log.push(`💢 Критичний провал (натуральна 1) — гірше нікуди.`)
       const risk = rollRiskType()

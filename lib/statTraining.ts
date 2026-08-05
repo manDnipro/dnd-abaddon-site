@@ -1,6 +1,10 @@
 import { Character, StatKey, STAT_LABELS, maxHpForEndurance } from './types'
 
-export const MAX_TRAINED_STAT = 10
+// Was 10 — raised 4x so a stat can climb through all four die tiers (d20/d30/d40/d50, see
+// lib/statLevels.ts) instead of topping out right as the system starts to get interesting.
+// Growth odds (GROWTH_CHANCE_ON_SUCCESS/FAILURE below) are unchanged — reaching 40 is meant to take
+// a real stretch of active play, not a single session.
+export const MAX_TRAINED_STAT = 40
 const STAT_EMOJI: Record<StatKey, string> = { str: '💪', agi: '🤸', end: '🛡️', per: '👁️', int: '🧠', cha: '✨' }
 
 // Bot ties stat growth to persisted practice/win-streak counters (practice_count>=5 OR a 3-win

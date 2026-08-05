@@ -4,7 +4,8 @@ import { getItem } from '@/lib/items'
 import { getDurability, MAX_DURABILITY, repairScrapCost, repairDC, REPAIR_FAIL_RESTORE_FRACTION } from '@/lib/durability'
 import { countOf, removeStack } from '@/lib/stacks'
 import { statModifier } from '@/lib/types'
-import { rollD20 } from '@/lib/dice'
+import { rollCheck } from '@/lib/dice'
+import { dieSizeForStat, scaleDcForSides } from '@/lib/statLevels'
 import { repairLine } from '@/lib/flavor'
 import { trainStat } from '@/lib/statTraining'
 
@@ -35,8 +36,9 @@ export async function POST(req: NextRequest) {
   remaining -= fromInv
   if (remaining > 0) character.storageBox = removeStack(character.storageBox, 'scrap', remaining)
 
-  const dc = repairDC(item)
-  const roll = rollD20(statModifier(character.stats.per))
+  const sides = dieSizeForStat(character.stats.per)
+  const dc = scaleDcForSides(repairDC(item), sides)
+  const roll = rollCheck(sides, statModifier(character.stats.per))
   const success = roll.total >= dc
   const log = [`🎲 Ремонт (${item.name}): ${roll.total} проти СК ${dc}${success ? ' — впорався!' : ' — не все вдалось з першого разу.'}`]
 

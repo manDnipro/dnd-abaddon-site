@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
-import { clampHungerThirst, clampInfection, clampMorale, clampReputation, statModifier } from '@/lib/types'
-import { rollD20 } from '@/lib/dice'
+import { clampHungerThirst, clampInfection, clampMorale, clampReputation, statModifier, STAT_LABELS } from '@/lib/types'
+import { rollCheck } from '@/lib/dice'
+import { dieSizeForStat, scaleDcForSides } from '@/lib/statLevels'
 import { getCampLocation } from '@/lib/campLocations'
 import { reputationTier, CANTEEN_MAX_USES } from '@/lib/reputation'
 import { getItem } from '@/lib/items'
@@ -48,7 +49,14 @@ export async function POST(req: NextRequest) {
     character.locationCooldowns = { ...character.locationCooldowns, [location.key]: Date.now() }
   }
 
-  const checkSuccess = location.stat === null || rollD20(statModifier(character.stats[location.stat])).total >= location.dc
+  let checkSuccess = true
+  if (location.stat !== null) {
+    const sides = dieSizeForStat(character.stats[location.stat])
+    const dc = scaleDcForSides(location.dc, sides)
+    const roll = rollCheck(sides, statModifier(character.stats[location.stat]))
+    checkSuccess = roll.total >= dc
+    log.push(`🎲 ${STAT_LABELS[location.stat]}: ${roll.total} проти СК ${dc}${checkSuccess ? ' — успіх!' : ' — невдача.'}`)
+  }
   const outcome = checkSuccess ? location.success : location.failure
 
   if (outcome.text) log.push(`${location.name}: ${outcome.text}`)

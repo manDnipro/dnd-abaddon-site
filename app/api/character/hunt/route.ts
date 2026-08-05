@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { clampHungerThirst, statModifier } from '@/lib/types'
-import { rollD20 } from '@/lib/dice'
+import { rollCheck } from '@/lib/dice'
+import { dieSizeForStat, scaleDcForSides } from '@/lib/statLevels'
 import { getItem } from '@/lib/items'
 import { addStack } from '@/lib/stacks'
 import { HUNTING_DC, HUNTING_HUNGER_COST, HUNTING_THIRST_COST, HUNTING_MISHAP_CHANCE, HUNTS_PER_PROFICIENCY, MAX_HUNTING_PROFICIENCY, rollHuntingCatch } from '@/lib/hunting'
@@ -24,8 +25,11 @@ export async function POST() {
   character.hunger = clampHungerThirst(character.hunger - HUNTING_HUNGER_COST)
   character.thirst = clampHungerThirst(character.thirst - HUNTING_THIRST_COST)
 
-  const roll = rollD20(statModifier(character.stats.per) + character.huntingProf)
-  const success = roll.total >= HUNTING_DC
+  const sides = dieSizeForStat(character.stats.per)
+  const dc = scaleDcForSides(HUNTING_DC, sides)
+  const roll = rollCheck(sides, statModifier(character.stats.per) + character.huntingProf)
+  const success = roll.total >= dc
+  log.push(`🎲 Полювання: ${roll.total} проти СК ${dc}${success ? ' — успіх!' : ' — невдача.'}`)
 
   if (success) {
     const catchKey = rollHuntingCatch()

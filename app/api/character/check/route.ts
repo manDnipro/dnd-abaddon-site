@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadOwnCharacter } from '@/lib/loadCharacter'
 import { STAT_LABELS, StatKey, statModifier, formatModifier } from '@/lib/types'
-import { rollD20 } from '@/lib/dice'
+import { rollCheck } from '@/lib/dice'
+import { dieSizeForStat } from '@/lib/statLevels'
 
 export async function POST(req: NextRequest) {
   const result = await loadOwnCharacter()
@@ -16,8 +17,9 @@ export async function POST(req: NextRequest) {
   // since nothing was actually won or lost. Stats only grow through checks that have real stakes
   // (combat, hunting, weapon proficiency), same as the bot's practice/win-streak counters.
   const mod = statModifier(character.stats[stat])
-  const roll = rollD20(mod)
-  const log = [`🎯 Перевірка (${STAT_LABELS[stat]} ${formatModifier(mod)}): кинуто ${roll.rolls[0]} ${formatModifier(mod)} = **${roll.total}**`]
+  const sides = dieSizeForStat(character.stats[stat])
+  const roll = rollCheck(sides, mod)
+  const log = [`🎯 Перевірка (${STAT_LABELS[stat]} ${formatModifier(mod)}, д${sides}): кинуто ${roll.rolls[0]} ${formatModifier(mod)} = **${roll.total}**`]
 
   return NextResponse.json({ character, log })
 }

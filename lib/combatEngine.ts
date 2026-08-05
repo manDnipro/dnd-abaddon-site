@@ -1,7 +1,8 @@
-import { Character, CombatState, clampInfection, statModifier } from './types'
+import { Character, CombatState, StatKey, clampInfection, statModifier } from './types'
 import { getItem, ItemDefinition } from './items'
 import { resolveAttack, rollInfectionCheck, DEFAULT_DEFENSE } from './combat'
 import { rollDice } from './dice'
+import { dieSizeForStat, scaleDcForSides } from './statLevels'
 import { EnemyTypeDef, SCREAMER_CALL_CHANCE } from './enemyTypes'
 import { zombieStatsForLevel } from './expedition'
 import { ENEMY_IMAGES } from './enemyImages'
@@ -19,8 +20,8 @@ function averageDice(dice: string): number {
   return count * ((sides + 1) / 2) + bonus
 }
 
-export function bestWeapon(character: Character): { id: string; damageDice: string; statMod: number } {
-  let best: { id: string; damageDice: string; statMod: number } | null = null
+export function bestWeapon(character: Character): { id: string; damageDice: string; statMod: number; statKey: StatKey } {
+  let best: { id: string; damageDice: string; statMod: number; statKey: StatKey } | null = null
   let bestAvg = -1
   for (const stack of character.inventory) {
     const item = getItem(stack.itemId)
@@ -29,11 +30,12 @@ export function bestWeapon(character: Character): { id: string; damageDice: stri
     const avg = averageDice(item.damageDice ?? '1d4')
     if (avg > bestAvg) {
       bestAvg = avg
-      const baseMod = statModifier(character.stats[item.statUsed ?? 'str'])
-      best = { id: item.key, damageDice: item.damageDice ?? '1d4', statMod: baseMod + weaponProficiencyPenalty(character, item) }
+      const statKey = item.statUsed ?? 'str'
+      const baseMod = statModifier(character.stats[statKey])
+      best = { id: item.key, damageDice: item.damageDice ?? '1d4', statMod: baseMod + weaponProficiencyPenalty(character, item), statKey }
     }
   }
-  return best ?? { id: 'fists', damageDice: '1d2', statMod: statModifier(character.stats.str) }
+  return best ?? { id: 'fists', damageDice: '1d2', statMod: statModifier(character.stats.str), statKey: 'str' }
 }
 
 export function equippedArmorTotal(character: Character): number {
@@ -87,7 +89,10 @@ export function resolvePlayerAttack(character: Character, combat: CombatState, s
   const weaponItem: ItemDefinition | undefined = weapon.id === 'fists' ? undefined : getItem(weapon.id)
   const weaponName = weapon.id === 'fists' ? 'голі руки' : weaponItem?.name ?? weapon.id
 
-  const attack = resolveAttack(weapon.statMod, sneak ? combat.defense - 4 : combat.defense, weapon.damageDice)
+  const attackSides = dieSizeForStat(character.stats[weapon.statKey])
+  const scaledDefense = scaleDcForSides(combat.defense, attackSides)
+  const sneakBonus = scaleDcForSides(4, attackSides)
+  const attack = resolveAttack(weapon.statMod, sneak ? scaledDefense - sneakBonus : scaledDefense, weapon.damageDice, attackSides)
   let damage = attack.damage
   if (attack.hit && sneak) damage *= 2
 
@@ -99,7 +104,7 @@ export function resolvePlayerAttack(character: Character, combat: CombatState, s
   } else {
     log.push(sneak
       ? `🤫 Не вдалось підкрастися непоміченим — ворог насторожі.`
-      : `⚔️ Промах (кидок ${attack.attackRoll.total} проти захисту ${combat.defense}).`)
+      : `⚔️ Промах (кидок ${attack.attackRoll.total} проти захисту ${scaledDefense}).`)
   }
 
   if (weapon.id !== 'fists') {
