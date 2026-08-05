@@ -41,6 +41,7 @@ export default function HutPage() {
 
   const unlocked = character.hutUnlocked || character.reputation >= HUT_UNLOCK_REPUTATION
   const built = character.hutProgress >= 100
+  const paused = unlocked && !built && character.reputation < HUT_UNLOCK_REPUTATION
   const stageIdx = currentHutStageIndex(character.hutProgress)
   const stage = HUT_STAGES[stageIdx]
   const nextStage = nextHutStage(character.hutProgress)
@@ -79,6 +80,16 @@ export default function HutPage() {
             </div>
           </div>
 
+          {paused && (
+            <div className="card mb-6" style={{ borderColor: '#8a5a1a' }}>
+              <p style={{ color: '#e0a03a', fontSize: 14, fontWeight: 700, marginBottom: 4 }}>⏸️ Будівництво призупинено</p>
+              <p style={{ color: '#999', fontSize: 13 }}>
+                Репутація впала нижче {HUT_UNLOCK_REPUTATION} (зараз {character.reputation}) — табір більше не довіряє тобі настільки, щоб продовжити.
+                Віднови довіру, і зможеш внести ресурси знову — уже внесене нікуди не зникає.
+              </p>
+            </div>
+          )}
+
           {!built && nextStage && (
             <div className="card mb-6">
               <h2 style={{ color: '#c9a227', fontSize: 15, marginBottom: 4 }}>Потрібно для етапу «{nextStage.label}»</h2>
@@ -98,7 +109,7 @@ export default function HutPage() {
                       {remaining > 0 && (
                         <button
                           onClick={() => call('/api/character/hut/contribute', { itemKey: c.itemKey, qty: Math.min(remaining, inInventory) })}
-                          disabled={loading || inInventory === 0} className="btn-gold" style={{ fontSize: 12, padding: '5px 12px' }}>
+                          disabled={loading || inInventory === 0 || paused} className="btn-gold" style={{ fontSize: 12, padding: '5px 12px', opacity: paused ? 0.4 : 1 }}>
                           Внести {Math.min(remaining, inInventory) || ''}
                         </button>
                       )}

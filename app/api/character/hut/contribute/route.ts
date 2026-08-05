@@ -15,9 +15,19 @@ export async function POST(req: NextRequest) {
   if (character.status !== 'approved') return NextResponse.json({ error: 'Персонаж ще не затверджений ГМ' }, { status: 403 })
   if (character.dead) return NextResponse.json({ error: 'Персонаж мертвий' }, { status: 403 })
 
+  // Unlocking the hut (first time reputation hit 100) and actually building it are two different
+  // gates — hutUnlocked just means "the camp has trusted you enough to grant land at some point."
+  // Construction itself needs LIVE reputation at 100, every contribution — if it drops afterward
+  // (bad trade, provoked complication, etc.), the build pauses until trust is earned back, rather
+  // than being a one-time check that can never be un-earned.
   if (character.reputation >= HUT_UNLOCK_REPUTATION) character.hutUnlocked = true
   if (!character.hutUnlocked) {
     return NextResponse.json({ error: `Хібара стає доступною при репутації ${HUT_UNLOCK_REPUTATION}.` }, { status: 403 })
+  }
+  if (character.reputation < HUT_UNLOCK_REPUTATION) {
+    return NextResponse.json({
+      error: `Будівництво призупинено — репутація впала (${character.reputation}/${HUT_UNLOCK_REPUTATION}). Віднови довіру табору, щоб продовжити.`,
+    }, { status: 403 })
   }
 
   const stage = nextHutStage(character.hutProgress)
