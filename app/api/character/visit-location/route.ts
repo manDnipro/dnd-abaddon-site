@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadOwnCharacter, saveCharacter, blockIfOnExpedition } from '@/lib/loadCharacter'
 import { clampHungerThirst, clampInfection, clampMorale, clampReputation, statModifier, STAT_LABELS } from '@/lib/types'
-import { rollCheck } from '@/lib/dice'
-import { dieSizeForStat, scaleDcForSides } from '@/lib/statLevels'
+import { rollD20 } from '@/lib/dice'
 import { getCampLocation } from '@/lib/campLocations'
 import { reputationTier, CANTEEN_MAX_USES } from '@/lib/reputation'
 import { getItem } from '@/lib/items'
 import { addStack } from '@/lib/stacks'
 import { appendCharacterLog } from '@/lib/characterLog'
 import { trainStat } from '@/lib/statTraining'
-import { locationDcEscalation } from '@/lib/locationYield'
+import { escalatedLocationDC } from '@/lib/locationYield'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -52,16 +51,16 @@ export async function POST(req: NextRequest) {
 
   let checkSuccess = true
   if (location.stat !== null) {
-    // Locations that pay out reputation/materials on success get progressively harder to pass the
-    // more they're farmed inside a rolling 4h window — same dice check, rising DC, so the payoff
-    // still comes down to the roll instead of a flat count-based cooldown or reward table.
+    // Camp checks always stay on a plain d20 — no stat-tier die scaling here (that's reserved for
+    // expeditions/combat/hunting/missions/trade). Locations that pay out reputation/materials on
+    // success instead get a progressively higher DC the more they're farmed inside a rolling 4h
+    // window (capped at 20, the die's own max), so the payoff still comes down to the roll rather
+    // than a flat count-based cooldown or reward table.
     const farmable = Boolean(location.success.reputationDelta || location.success.materialReward)
-    const dcBonus = farmable ? locationDcEscalation(character, location.key) : 0
-    const sides = dieSizeForStat(character.stats[location.stat])
-    const dc = scaleDcForSides(location.dc + dcBonus, sides)
-    const roll = rollCheck(sides, statModifier(character.stats[location.stat]))
+    const dc = farmable ? escalatedLocationDC(character, location.key, location.dc) : location.dc
+    const roll = rollD20(statModifier(character.stats[location.stat]))
     checkSuccess = roll.total >= dc
-    if (dcBonus > 0) log.push(`🔺 Тебе тут уже занадто добре знають — складність вища.`)
+    if (dc > location.dc) log.push(`🔺 Тебе тут уже занадто добре знають — складність вища.`)
     log.push(`🎲 ${STAT_LABELS[location.stat]}: ${roll.total} проти СК ${dc}${checkSuccess ? ' — успіх!' : ' — невдача.'}`)
   }
   const outcome = checkSuccess ? location.success : location.failure
