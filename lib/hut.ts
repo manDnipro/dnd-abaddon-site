@@ -19,7 +19,10 @@ export interface HutStage {
 // so that dungeon is the actual point of building a hut, not just flavor. Quantities are a first
 // pass; easy to retune later, nothing else depends on the exact numbers.
 export const HUT_STAGES: HutStage[] = [
-  { key: 'foundation', label: 'Фундамент', image: 'hut_stage1.jpg', progressAt: 0, cost: [] },
+  {
+    key: 'foundation', label: 'Фундамент', image: 'hut_stage1.jpg', progressAt: 10,
+    cost: [{ itemKey: 'cement_bag', quantity: 50 }, { itemKey: 'sand_bag', quantity: 100 }],
+  },
   {
     key: 'frame', label: 'Каркас', image: 'hut_stage2.jpg', progressAt: 25,
     cost: [{ itemKey: 'boards', quantity: 15 }, { itemKey: 'nails', quantity: 20 }],
