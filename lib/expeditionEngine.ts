@@ -23,9 +23,18 @@ export type SearchResult = {
 // Players reported near-100% loot on a successful search feeling "imba" — every clean roll always
 // handed over an item, which stacked up fast especially when two people ran solo searches side by
 // side (misread as a "duo bug", but the per-search odds were just too generous for everyone).
-// Passing the search roll no longer guarantees a find; it just means the location was safe/worth
-// searching. This applies equally whether you're out there alone or with a friend.
-const LOOT_DROP_CHANCE = 0.5
+// A first fix made loot a flat 50/50 coin flip on top of a passed search — but players then
+// noticed that coin flip was completely invisible and had nothing to do with the number they just
+// saw on screen ("від кубиків це взагалі не залежить"), which felt arbitrary even when it wasn't
+// overpowered anymore. Loot chance now scales with how much the roll beat the DC by: a roll that
+// barely passes has a real chance of an empty-handed search, a roll that crushes the DC almost
+// always pays off — same average generosity as the flat 50%, but visibly tied to the dice.
+const LOOT_CHANCE_FLOOR = 0.25
+const LOOT_CHANCE_CEIL = 0.9
+const LOOT_CHANCE_PER_MARGIN = 0.06
+function lootChanceForMargin(margin: number): number {
+  return Math.min(LOOT_CHANCE_CEIL, Math.max(LOOT_CHANCE_FLOOR, LOOT_CHANCE_FLOOR + margin * LOOT_CHANCE_PER_MARGIN))
+}
 
 // Loot never vanishes — a full inventory overflows into the personal camp storage box instead,
 // matching the bot's addItemWithOverflow behavior.
@@ -166,12 +175,14 @@ export function performSearch(character: Character, level: ExpeditionLevel, opts
   if (success) {
     const xpGain = XP_REWARDS.expeditionByTier[level.index] ?? 5
     character.xp += xpGain
+    const margin = searchRoll.total - level.dc
+    const lootChance = lootChanceForMargin(margin)
     log.push(`🎲 Пошук: ${searchRoll.total} проти СК ${level.dc} — успіх! (+${xpGain} XP)`)
-    if (Math.random() < LOOT_DROP_CHANCE) {
+    if (Math.random() < lootChance) {
       const loot = rollLoot(level.index)
       addToInventory(character, loot.itemKey, loot.quantity, log)
     } else {
-      log.push(`🕳️ Локація вже розграбована — путнього нічого не залишилось.`)
+      log.push(`🕳️ Ледь вистачило на прохід — локація вже розграбована, путнього нічого не залишилось.`)
     }
 
     // Danger dial: even a clean success on a high-risk location carries a small chance that
