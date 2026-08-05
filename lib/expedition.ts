@@ -141,6 +141,7 @@ export const LOOT_TIERS: Record<number, LootEntry[]> = {
   3: [
     { itemKey: 'canned_food', minQuantity: 1, maxQuantity: 2, weight: 7 },
     { itemKey: 'water_bottle', minQuantity: 1, maxQuantity: 2, weight: 7 },
+    { itemKey: 'empty_flask', minQuantity: 1, maxQuantity: 1, weight: 2 },
     { itemKey: 'mystery_can', minQuantity: 1, maxQuantity: 1, weight: 6 },
     { itemKey: 'scrap', minQuantity: 1, maxQuantity: 4, weight: 9 },
     { itemKey: 'cloth', minQuantity: 1, maxQuantity: 4, weight: 8 },
@@ -175,6 +176,7 @@ export const LOOT_TIERS: Record<number, LootEntry[]> = {
   4: [
     { itemKey: 'medkit', minQuantity: 1, maxQuantity: 2, weight: 9 },
     { itemKey: 'antibiotics', minQuantity: 1, maxQuantity: 1, weight: 8 },
+    { itemKey: 'empty_flask', minQuantity: 1, maxQuantity: 1, weight: 2 },
     { itemKey: 'mystery_can', minQuantity: 1, maxQuantity: 2, weight: 5 },
     { itemKey: 'ammo_rifle', minQuantity: 3, maxQuantity: 6, weight: 9 },
     { itemKey: 'ammo_pistol', minQuantity: 3, maxQuantity: 6, weight: 8 },

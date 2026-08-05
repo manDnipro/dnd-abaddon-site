@@ -137,10 +137,18 @@ export default function ActionsPage() {
                       {loc.stat && <div style={{ color: '#555', fontSize: 11, marginTop: 4 }}>Перевірка: {STAT_LABELS[loc.stat]} проти СК {loc.dc}</div>}
                       {onCooldown && <div style={{ color: '#a68a4a', fontSize: 11, marginTop: 4 }}>⏳ Доступно через {Math.ceil(msLeft / 60_000)} хв</div>}
                     </div>
-                    <button onClick={() => call('/api/character/visit-location', { key: loc.key })} disabled={loading || onCooldown}
-                      style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: loading || onCooldown ? 'default' : 'pointer', flexShrink: 0, opacity: onCooldown ? 0.5 : 1 }}>
-                      Піти туди
-                    </button>
+                    <div className="flex gap-2" style={{ flexShrink: 0 }}>
+                      {loc.key === 'water_pump' && countOf(character.inventory, 'empty_flask') > 0 && (
+                        <button onClick={() => call('/api/character/fill-flask')} disabled={loading}
+                          style={{ fontSize: 12, color: '#3a7ab0', background: 'none', border: '1px solid #1a2a3a', borderRadius: 4, padding: '5px 12px', cursor: loading ? 'default' : 'pointer' }}>
+                          Наповнити флягу ({countOf(character.inventory, 'empty_flask')})
+                        </button>
+                      )}
+                      <button onClick={() => call('/api/character/visit-location', { key: loc.key })} disabled={loading || onCooldown}
+                        style={{ fontSize: 12, color: '#a68a4a', background: 'none', border: '1px solid #2a241c', borderRadius: 4, padding: '5px 12px', cursor: loading || onCooldown ? 'default' : 'pointer', opacity: onCooldown ? 0.5 : 1 }}>
+                        Піти туди
+                      </button>
+                    </div>
                   </div>
                 </div>
               )

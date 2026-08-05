@@ -54,6 +54,8 @@ export const ITEM_CATALOG: Record<string, ItemDefinition> = {
   canned_food: { key: 'canned_food', name: 'Консерви', type: 'food', description: 'Тушонка чи консервовані овочі.', hungerRestore: 40 },
   energy_bar: { key: 'energy_bar', name: 'Енергетичний батончик', type: 'food', description: 'Швидкий перекус.', hungerRestore: 20 },
   water_bottle: { key: 'water_bottle', name: 'Пляшка води', type: 'water', description: 'Чиста питна вода.', thirstRestore: 40 },
+  empty_flask: { key: 'empty_flask', name: 'Пуста фляга', type: 'misc', description: 'Порожня фляга — наповни водою з колонки в таборі, перш ніж брати на вилазку.' },
+  filled_flask: { key: 'filled_flask', name: 'Фляга з водою', type: 'water', description: 'Наповнена фляга — можна взяти на вилазку.', thirstRestore: 50 },
   mystery_can: { key: 'mystery_can', name: 'Загадкові консерви', type: 'food', description: 'Бляшанка без етикетки.', hungerRestore: 25, poisonChance: 35 },
   bandage: { key: 'bandage', name: 'Бинт', type: 'medical', description: 'Зупиняє кровотечу, трохи гоїть рани.', healAmount: 10 },
   medkit: { key: 'medkit', name: 'Аптечка', type: 'medical', description: 'Повний набір першої допомоги.', healAmount: 30, infectionReduce: 20 },
