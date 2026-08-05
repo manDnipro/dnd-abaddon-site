@@ -5,6 +5,7 @@ import { Character } from './types'
 import { migrateLegacyCharacter } from './migrateCharacter'
 import { getOrRollWeather } from './worldState'
 import { runDueDailyTicks } from './dailyTick'
+import { runDueHutTicks } from './hutTick'
 import { getOwnerCharId } from './ownerChar'
 import { appendCharacterLog } from './characterLog'
 
@@ -42,6 +43,7 @@ export async function loadOwnCharacter(): Promise<{ owner: string; charId: strin
     const weather = await getOrRollWeather()
     const tick = runDueDailyTicks(character, weather.temperature)
     dailyTickLog = tick.log
+    dailyTickLog = dailyTickLog.concat(runDueHutTicks(character))
   }
 
   if (migrated || dailyTickLog.length > 0) {

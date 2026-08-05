@@ -122,6 +122,17 @@ export type Character = {
   // usable, it just pays out less the more it's farmed inside the window.
   locationYieldUses: Record<string, number[]>
 
+  // Personal hut, unlocked at HUT_UNLOCK_REPUTATION (lib/hut.ts). hutUnlocked latches true the
+  // first time reputation hits the threshold so a later reputation dip can't strand an in-progress
+  // build. hutContributions is keyed "stageKey:itemKey" -> qty contributed so far toward that
+  // stage's requirement; hutProgress is the derived 0-100 cumulative % once a stage is fully paid.
+  hutUnlocked: boolean
+  hutProgress: number
+  hutContributions: Record<string, number>
+  inHut: boolean
+  lastHutTickAt: number
+  hutStorage: InventoryStack[]
+
   xp: number
   meleeProf: number
   firearmProf: number

@@ -61,6 +61,12 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.canteenUses === undefined) { patched.canteenUses = []; changed = true }
   if (patched.locationCooldowns === undefined) { patched.locationCooldowns = {}; changed = true }
   if (patched.locationYieldUses === undefined) { patched.locationYieldUses = {}; changed = true }
+  if (patched.hutUnlocked === undefined) { patched.hutUnlocked = false; changed = true }
+  if (patched.hutProgress === undefined) { patched.hutProgress = 0; changed = true }
+  if (patched.hutContributions === undefined) { patched.hutContributions = {}; changed = true }
+  if (patched.inHut === undefined) { patched.inHut = false; changed = true }
+  if (patched.lastHutTickAt === undefined) { patched.lastHutTickAt = Date.now(); changed = true }
+  if (patched.hutStorage === undefined) { patched.hutStorage = []; changed = true }
   if (patched.xp === undefined) { patched.xp = 0; changed = true }
   if (patched.meleeProf === undefined) { patched.meleeProf = 0; changed = true }
   if (patched.firearmProf === undefined) { patched.firearmProf = 0; changed = true }
