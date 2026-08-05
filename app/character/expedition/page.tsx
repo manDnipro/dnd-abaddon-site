@@ -7,6 +7,7 @@ import { EXPEDITION_LEVELS } from '@/lib/expedition'
 import { DUNGEONS } from '@/lib/dungeons'
 import { getItem, isConsumable } from '@/lib/items'
 import { levelFromXp } from '@/lib/levels'
+import { dieSizeForStat } from '@/lib/statLevels'
 import DiceLogLine from '@/components/DiceLogLine'
 import DiceRulesInfo from '@/components/DiceRulesInfo'
 
@@ -70,6 +71,11 @@ export default function ExpeditionPage() {
   const charLevel = levelFromXp(character.xp)
   const epicenter = EXPEDITION_LEVELS.find(l => l.key === 'epicenter')
   const epicenterLocked = Boolean(epicenter?.minCharacterLevel && charLevel < epicenter.minCharacterLevel)
+  // Reaching level 20 doesn't mean Сприйняття itself kept up — the dungeon always rolls at least
+  // d30 (minDieSides), but a character whose PER is still tier-1 (д20) rolls it with a much smaller
+  // modifier than the DC expects. Warn about that separately from the hard level gate above.
+  const perSides = dieSizeForStat(character.stats.per)
+  const epicenterDiceWeak = Boolean(epicenter?.minDieSides && perSides < epicenter.minDieSides)
 
   return (
     <div>
@@ -135,6 +141,9 @@ export default function ExpeditionPage() {
             {epicenter && (
               <button disabled={loading || epicenterLocked}
                 onClick={async () => {
+                  if (epicenterDiceWeak && !window.confirm(
+                    `Твоя Сприйняття ще не доросла до цього данжу — тут кидають щонайменше д${epicenter.minDieSides}, а твій кубик за характеристикою лише д${perSides}. Шанси будуть значно нижчі. Все одно йти?`
+                  )) return
                   setLoading(true); setError('')
                   const res = await fetch('/api/expedition/start', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -166,6 +175,15 @@ export default function ExpeditionPage() {
                     fontFamily: "'Special Elite', monospace", letterSpacing: '0.05em',
                   }}>
                     🔒 Потрібен {epicenter.minCharacterLevel} рівень (зараз {charLevel})
+                  </div>
+                )}
+                {!epicenterLocked && epicenterDiceWeak && (
+                  <div style={{
+                    position: 'absolute', top: 8, right: 8, background: 'rgba(10,9,8,0.9)', border: '1px solid #e0a03a',
+                    color: '#e0a03a', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 3,
+                    fontFamily: "'Special Elite', monospace", letterSpacing: '0.05em', maxWidth: '80%', textAlign: 'right',
+                  }}>
+                    ⚠️ Сприйняття слабке для д{epicenter.minDieSides} (твій д{perSides})
                   </div>
                 )}
               </button>
