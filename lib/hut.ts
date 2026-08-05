@@ -25,15 +25,15 @@ export const HUT_STAGES: HutStage[] = [
   },
   {
     key: 'frame', label: 'Каркас', image: 'hut_stage2.jpg', progressAt: 25,
-    cost: [{ itemKey: 'boards', quantity: 15 }, { itemKey: 'nails', quantity: 20 }],
+    cost: [{ itemKey: 'boards', quantity: 100 }, { itemKey: 'hammer', quantity: 1 }, { itemKey: 'nails', quantity: 200 }],
   },
   {
     key: 'walls', label: 'Стіни (бетон)', image: 'hut_stage3.jpg', progressAt: 75,
-    cost: [{ itemKey: 'cement_bag', quantity: 15 }, { itemKey: 'sand_bag', quantity: 15 }, { itemKey: 'boards', quantity: 10 }],
+    cost: [{ itemKey: 'cement_bag', quantity: 100 }, { itemKey: 'sand_bag', quantity: 200 }, { itemKey: 'rebar', quantity: 50 }],
   },
   {
     key: 'roof', label: 'Дах та вікна', image: 'hut_stage4.jpg', progressAt: 100,
-    cost: [{ itemKey: 'boards', quantity: 15 }, { itemKey: 'nails', quantity: 15 }, { itemKey: 'cement_bag', quantity: 5 }],
+    cost: [{ itemKey: 'glass', quantity: 50 }, { itemKey: 'boards', quantity: 100 }, { itemKey: 'roofing_felt', quantity: 25 }, { itemKey: 'nails', quantity: 100 }],
   },
 ]
 

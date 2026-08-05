@@ -214,6 +214,10 @@ export const LOOT_TIERS: Record<number, LootEntry[]> = {
     { itemKey: 'sand_bag', minQuantity: 1, maxQuantity: 2, weight: 10 },
     { itemKey: 'boards', minQuantity: 2, maxQuantity: 5, weight: 9 },
     { itemKey: 'nails', minQuantity: 3, maxQuantity: 8, weight: 9 },
+    { itemKey: 'rebar', minQuantity: 1, maxQuantity: 3, weight: 7 },
+    { itemKey: 'glass', minQuantity: 1, maxQuantity: 2, weight: 5 },
+    { itemKey: 'roofing_felt', minQuantity: 1, maxQuantity: 2, weight: 5 },
+    { itemKey: 'hammer', minQuantity: 1, maxQuantity: 1, weight: 3 },
   ],
 }
 
