@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { loadOwnCharacter, saveCharacter } from '@/lib/loadCharacter'
 import { clampHungerThirst, clampInfection, clampMorale } from '@/lib/types'
 import { getItem, isConsumable } from '@/lib/items'
-import { removeStack } from '@/lib/stacks'
+import { addStack, removeStack } from '@/lib/stacks'
 import { useItemLine, poisonLine } from '@/lib/flavor'
 import { appendCharacterLog } from '@/lib/characterLog'
 import { resolveEnemyAttack } from '@/lib/combatEngine'
@@ -26,6 +26,10 @@ export async function POST(req: NextRequest) {
   const wasOnExpedition = Boolean(character.expedition)
   const log: string[] = []
   character.inventory = removeStack(character.inventory, itemId, 1)
+
+  // A flask is a reusable container, not a disposable bottle — drinking it empties it instead of
+  // making it vanish, so it can be refilled again at the camp water pump.
+  if (itemId === 'filled_flask') addStack(character.inventory, 'empty_flask', 1)
 
   if (item.poisonChance && Math.random() * 100 < item.poisonChance) {
     const dmg = Math.ceil(Math.random() * 4) + 1
