@@ -42,6 +42,7 @@ export default function ExpeditionPage() {
   const [loading, setLoading] = useState(false)
   const [now, setNow] = useState(Date.now())
   const [useItemChoice, setUseItemChoice] = useState('')
+  const [healItemChoice, setHealItemChoice] = useState('')
   const [useLuck, setUseLuck] = useState(false)
   const [partner, setPartner] = useState<PartnerStatus>(null)
 
@@ -136,12 +137,41 @@ export default function ExpeditionPage() {
             {partner.dead ? '☠️ загинув(-ла)' : partnerPhaseLabel(partner.expedition)}
           </p>
           {partner.log.length > 0 && (
-            <div className="flex flex-col gap-1" style={{ maxHeight: 160, overflowY: 'auto' }}>
+            <div className="flex flex-col gap-1" style={{ maxHeight: 160, overflowY: 'auto', marginBottom: 10 }}>
               {partner.log.slice(0, 8).map((e, i) => (
                 <p key={i} style={{ color: '#9a9284', fontSize: 12, lineHeight: 1.5, opacity: i === 0 ? 1 : 0.6 }}>
                   <DiceLogLine text={e.text} />
                 </p>
               ))}
+            </div>
+          )}
+
+          {!partner.dead && (
+            <div className="flex gap-2 flex-wrap items-center" style={{ borderTop: '1px solid #2a241c', paddingTop: 10 }}>
+              {(() => {
+                const medItems = character.inventory.filter(s => getItem(s.itemId)?.type === 'medical')
+                if (medItems.length === 0) return null
+                return (
+                  <>
+                    <select value={healItemChoice} onChange={e => setHealItemChoice(e.target.value)}
+                      style={{ background: '#0a0a0a', border: '1px solid #2a241c', color: '#c9c4ba', borderRadius: 4, padding: '6px 10px', fontSize: 12 }}>
+                      <option value="">🩹 Підлікувати напарника...</option>
+                      {medItems.map(s => <option key={s.itemId} value={s.itemId}>{getItem(s.itemId)?.name ?? s.itemId} ×{s.qty}</option>)}
+                    </select>
+                    <button disabled={loading || !healItemChoice}
+                      onClick={() => { const id = healItemChoice; setHealItemChoice(''); call('/api/social/duo/heal-partner', { itemId: id }) }}
+                      style={{ background: 'none', border: '1px solid #1a2a1a', color: '#5cb87a', borderRadius: 4, padding: '6px 12px', cursor: loading || !healItemChoice ? 'default' : 'pointer', fontSize: 12 }}>
+                      Використати
+                    </button>
+                  </>
+                )
+              })()}
+              {partner.inCombat && !character.combat && (
+                <button onClick={() => call('/api/social/duo/assist-combat')} disabled={loading}
+                  style={{ background: 'none', border: '1px solid #3a1010', color: '#e0a03a', borderRadius: 4, padding: '6px 14px', cursor: loading ? 'default' : 'pointer', fontSize: 12 }}>
+                  ⚔️ Допомогти в бою
+                </button>
+              )}
             </div>
           )}
         </div>
