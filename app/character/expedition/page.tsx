@@ -11,6 +11,19 @@ import { dieSizeForStat } from '@/lib/statLevels'
 import DiceLogLine from '@/components/DiceLogLine'
 import DiceRulesInfo from '@/components/DiceRulesInfo'
 
+type PartnerStatus = {
+  name: string; dead: boolean; hp: number; maxHp: number
+  expedition: Character['expedition']; inCombat: boolean; enemyLabel: string | null
+  log: { text: string; at: number }[]
+} | null
+
+function partnerPhaseLabel(exp: Character['expedition']): string {
+  if (!exp) return '🏕️ повернувся(-лась) в табір'
+  if (exp.phase === 'traveling_out') return '🚶 в дорозі туди'
+  if (exp.phase === 'on_site') return '🔍 на місці, шукає'
+  return '🚶 повертається в табір'
+}
+
 function logLineColor(line: string): string {
   if (/^(💥|☠️|🩸)/.test(line)) return '#c0392b'
   if (/^(✅|🎒|🏃.*вдалась)/.test(line)) return '#5cb87a'
@@ -30,6 +43,7 @@ export default function ExpeditionPage() {
   const [now, setNow] = useState(Date.now())
   const [useItemChoice, setUseItemChoice] = useState('')
   const [useLuck, setUseLuck] = useState(false)
+  const [partner, setPartner] = useState<PartnerStatus>(null)
 
   const load = useCallback(async () => {
     const res = await fetch('/api/character/mine')
@@ -38,6 +52,20 @@ export default function ExpeditionPage() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!character?.duoPartnerId) { setPartner(null); return }
+    let cancelled = false
+    async function poll() {
+      const res = await fetch('/api/social/duo/partner-status')
+      if (!res.ok || cancelled) return
+      const d = await res.json()
+      setPartner(d.partner)
+    }
+    poll()
+    const t = setInterval(poll, 6_000)
+    return () => { cancelled = true; clearInterval(t) }
+  }, [character?.duoPartnerId])
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000)
@@ -92,6 +120,32 @@ export default function ExpeditionPage() {
       </p>
 
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}
+
+      {partner && (
+        <div className="card mb-6" style={{ borderColor: '#3a2f10' }}>
+          <div className="flex justify-between items-center mb-2">
+            <span style={{ color: '#c9a94f', fontSize: 13, fontWeight: 700 }}>🧍 Напарник: {partner.name}</span>
+            {!partner.dead && (
+              <span style={{ color: '#999', fontSize: 12 }}>
+                ОЗ {partner.hp}/{partner.maxHp}
+                {partner.inCombat && <span style={{ color: '#e0a03a' }}> · ⚔️ бій з {partner.enemyLabel}</span>}
+              </span>
+            )}
+          </div>
+          <p style={{ color: partner.dead ? '#c0392b' : '#888', fontSize: 12, marginBottom: partner.log.length > 0 ? 10 : 0 }}>
+            {partner.dead ? '☠️ загинув(-ла)' : partnerPhaseLabel(partner.expedition)}
+          </p>
+          {partner.log.length > 0 && (
+            <div className="flex flex-col gap-1" style={{ maxHeight: 160, overflowY: 'auto' }}>
+              {partner.log.slice(0, 8).map((e, i) => (
+                <p key={i} style={{ color: '#9a9284', fontSize: 12, lineHeight: 1.5, opacity: i === 0 ? 1 : 0.6 }}>
+                  <DiceLogLine text={e.text} />
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {character.luck > 0 && (
         <label className="flex items-center gap-2 mb-4" style={{ fontSize: 13, color: '#c9a94f', cursor: 'pointer' }}>

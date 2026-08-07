@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
 
   character.expedition = { levelKey: level.key, phase: 'traveling_out', arrivesAt: Date.now() + travelMs }
   partner.expedition = { levelKey: level.key, phase: 'traveling_out', arrivesAt: Date.now() + travelMs }
+  character.duoPartnerId = invite.fromCharId
+  partner.duoPartnerId = charId
 
   await saveCharacter(charId, character)
   await saveCharacter(invite.fromCharId, partner)
@@ -41,6 +43,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     character,
-    log: [`✅ ${character.name} та ${partner.name} вирушають на вилазку разом (${level.label}). Кожен проходить її на своїй сторінці вилазки — прогрес не спільний, лише час виходу співпав.`],
+    log: [`✅ ${character.name} та ${partner.name} вирушають на вилазку разом (${level.label}). Кожен кидає свої кубики окремо, але тепер видно дії напарника наживо на сторінці вилазки.`],
   })
 }

@@ -133,6 +133,13 @@ export type Character = {
   lastHutTickAt: number
   hutStorage: InventoryStack[]
 
+  // Set on both characters when a duo expedition invite is accepted (app/api/social/duo/accept),
+  // cleared for whichever one finishes their trip first (lib/expeditionLog.ts's
+  // finalizeExpeditionLog) — lets the expedition page show a partner's live status/log even though
+  // each character's own search rolls stay fully independent (see app/api/social/duo/accept's own
+  // log line: "прогрес не спільний, лише час виходу співпав").
+  duoPartnerId: string | null
+
   xp: number
   meleeProf: number
   firearmProf: number

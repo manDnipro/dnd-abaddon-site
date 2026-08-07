@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     inHut: false,
     lastHutTickAt: Date.now(),
     hutStorage: [],
+    duoPartnerId: null,
     xp: 0,
     meleeProf: 0,
     firearmProf: 0,
