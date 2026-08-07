@@ -68,6 +68,7 @@ export function migrateLegacyCharacter(c: Character): Character | null {
   if (patched.lastHutTickAt === undefined) { patched.lastHutTickAt = Date.now(); changed = true }
   if (patched.hutStorage === undefined) { patched.hutStorage = []; changed = true }
   if (patched.duoPartnerId === undefined) { patched.duoPartnerId = null; changed = true }
+  if (patched.energyChargesLeft === undefined) { patched.energyChargesLeft = 0; changed = true }
   if (patched.xp === undefined) { patched.xp = 0; changed = true }
   if (patched.meleeProf === undefined) { patched.meleeProf = 0; changed = true }
   if (patched.firearmProf === undefined) { patched.firearmProf = 0; changed = true }

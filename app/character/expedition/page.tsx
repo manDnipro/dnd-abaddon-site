@@ -118,6 +118,7 @@ export default function ExpeditionPage() {
         {' · '}Голод: {character.hunger} · Спрага: {character.thirst} · Мораль: {character.morale}
         {character.infection > 0 && <> · <span style={{ color: '#8e44ad' }}>Інфекція: {character.infection}</span></>}
         {' · '}<span style={{ color: '#c9a227' }}>🍀 Удача: {character.luck}/{character.maxLuck}</span>
+        {character.energyChargesLeft > 0 && <> · <span style={{ color: '#e0a03a' }}>⚡ Енергетик: ще {character.energyChargesLeft} пошуки безкоштовно</span></>}
       </p>
 
       {error && <p style={{ color: '#c0392b', marginBottom: 16 }}>🚫 {error}</p>}

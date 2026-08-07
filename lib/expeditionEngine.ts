@@ -133,8 +133,13 @@ export function performSearch(character: Character, level: ExpeditionLevel, opts
   const log: string[] = []
   const images: string[] = []
 
-  character.hunger = clampHungerThirst(character.hunger - level.hungerCost)
-  character.thirst = clampHungerThirst(character.thirst - level.thirstCost)
+  if (character.energyChargesLeft > 0) {
+    character.energyChargesLeft -= 1
+    log.push(`⚡ Енергетик тримає на ногах — цей пошук не коштує голоду й спраги (лишилось: ${character.energyChargesLeft}).`)
+  } else {
+    character.hunger = clampHungerThirst(character.hunger - level.hungerCost)
+    character.thirst = clampHungerThirst(character.thirst - level.thirstCost)
+  }
 
   const location = rollSearchLocation()
   log.push(`🔍 ${character.name} ${location}...`)

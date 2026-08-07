@@ -19,6 +19,10 @@ export interface ItemDefinition {
   slot?: ClothingSlot
   warmth?: number
   armor?: number
+  /** Doesn't restore hunger/thirst directly — grants this many future searches during which
+   *  ExpeditionLevel.hungerCost/thirstCost are skipped entirely (see lib/expeditionEngine.ts and
+   *  Character.energyChargesLeft). A stimulant, not a meal. */
+  energyCharges?: number
 }
 
 export const ITEM_CATALOG: Record<string, ItemDefinition> = {
@@ -57,6 +61,9 @@ export const ITEM_CATALOG: Record<string, ItemDefinition> = {
   empty_flask: { key: 'empty_flask', name: 'Пуста фляга', type: 'misc', description: 'Порожня фляга — наповни водою з колонки в таборі, перш ніж брати на вилазку.' },
   filled_flask: { key: 'filled_flask', name: 'Фляга з водою', type: 'water', description: 'Наповнена фляга — можна взяти на вилазку.', thirstRestore: 50 },
   mystery_can: { key: 'mystery_can', name: 'Загадкові консерви', type: 'food', description: 'Бляшанка без етикетки.', hungerRestore: 25, poisonChance: 35 },
+  energy_drink_1: { key: 'energy_drink_1', name: 'Енергетик (слабкий)', type: 'food', description: 'Дешева хімія — тримає на ногах ще пару вилазкових пошуків без їжі й води.', energyCharges: 2 },
+  energy_drink_2: { key: 'energy_drink_2', name: 'Енергетик (сильний)', type: 'food', description: 'Концентрована суміш кофеїну й стимуляторів — заглушає голод і спрагу надовше.', energyCharges: 4 },
+  energy_drink_3: { key: 'energy_drink_3', name: 'Енергетик (преміум)', type: 'food', description: 'Довоєнна лабораторна розробка — рідкість, якою не розкидаються.', energyCharges: 7 },
   bandage: { key: 'bandage', name: 'Бинт', type: 'medical', description: 'Зупиняє кровотечу, трохи гоїть рани.', healAmount: 10 },
   medkit: { key: 'medkit', name: 'Аптечка', type: 'medical', description: 'Повний набір першої допомоги.', healAmount: 30, infectionReduce: 20 },
   antibiotics: { key: 'antibiotics', name: 'Антибіотики', type: 'medical', description: 'Значно знижує рівень інфекції.', infectionReduce: 50 },
@@ -153,6 +160,9 @@ export function isConsumable(item: ItemDefinition): boolean {
 
 const TRADE_VALUE_OVERRIDES: Record<string, number> = {
   reloading_press: 12, workbench: 10, rope: 3, old_dress: 2, blanket: 2, bedsheet: 2,
+  // Energy drinks are meant to be a real splurge, not a routine buy — priced well above what a
+  // plain food/water item of similar rarity would cost, scaling with how many searches they cover.
+  energy_drink_1: 10, energy_drink_2: 20, energy_drink_3: 35,
 }
 
 function averageDiceRoll(dice: string): number {

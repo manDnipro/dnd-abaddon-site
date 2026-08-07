@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
   } else {
     if (item.hungerRestore) { character.hunger = clampHungerThirst(character.hunger + item.hungerRestore); log.push(useItemLine(character.name, item.name, 'food')) }
     if (item.thirstRestore) { character.thirst = clampHungerThirst(character.thirst + item.thirstRestore); log.push(useItemLine(character.name, item.name, 'water')) }
+    if (item.energyCharges) {
+      character.energyChargesLeft += item.energyCharges
+      log.push(`⚡ ${character.name} п'є ${item.name} — наступні ${item.energyCharges} пошуки на вилазці не коштуватимуть голоду й спраги (запас: ${character.energyChargesLeft}).`)
+    }
     if (item.healAmount) { character.hp = Math.min(character.maxHp, character.hp + item.healAmount); log.push(useItemLine(character.name, item.name, 'medical')) }
     if (item.infectionReduce) { character.infection = clampInfection(character.infection - item.infectionReduce); log.push(`☣️ ${character.name} відчуває, як гарячка трохи відступає (-${item.infectionReduce} інфекції).`) }
     if (item.moraleRestore) { character.morale = clampMorale(character.morale + item.moraleRestore); log.push(useItemLine(character.name, item.name, 'other')) }

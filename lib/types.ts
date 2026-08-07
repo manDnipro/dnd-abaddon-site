@@ -140,6 +140,11 @@ export type Character = {
   // log line: "прогрес не спільний, лише час виходу співпав").
   duoPartnerId: string | null
 
+  // Decremented by one on every expedition search while > 0 — each of those searches skips the
+  // level's hungerCost/thirstCost entirely instead of restoring hunger/thirst (see energy_drink_*
+  // items in lib/items.ts and lib/expeditionEngine.ts's performSearch).
+  energyChargesLeft: number
+
   xp: number
   meleeProf: number
   firearmProf: number
